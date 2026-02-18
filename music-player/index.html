@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Music Player</title>
+<style>
+  :root {
+    --bg: #0b1020;
+    --panel: #151f35;
+    --line: #33507c;
+    --text: #edf4ff;
+    --muted: #9eb5d6;
+    --ok: #1ec88c;
+    --warn: #edb351;
+    --accent: #68b3ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background:
+      radial-gradient(900px 420px at 80% -10%, rgba(92, 145, 220, .25), transparent 50%),
+      radial-gradient(900px 420px at 10% -10%, rgba(92, 220, 185, .14), transparent 50%),
+      var(--bg);
+    padding: 16px;
+  }
+  .wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: grid;
+    gap: 12px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px;
+  }
+  h1 { margin: 0 0 8px; font-size: 1.35rem; }
+  h2 { margin: 0 0 10px; font-size: 1.05rem; }
+  .muted { color: var(--muted); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .btn {
+    border: 1px solid #3f699f;
+    border-radius: 10px;
+    background: #295283;
+    color: #fff;
+    font-weight: 700;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  .btn.ok { background: #106948; border-color: #23946f; }
+  .btn.warn { background: #775b20; border-color: #be9440; }
+  .range { width: 220px; }
+  .status {
+    margin-top: 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #0c1524;
+    color: var(--muted);
+    padding: 8px 10px;
+  }
+  .list { display: grid; gap: 8px; margin-top: 10px; }
+  .item {
+    border: 1px solid #36537d;
+    border-radius: 10px;
+    background: #101b2d;
+    padding: 8px 10px;
+  }
+  .item-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: center;
+  }
+  .item.active { border-color: #4e8bd1; box-shadow: 0 0 0 1px rgba(104, 179, 255, .25) inset; }
+  .meta { color: var(--muted); font-size: .84rem; }
+  .player {
+    width: 100%;
+    margin-top: 10px;
+  }
+  .time { font-size: .85rem; color: var(--muted); min-width: 95px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Music Player</h1>
+    <div class="muted">Offline-friendly local music player. Load files from device and keep playlist in-browser.</div>
+  </div>
+
+  <div class="card">
+    <h2>Load Audio</h2>
+    <div class="row">
+      <input id="fileInput" type="file" accept="audio/*" multiple />
+      <button id="clearBtn" class="btn warn" type="button">Clear Playlist</button>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button id="prevBtn" class="btn" type="button">Prev</button>
+      <button id="playBtn" class="btn ok" type="button">Play</button>
+      <button id="pauseBtn" class="btn" type="button">Pause</button>
+      <button id="nextBtn" class="btn" type="button">Next</button>
+      <label class="muted" for="volume">Volume</label>
+      <input id="volume" class="range" type="range" min="0" max="1" step="0.01" value="0.9" />
+      <span id="time" class="time">00:00 / 00:00</span>
+    </div>
+    <audio id="audio" class="player" controls preload="metadata"></audio>
+    <div id="status" class="status">Ready.</div>
+  </div>
+
+  <div class="card">
+    <h2>Playlist</h2>
+    <div id="playlist" class="list"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const KEY = 'musicPlayer.playlist.v1';
+  const state = {
+    tracks: [],
+    index: -1
+  };
+  const el = {
+    fileInput: document.getElementById('fileInput'),
+    clearBtn: document.getElementById('clearBtn'),
+    prevBtn: document.getElementById('prevBtn'),
+    playBtn: document.getElementById('playBtn'),
+    pauseBtn: document.getElementById('pauseBtn'),
+    nextBtn: document.getElementById('nextBtn'),
+    volume: document.getElementById('volume'),
+    audio: document.getElementById('audio'),
+    status: document.getElementById('status'),
+    playlist: document.getElementById('playlist'),
+    time: document.getElementById('time')
+  };
+
+  function fmtTime(sec) {
+    const s = Math.max(0, Math.floor(sec || 0));
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    return `${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
+  }
+
+  function setStatus(msg) {
+    el.status.textContent = msg;
+  }
+
+  function bytesText(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  }
+
+  function save() {
+    const safe = state.tracks.map((t) => ({ name: t.name, size: t.size, type: t.type, ts: t.ts }));
+    localStorage.setItem(KEY, JSON.stringify(safe));
+  }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return;
+      const cached = JSON.parse(raw);
+      if (Array.isArray(cached) && cached.length) {
+        setStatus('Playlist metadata restored. Re-add files to play (browser security).');
+      }
+    } catch (_) {}
+  }
+
+  function setTrack(i, autoPlay) {
+    if (i < 0 || i >= state.tracks.length) return;
+    state.index = i;
+    const t = state.tracks[i];
+    el.audio.src = t.url;
+    renderPlaylist();
+    setStatus(`Loaded: ${t.name}`);
+    if (autoPlay) {
+      el.audio.play().catch(() => {
+        setStatus(`Loaded: ${t.name}. Tap Play to start.`);
+      });
+    }
+  }
+
+  function next(autoPlay) {
+    if (!state.tracks.length) return;
+    const i = (state.index + 1) % state.tracks.length;
+    setTrack(i, autoPlay);
+  }
+
+  function prev(autoPlay) {
+    if (!state.tracks.length) return;
+    const i = (state.index - 1 + state.tracks.length) % state.tracks.length;
+    setTrack(i, autoPlay);
+  }
+
+  function removeTrack(i) {
+    const t = state.tracks[i];
+    if (!t) return;
+    URL.revokeObjectURL(t.url);
+    state.tracks.splice(i, 1);
+    if (!state.tracks.length) {
+      state.index = -1;
+      el.audio.removeAttribute('src');
+      el.audio.load();
+    } else if (state.index >= state.tracks.length) {
+      state.index = state.tracks.length - 1;
+      setTrack(state.index, false);
+    }
+    save();
+    renderPlaylist();
+  }
+
+  function clearPlaylist() {
+    state.tracks.forEach((t) => URL.revokeObjectURL(t.url));
+    state.tracks = [];
+    state.index = -1;
+    el.audio.removeAttribute('src');
+    el.audio.load();
+    save();
+    renderPlaylist();
+    setStatus('Playlist cleared.');
+  }
+
+  function renderPlaylist() {
+    if (!state.tracks.length) {
+      el.playlist.innerHTML = '<div class="muted">No tracks loaded.</div>';
+      return;
+    }
+    el.playlist.innerHTML = state.tracks.map((t, i) => `
+      <div class="item ${i === state.index ? 'active' : ''}">
+        <div class="item-head">
+          <strong>${t.name.replaceAll('<', '&lt;')}</strong>
+          <div class="row">
+            <button class="btn ok" data-play="${i}" type="button">Play</button>
+            <button class="btn warn" data-del="${i}" type="button">Delete</button>
+          </div>
+        </div>
+        <div class="meta">${bytesText(t.size)} | ${t.type || 'audio/*'}</div>
+      </div>
+    `).join('');
+    el.playlist.querySelectorAll('[data-play]').forEach((b) => {
+      b.addEventListener('click', () => setTrack(Number(b.getAttribute('data-play')), true));
+    });
+    el.playlist.querySelectorAll('[data-del]').forEach((b) => {
+      b.addEventListener('click', () => removeTrack(Number(b.getAttribute('data-del'))));
+    });
+  }
+
+  function bind() {
+    el.fileInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+      const newTracks = files.map((f) => ({
+        name: f.name,
+        size: f.size,
+        type: f.type,
+        ts: Date.now(),
+        url: URL.createObjectURL(f)
+      }));
+      state.tracks.push(...newTracks);
+      save();
+      renderPlaylist();
+      if (state.index === -1 && state.tracks.length) setTrack(0, false);
+      setStatus(`Added ${files.length} track(s).`);
+      el.fileInput.value = '';
+    });
+
+    el.clearBtn.addEventListener('click', clearPlaylist);
+    el.playBtn.addEventListener('click', () => {
+      if (state.index === -1 && state.tracks.length) setTrack(0, false);
+      el.audio.play().catch(() => {});
+    });
+    el.pauseBtn.addEventListener('click', () => el.audio.pause());
+    el.nextBtn.addEventListener('click', () => next(true));
+    el.prevBtn.addEventListener('click', () => prev(true));
+    el.volume.addEventListener('input', () => { el.audio.volume = Number(el.volume.value || 0.9); });
+
+    el.audio.addEventListener('ended', () => next(true));
+    el.audio.addEventListener('timeupdate', () => {
+      el.time.textContent = `${fmtTime(el.audio.currentTime)} / ${fmtTime(el.audio.duration)}`;
+    });
+    el.audio.addEventListener('loadedmetadata', () => {
+      el.time.textContent = `${fmtTime(el.audio.currentTime)} / ${fmtTime(el.audio.duration)}`;
+    });
+  }
+
+  function init() {
+    load();
+    bind();
+    el.audio.volume = Number(el.volume.value || 0.9);
+    renderPlaylist();
+    setStatus('Ready.');
+  }
+
+  init();
+})();
+</script>
+<script src="../shared/help-content.js"></script>
+<script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

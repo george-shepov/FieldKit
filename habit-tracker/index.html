@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>🌱 Micro Habit Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- In-browser SQLite (WebAssembly) + Charts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --bg:#0b1020; --card:#121834; --ink:#e7ecff; --muted:#9aa3c7; --accent:#6ea8ff; --good:#34d399; --skip:#f59e0b;
+      --grid:#2a335c; --cell:#1b2346;
+      --heat1:#cbd5e1; --heat2:#94a3b8; --heat3:#64748b; --heat4:#475569; --heat5:#334155;
+    }
+    @media (prefers-color-scheme: light){
+      :root{ --bg:#f7f8fc; --card:#ffffff; --ink:#0f172a; --muted:#52607a; --accent:#3b82f6; --good:#10b981; --skip:#f59e0b; --grid:#e6e9f5; --cell:#eef1fb;
+             --heat1:#dbeafe; --heat2:#bfdbfe; --heat3:#93c5fd; --heat4:#60a5fa; --heat5:#3b82f6; }
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;min-height:100vh}
+    header{padding:1rem 1.2rem;text-align:center;font-weight:700;font-size:1.5rem;background:linear-gradient(90deg,var(--accent),#9b8cff);color:white}
+    main{flex:1;max-width:920px;margin:0 auto;padding:1rem;display:flex;flex-direction:column;gap:1rem}
+    .controls{background:var(--card);border-radius:14px;padding:.8rem;display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;box-shadow:0 6px 24px rgba(0,0,0,.15)}
+    .controls input{padding:.55rem .7rem;border:1px solid rgba(255,255,255,.08);border-radius:10px;min-width:200px;background:transparent;color:var(--ink)}
+    .controls button{background:var(--accent);color:white;border:0;border-radius:10px;padding:.55rem .8rem;font-weight:600;cursor:pointer}
+    .controls button.secondary{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+    .panel{background:var(--card);border-radius:14px;padding:1rem;box-shadow:0 6px 24px rgba(0,0,0,.15)}
+    .panel h3{margin:.1rem 0 .6rem 0;font-size:1rem;color:var(--muted);letter-spacing:.02em}
+    .habit{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:.8rem;margin:.5rem 0}
+    .habit-header{display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+    .habit-title{font-weight:700}
+    .habit-actions button{background:transparent;border:0;color:var(--muted);cursor:pointer;font-size:1rem;margin-left:.25rem}
+    .days{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.5rem}
+    .day{width:32px;height:28px;border-radius:8px;background:#2a335c;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;color:#c7cff9;border:1px solid rgba(255,255,255,.06)}
+    .day.checked{background:var(--good);color:white}
+    .day.skipped{background:var(--skip);color:white}
+    .streak{margin-top:.4rem;color:var(--muted);font-size:.9rem}
+    .spark{width:100%!important;max-height:64px;margin-top:.4rem}
+    .summary{display:grid;grid-template-columns:1fr;gap:.8rem}
+    @media(min-width:840px){.summary{grid-template-columns:1fr 1fr}}
+    .legend{display:flex;gap:.5rem;align-items:center;font-size:.85rem;color:var(--muted);margin-top:.5rem;flex-wrap:wrap}
+    .legend .box{width:14px;height:14px;border-radius:3px;border:1px solid rgba(0,0,0,.08);background:var(--grid)}
+    .heatmap-wrap{position:relative}
+    canvas.heatmap{width:100%; max-width:100%; height:200px; border-radius:12px; background:var(--cell); display:block}
+    .heat-controls{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin:.5rem 0}
+    select, .pill{
+      padding:.45rem .6rem;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:transparent;color:var(--ink);cursor:pointer
+    }
+    .pill.active{background:var(--accent);border-color:transparent;color:white}
+    .tooltip{
+      position:absolute; pointer-events:none; background:rgba(0,0,0,.8); color:#fff; font-size:.8rem; padding:.35rem .5rem; border-radius:6px; transform:translate(-50%,-100%); white-space:nowrap; z-index:5; display:none;
+    }
+    footer{padding:1rem;text-align:center;color:var(--muted);font-size:.9rem}
+  
+/* Suite nav */
+.suite-nav{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:hsl(222,30%,10%);border-bottom:1px solid hsl(222,15%,20%);font-size:12px;font-family:'DM Sans',system-ui,sans-serif}
+.suite-nav a{color:hsl(215,15%,55%);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .15s}
+.suite-nav a:hover{color:hsl(160,60%,45%)}
+.suite-nav .suite-name{color:hsl(215,10%,40%);font-family:'DM Mono',monospace;font-size:11px}
+</style>
+</head>
+<body>
+<nav class="suite-nav">
+  <a href="../index.html">← Back to Suite</a>
+  <span class="suite-name">ProSe Pilot</span>
+</nav>
+
+  <header>🌱 Micro Habit Tracker</header>
+
+  <main>
+    <!-- Global controls -->
+    <section class="controls">
+      <input id="habitInput" placeholder="New habit..." maxlength="30" />
+      <button onclick="addHabit()">Add Habit</button>
+      <button onclick="nextDay()">Next Day âž¡ï¸</button>
+      <button class="secondary" onclick="exportData()">Export JSON</button>
+      <button class="secondary" onclick="importData()">Import JSON</button>
+      <button class="secondary" onclick="exportSQLite()">Export DB</button>
+      <button class="secondary" onclick="importSQLite()">Import DB</button>
+    </section>
+
+    <!-- Weekly / Monthly summaries -->
+    <section class="panel">
+      <h3>Summary</h3>
+      <div class="summary">
+        <div>
+          <strong>Last 7 Days — Completions per Day</strong>
+          <canvas id="weeklyChart"></canvas>
+        </div>
+        <div>
+          <strong>Last 30 Days — Completions per Habit</strong>
+          <canvas id="monthlyChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Calendar heatmap -->
+    <section class="panel">
+      <h3>90-Day Activity Heatmap</h3>
+      <div class="heat-controls">
+        <span class="pill active" id="overallPill" onclick="setHeatmapMode('overall')">Overall</span>
+        <span class="pill" id="perHabitPill" onclick="setHeatmapMode('habit')">Per-habit</span>
+        <select id="habitSelect" onchange="drawHeatmap()" disabled title="Pick a habit for per-habit heatmap"></select>
+      </div>
+      <div class="heatmap-wrap">
+        <canvas id="heatmap" class="heatmap"></canvas>
+        <div id="tooltip" class="tooltip"></div>
+      </div>
+      <div class="legend">
+        <span>Less</span>
+        <span class="box" style="background:var(--heat1)"></span>
+        <span class="box" style="background:var(--heat2)"></span>
+        <span class="box" style="background:var(--heat3)"></span>
+        <span class="box" style="background:var(--heat4)"></span>
+        <span class="box" style="background:var(--heat5)"></span>
+        <span>More</span>
+      </div>
+    </section>
+
+    <!-- Habits list -->
+    <section class="panel">
+      <h3>Habits (max 7)</h3>
+      <div id="habitList"></div>
+    </section>
+  </main>
+
+  <footer>Stay consistent. Small steps, big change.</footer>
+
+  <script>
+    // ===== Config =====
+    const daysToShow = 7;
+
+    // ===== SQLite globals =====
+    let SQL;        // sql.js module
+    let db;         // Database
+    let weeklyChart, monthlyChart;
+
+    // Heatmap mode
+    let heatmapMode = 'overall'; // 'overall' | 'habit'
+    let heatmapCells = []; // hit-test cache
+
+    // ===== Init =====
+    (async function initDB(){
+      SQL = await initSqlJs({ locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}` });
+      db = new SQL.Database();
+
+      // Schema
+      db.run(`
+        PRAGMA journal_mode=MEMORY;
+        CREATE TABLE IF NOT EXISTS habits (name TEXT PRIMARY KEY, history TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS habit_log (
+          d TEXT NOT NULL,
+          name TEXT NOT NULL,
+          state INTEGER NOT NULL,
+          PRIMARY KEY(d, name)
+        );
+        CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+      `);
+
+      // Seed demo if empty
+      const cnt = scalar("SELECT COUNT(*) FROM habits");
+      if (cnt === 0) seedDemo();
+
+      render();
+      rebuildCharts();
+      rebuildHabitSelect();
+      drawHeatmap();
+      window.addEventListener('resize', drawHeatmap);
+      // tooltips
+      setupHeatmapTooltip();
+    })();
+
+    // ===== Helpers =====
+    function scalar(sql, params=[]) {
+      const r = db.exec(sql, params);
+      return r.length ? r[0].values[0][0] : null;
+    }
+    function getRows(sql, params=[]) {
+      const r = db.exec(sql, params);
+      if (!r.length) return [];
+      const cols = r[0].columns;
+      return r[0].values.map(row => Object.fromEntries(row.map((v,i)=>[cols[i], v])));
+    }
+    function todayStr() {
+      const d = new Date(); d.setHours(0,0,0,0);
+      return d.toISOString().slice(0,10);
+    }
+    function strToDate(s){ const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d); }
+    function dateAddDays(s, k){ const d=strToDate(s); d.setDate(d.getDate()+k); return d.toISOString().slice(0,10); }
+
+    // ===== Demo seed =====
+    function seedDemo(){
+      db.run("INSERT OR REPLACE INTO meta(key,value) VALUES('current_date',?)", [todayStr()]);
+      const demo = [
+        {name:"Drink Water", history:[1,1,0,1,0,0,0]},
+        {name:"Meditate",   history:[0,1,1,0,0,0,0]},
+        {name:"Exercise",   history:[0,0,0,1,1,0,0]}
+      ];
+      demo.forEach(h => db.run("INSERT INTO habits(name,history) VALUES(?,?)", [h.name, JSON.stringify(h.history)]));
+
+      // Backfill 90 days deterministically
+      const start = dateAddDays(todayStr(), -90);
+      const names = demo.map(d=>d.name);
+      for (let i=0;i<90;i++){
+        const d = dateAddDays(start, i);
+        names.forEach((n, idx) => {
+          const st = ((i + 2*idx) % 3 === 0) ? 1 : (Math.random()<0.25 ? 1 : 0);
+          db.run("INSERT OR REPLACE INTO habit_log(d,name,state) VALUES(?,?,?)", [d, n, st]);
+        });
+      }
+    }
+
+    function getCurrentDate(){
+      const val = scalar("SELECT value FROM meta WHERE key='current_date'");
+      if (val) return val;
+      const t = todayStr();
+      db.run("INSERT OR REPLACE INTO meta(key,value) VALUES('current_date',?)",[t]);
+      return t;
+    }
+    function setCurrentDate(s){
+      db.run("INSERT OR REPLACE INTO meta(key,value) VALUES('current_date',?)",[s]);
+    }
+
+    // ===== CRUD: Habits & UI =====
+    function loadHabits(){
+      const rows = getRows("SELECT name, history FROM habits ORDER BY name");
+      return rows.map(r => ({ name:r.name, history: JSON.parse(r.history) }));
+    }
+    function saveHabits(habits){
+      db.run("DELETE FROM habits");
+      habits.forEach(h => db.run("INSERT INTO habits(name,history) VALUES(?,?)",[h.name, JSON.stringify(h.history)]));
+    }
+
+    function render(){
+      const habits = loadHabits();
+      const list = document.getElementById("habitList");
+      list.innerHTML = "";
+
+      habits.forEach((habit, index) => {
+        const card = document.createElement("div");
+        card.className = "habit";
+
+        // streak = consecutive 1's from the end
+        let streak = 0;
+        for (let i = habit.history.length-1; i>=0; i--){
+          if (habit.history[i] === 1) streak++; else break;
+        }
+
+        const cid = `spark-${index}-${Math.random().toString(36).slice(2,7)}`;
+        card.innerHTML = `
+          <div class="habit-header">
+            <span class="habit-title">${escapeHtml(habit.name)}</span>
+            <div class="habit-actions">
+              <button title="Rename" onclick="editHabit(${index})">📏</button>
+              <button title="Delete" onclick="deleteHabit(${index})">🌱—‘ï¸</button>
+            </div>
+          </div>
+          <div class="days">
+            ${habit.history.map((d,i)=>
+              `<div class="day ${d===1?"checked":d===2?"skipped":""}" onclick="toggleDay(${index},${i})">${i+1}</div>`
+            ).join("")}
+          </div>
+          <div class="streak">🌱”¥ Streak: ${streak} days</div>
+          <canvas id="${cid}" class="spark"></canvas>
+        `;
+        list.appendChild(card);
+
+        // Per-habit weekly sparkline
+        new Chart(document.getElementById(cid).getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: Array.from({length: daysToShow}, (_,i)=>i+1),
+            datasets: [{ data: habit.history.map(v=>v===1?1:0), tension:.35, pointRadius:0 }]
+          },
+          options: {
+            responsive:true, plugins:{legend:{display:false}},
+            scales:{y:{display:false, min:0, max:1.2},x:{display:false}},
+            elements:{line:{borderWidth:2}}
+          }
+        });
+      });
+    }
+
+    function addHabit(){
+      const input = document.getElementById("habitInput");
+      const name = input.value?.trim();
+      if (!name) return;
+      const habits = loadHabits();
+      if (habits.length >= 7) { alert("Limit is 7 habits."); return; }
+      habits.push({ name, history: Array(daysToShow).fill(0) });
+      saveHabits(habits);
+      input.value = "";
+      render(); rebuildCharts(); rebuildHabitSelect(); drawHeatmap();
+    }
+
+    function deleteHabit(i){
+      const habits = loadHabits();
+      const [removed] = habits.splice(i,1);
+      saveHabits(habits);
+      db.run("DELETE FROM habit_log WHERE name = ?", [removed.name]);
+      render(); rebuildCharts(); rebuildHabitSelect(); drawHeatmap();
+    }
+
+    function editHabit(i){
+      const habits = loadHabits();
+      const newName = prompt("Edit habit name:", habits[i].name);
+      if (!newName) return;
+      const oldName = habits[i].name;
+      habits[i].name = newName.trim();
+      saveHabits(habits);
+      db.run("UPDATE habit_log SET name=? WHERE name=?", [habits[i].name, oldName]);
+      render(); rebuildCharts(); rebuildHabitSelect(); drawHeatmap();
+    }
+
+    function toggleDay(habitIndex, dayIndex){
+      const habits = loadHabits();
+      const v = habits[habitIndex].history[dayIndex];
+      habits[habitIndex].history[dayIndex] = (v===0) ? 1 : (v===1 ? 2 : 0); // 0 -> 1 -> 2 -> 0
+      saveHabits(habits);
+      render();
+    }
+
+    // ===== Daily progression & logging =====
+    function nextDay(){
+      const habits = loadHabits();
+      const d = getCurrentDate();
+
+      // Log "today" as the rightmost column; only "done" counts
+      habits.forEach(h => {
+        const state = Number(h.history[daysToShow-1] || 0); // 0/1/2
+        const done = (state === 1) ? 1 : 0;
+        db.run("INSERT OR REPLACE INTO habit_log(d,name,state) VALUES(?,?,?)", [d, h.name, done]);
+      });
+
+      // Advance and roll window
+      setCurrentDate(dateAddDays(d, 1));
+      habits.forEach(h => { h.history.shift(); h.history.push(0); });
+      saveHabits(habits);
+
+      render();
+      rebuildCharts();
+      drawHeatmap();
+    }
+
+    // ===== Summaries (Weekly / Monthly) =====
+    function rebuildCharts(){
+      const dEnd = getCurrentDate();
+      const dStart7  = dateAddDays(dEnd, -7);
+      const dStart30 = dateAddDays(dEnd, -30);
+
+      // Last 7 days — counts per day (state==1)
+      const days7 = [];
+      for (let i=0;i<7;i++) days7.push(dateAddDays(dStart7, i));
+      const data7 = days7.map(ds => scalar("SELECT COALESCE(SUM(state),0) FROM habit_log WHERE d=?", [ds]) || 0);
+
+      // Last 30 days — totals per habit
+      const habits = loadHabits();
+      const labels30 = habits.map(h=>h.name);
+      const totals30 = labels30.map(name =>
+        scalar("SELECT COALESCE(SUM(state),0) FROM habit_log WHERE d>=? AND d<? AND name=?", [dStart30, dEnd, name]) || 0
+      );
+
+      // WEEKLY
+      const wCtx = document.getElementById('weeklyChart').getContext('2d');
+      if (weeklyChart) weeklyChart.destroy();
+      weeklyChart = new Chart(wCtx, {
+        type: 'line',
+        data: { labels: days7.map(s => s.slice(5)), datasets: [{ data: data7, tension:.3 }] },
+        options: {
+          plugins:{legend:{display:false}, tooltip:{mode:'index', intersect:false}},
+          scales:{y:{beginAtZero:true, ticks:{precision:0}}, x:{ticks:{autoSkip:true,maxTicksLimit:7}}},
+          animation:false
+        }
+      });
+
+      // MONTHLY
+      const mCtx = document.getElementById('monthlyChart').getContext('2d');
+      if (monthlyChart) monthlyChart.destroy();
+      monthlyChart = new Chart(mCtx, {
+        type: 'bar',
+        data: { labels: labels30, datasets: [{ data: totals30 }] },
+        options: { plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{precision:0}}}, animation:false }
+      });
+    }
+
+    // ===== Heatmap (90 days) with modes + tooltip =====
+    function setHeatmapMode(mode){
+      heatmapMode = mode;
+      document.getElementById('overallPill').classList.toggle('active', mode==='overall');
+      const per = (mode==='habit');
+      document.getElementById('perHabitPill').classList.toggle('active', per);
+      const sel = document.getElementById('habitSelect');
+      sel.disabled = !per;
+      drawHeatmap();
+    }
+
+    function rebuildHabitSelect(){
+      const sel = document.getElementById('habitSelect');
+      const habits = loadHabits();
+      const prev = sel.value;
+      sel.innerHTML = '';
+      habits.forEach(h => {
+        const opt = document.createElement('option');
+        opt.value = h.name; opt.textContent = h.name;
+        sel.appendChild(opt);
+      });
+      // try restore previous selection
+      if ([...sel.options].some(o=>o.value===prev)) sel.value = prev;
+    }
+
+    function drawHeatmap(){
+      const canvas = document.getElementById('heatmap');
+      const ctx = canvas.getContext('2d');
+      const sel = document.getElementById('habitSelect');
+      const tooltip = document.getElementById('tooltip');
+
+      // Adjust for device pixel ratio
+      const dpr = window.devicePixelRatio || 1;
+      const W = canvas.clientWidth, H = canvas.clientHeight;
+      canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+
+      // Data window
+      const end = getCurrentDate();               // exclusive
+      const start = dateAddDays(end, -90);
+
+      // Build an array of days with totals
+      const days = [];
+      for (let i=0;i<90;i++) days.push(dateAddDays(start, i));
+
+      let values = [];
+      if (heatmapMode === 'overall'){
+        values = days.map(s => scalar("SELECT COALESCE(SUM(state),0) FROM habit_log WHERE d=?", [s]) || 0);
+      } else {
+        const name = sel.value || (loadHabits()[0]?.name || '');
+        values = days.map(s => scalar("SELECT COALESCE(SUM(state),0) FROM habit_log WHERE d=? AND name=?", [s, name]) || 0);
+      }
+
+      const maxHabits = Math.max(1, (heatmapMode==='overall' ? loadHabits().length : 1));
+      const maxPerDay = maxHabits;
+
+      // Grid size (13 weeks x 7 rows)
+      const cols = 13; const rows = 7;
+      const cell = Math.floor(Math.min((W - 16) / cols, (H - 16) / rows));
+      const x0 = Math.floor((W - cols*cell)/2), y0 = Math.floor((H - rows*cell)/2);
+
+      // Background
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--cell');
+      ctx.fillRect(0,0,W,H);
+
+      // Draw cells & build hit-test map
+      heatmapCells = [];
+      const firstDate = strToDate(start);
+      const offsetWeekday = (firstDate.getDay()+6)%7; // Monday=0..Sunday=6
+
+      for (let i=0;i<days.length;i++){
+        const d = strToDate(days[i]);
+        const weekday = (d.getDay()+6)%7;
+        const col = Math.floor((i + offsetWeekday) / 7);
+        if (col >= cols) continue;
+
+        const v = Math.max(0, Math.min(1, values[i] / maxPerDay));
+        const color = heatColor(v);
+        const x = x0 + col*cell;
+        const y = y0 + weekday*cell;
+
+        ctx.fillStyle = color;
+        ctx.fillRect(x+2, y+2, cell-4, cell-4);
+
+        heatmapCells.push({x:x+2, y:y+2, w:cell-4, h:cell-4, date:days[i], value:values[i]});
+      }
+
+      // Hide tooltip after redraw
+      tooltip.style.display = 'none';
+    }
+
+    function setupHeatmapTooltip(){
+      const canvas = document.getElementById('heatmap');
+      const tooltip = document.getElementById('tooltip');
+
+      canvas.addEventListener('mousemove', (e)=>{
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const hit = heatmapCells.find(c => x>=c.x && x<=c.x+c.w && y>=c.y && y<=c.y+c.h);
+        if (hit){
+          const d = strToDate(hit.date);
+          const dateStr = d.toLocaleDateString(undefined, {year:'numeric', month:'short', day:'numeric', weekday:'short'});
+          const label = (heatmapMode==='overall') ? 'Total' : (document.getElementById('habitSelect').value || 'Habit');
+          tooltip.textContent = `${dateStr} — ${label}: ${hit.value}`;
+          tooltip.style.display = 'block';
+          tooltip.style.left = `${hit.x + hit.w/2}px`;
+          tooltip.style.top  = `${hit.y}px`;
+        } else {
+          tooltip.style.display = 'none';
+        }
+      });
+
+      canvas.addEventListener('mouseleave', ()=>{ tooltip.style.display='none'; });
+    }
+
+    function heatColor(v){
+      const stops = ['var(--heat1)','var(--heat2)','var(--heat3)','var(--heat4)','var(--heat5)'];
+      const idx = Math.min(stops.length-1, Math.floor(v * stops.length));
+      // resolve CSS var to actual color
+      const tmp = document.createElement('div');
+      tmp.style.color = stops[idx];
+      document.body.appendChild(tmp);
+      const col = getComputedStyle(tmp).color;
+      tmp.remove();
+      return col;
+    }
+
+    // ===== Export / Import (JSON) =====
+    function exportData(){
+      const payload = {
+        meta: getRows("SELECT key,value FROM meta"),
+        habits: loadHabits(),
+        log: getRows("SELECT d,name,state FROM habit_log ORDER BY d,name")
+      };
+      const blob = new Blob([JSON.stringify(payload,null,2)], { type:"application/json" });
+      const url  = URL.createObjectURL(blob);
+      const a = Object.assign(document.createElement("a"), { href:url, download:"habits.json" });
+      a.click(); URL.revokeObjectURL(url);
+    }
+    function importData(){
+      const input = document.createElement("input");
+      input.type="file"; input.accept="application/json";
+      input.onchange = e => {
+        const file = e.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          try{
+            const obj = JSON.parse(ev.target.result);
+            db.run("DELETE FROM meta"); db.run("DELETE FROM habits"); db.run("DELETE FROM habit_log");
+            (obj.meta||[]).forEach(kv => db.run("INSERT OR REPLACE INTO meta(key,value) VALUES(?,?)",[kv.key, kv.value]));
+            (obj.habits||[]).forEach(h => db.run("INSERT INTO habits(name,history) VALUES(?,?)",[h.name, JSON.stringify(h.history||Array(daysToShow).fill(0))]));
+            (obj.log||[]).forEach(r => db.run("INSERT OR REPLACE INTO habit_log(d,name,state) VALUES(?,?,?)",[r.d, r.name, Number(r.state||0)]));
+            render(); rebuildCharts(); rebuildHabitSelect(); drawHeatmap();
+          }catch(err){ alert("Invalid JSON"); console.error(err); }
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    }
+
+    // ===== Export / Import (SQLite DB) =====
+    function exportSQLite(){
+      const data = db.export();
+      const blob = new Blob([data], { type:"application/octet-stream" });
+      const url  = URL.createObjectURL(blob);
+      const a = Object.assign(document.createElement("a"), { href:url, download:"habits.sqlite" });
+      a.click(); URL.revokeObjectURL(url);
+    }
+    function importSQLite(){
+      const input = document.createElement("input");
+      input.type="file"; input.accept=".sqlite,application/octet-stream,application/x-sqlite3";
+      input.onchange = e => {
+        const file = e.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          try{
+            const bytes = new Uint8Array(ev.target.result);
+            db = new SQL.Database(bytes);
+            db.run(`
+              CREATE TABLE IF NOT EXISTS habits (name TEXT PRIMARY KEY, history TEXT NOT NULL);
+              CREATE TABLE IF NOT EXISTS habit_log (d TEXT NOT NULL, name TEXT NOT NULL, state INTEGER NOT NULL, PRIMARY KEY(d,name));
+              CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+            `);
+            render(); rebuildCharts(); rebuildHabitSelect(); drawHeatmap();
+          }catch(err){ alert("Invalid SQLite file"); console.error(err); }
+        };
+        reader.readAsArrayBuffer(file);
+      };
+      input.click();
+    }
+
+    // ===== Utilities =====
+    function escapeHtml(s){ return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+    // Expose handlers
+    window.addHabit = addHabit;
+    window.deleteHabit = deleteHabit;
+    window.editHabit = editHabit;
+    window.toggleDay = toggleDay;
+    window.nextDay = nextDay;
+    window.exportData = exportData;
+    window.importData = importData;
+    window.exportSQLite = exportSQLite;
+    window.importSQLite = importSQLite;
+    window.setHeatmapMode = setHeatmapMode;
+  </script>
+  <script src="../shared/help-content.js"></script>
+  <script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

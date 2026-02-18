@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Driver License Study Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b1116;
+    --bg2: #101922;
+    --panel: #172432;
+    --panel2: #1d2f41;
+    --line: #2b4054;
+    --line-soft: #223344;
+    --text: #e7f1fb;
+    --muted: #a3bccf;
+    --brand: #2dd4bf;
+    --brand-2: #f59e0b;
+    --ok: #22c55e;
+    --danger: #ef4444;
+    --shadow: 0 16px 40px rgba(0, 0, 0, 0.32);
+    --sans: 'Space Grotesk', system-ui, sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    color: var(--text);
+    font-family: var(--sans);
+    background:
+      radial-gradient(1000px 520px at -10% -20%, #134e4a 0%, transparent 65%),
+      radial-gradient(900px 520px at 110% -20%, #7c2d12 0%, transparent 65%),
+      linear-gradient(165deg, var(--bg), #0b1520 56%, #0b1116);
+  }
+  .suite-nav {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid #27384b;
+    background: rgba(8, 14, 20, 0.84);
+    backdrop-filter: blur(8px);
+  }
+  .suite-nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .suite-nav a:hover { color: var(--brand); }
+  .suite-nav span {
+    color: #7d98ad;
+    font-size: 12px;
+    font-family: var(--mono);
+  }
+  .wrap {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 0 14px 26px;
+    display: grid;
+    gap: 14px;
+  }
+  .hero {
+    border: 1px solid var(--line);
+    background: linear-gradient(160deg, rgba(14, 30, 42, 0.95), rgba(16, 24, 35, 0.95));
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    padding: 18px;
+  }
+  .hero h1 {
+    font-size: clamp(1.25rem, 3.5vw, 1.9rem);
+    letter-spacing: 0.2px;
+  }
+  .hero p {
+    color: var(--muted);
+    margin-top: 8px;
+    line-height: 1.45;
+  }
+  .hero strong { color: var(--brand); }
+  .controls {
+    border: 1px solid var(--line);
+    background: rgba(13, 24, 34, 0.92);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 10px;
+    align-items: end;
+  }
+  .control { display: grid; gap: 6px; }
+  label {
+    color: #9cb4c7;
+    font-size: 12px;
+    font-family: var(--mono);
+    letter-spacing: 0.2px;
+  }
+  select, textarea {
+    width: 100%;
+    border: 1px solid #35506a;
+    background: #0f1b27;
+    color: var(--text);
+    border-radius: 10px;
+    font-size: 14px;
+    padding: 10px 12px;
+    font-family: var(--sans);
+  }
+  select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.16);
+  }
+  .btn {
+    border: 1px solid #3c556d;
+    border-radius: 10px;
+    background: #1a2f44;
+    color: var(--text);
+    padding: 10px 12px;
+    cursor: pointer;
+    font-weight: 600;
+    font-family: var(--sans);
+    transition: background .15s, transform .12s;
+  }
+  .btn:hover { background: #243f57; }
+  .btn:active { transform: translateY(1px); }
+  .btn.primary {
+    border-color: #2f8f86;
+    background: linear-gradient(180deg, #11877b, #0d6a61);
+  }
+  .btn.primary:hover { background: linear-gradient(180deg, #129488, #0f766d); }
+  .btn.warn {
+    border-color: #9c5f16;
+    background: linear-gradient(180deg, #b87611, #9a5f09);
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    border: 1px solid var(--line);
+    background: #0e1b27;
+    color: #c8d8e7;
+    border-radius: 999px;
+    padding: 8px 13px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: var(--mono);
+  }
+  .tab.active {
+    border-color: #3f8491;
+    color: #defaf8;
+    background: linear-gradient(180deg, rgba(20, 82, 92, 0.95), rgba(16, 63, 71, 0.95));
+  }
+  .view {
+    border: 1px solid var(--line);
+    background: linear-gradient(170deg, rgba(16, 27, 39, 0.96), rgba(12, 20, 30, 0.96));
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 16px;
+    display: none;
+  }
+  .view.active { display: block; }
+  .subtle {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .digest-list {
+    margin-top: 10px;
+    display: grid;
+    gap: 8px;
+  }
+  .digest-list li {
+    list-style: none;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--line-soft);
+    background: #0f1b27;
+  }
+  .qa-box {
+    margin-top: 12px;
+    border: 1px solid #35506a;
+    border-radius: 12px;
+    background: #0f1c2a;
+    padding: 14px;
+  }
+  .qa-question {
+    font-size: 1.02rem;
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+  .qa-answer {
+    display: none;
+    border-top: 1px dashed #35506a;
+    margin-top: 10px;
+    padding-top: 10px;
+    color: #d7e8f7;
+  }
+  .qa-answer.open { display: block; }
+  .row {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .flash-wrap {
+    margin-top: 12px;
+    max-width: 620px;
+  }
+  .flashcard {
+    min-height: 180px;
+    border: 1px solid #3a5268;
+    border-radius: 14px;
+    background: #0f1d2a;
+    position: relative;
+    cursor: pointer;
+    perspective: 1000px;
+  }
+  .flash-inner {
+    position: absolute;
+    inset: 0;
+    transition: transform .35s ease;
+    transform-style: preserve-3d;
+  }
+  .flashcard.flipped .flash-inner { transform: rotateY(180deg); }
+  .face {
+    position: absolute;
+    inset: 0;
+    padding: 16px;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    backface-visibility: hidden;
+    border-radius: 14px;
+  }
+  .front {
+    background: linear-gradient(170deg, #102334, #0f1c29);
+  }
+  .back {
+    background: linear-gradient(170deg, #17311f, #13281a);
+    transform: rotateY(180deg);
+  }
+  .card-tag {
+    position: absolute;
+    left: 12px;
+    top: 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: #9db5c8;
+  }
+  .face p { line-height: 1.45; }
+  textarea {
+    min-height: 180px;
+    resize: vertical;
+    font-family: var(--mono);
+    line-height: 1.4;
+  }
+  .status {
+    margin-top: 10px;
+    color: #d0dfec;
+    font-size: 14px;
+  }
+  .status.ok { color: #86efac; }
+  .status.err { color: #fca5a5; }
+
+  @media (max-width: 900px) {
+    .controls { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <nav class="suite-nav">
+    <a href="../index.html">&larr; Back to Suite</a>
+    <span>ProSe Pilot</span>
+  </nav>
+
+  <main class="wrap">
+    <header class="hero">
+      <h1>Driver License Study Lab</h1>
+      <p>
+        <strong>Built for permit prep:</strong> read a short driving digest, practice questions, and memorize via flashcards.
+        You can also paste any study material and convert it into Q&amp;A cards.
+      </p>
+    </header>
+
+    <section class="controls">
+      <div class="control">
+        <label for="langSelect">Language</label>
+        <select id="langSelect"></select>
+      </div>
+      <div class="control">
+        <label for="deckSelect">Study Deck</label>
+        <select id="deckSelect">
+          <option value="builtin">Built-in driver deck</option>
+          <option value="custom">Custom deck</option>
+        </select>
+      </div>
+      <button id="shuffleBtn" class="btn" type="button">Shuffle Deck</button>
+    </section>
+
+    <section class="tabs" aria-label="Study views">
+      <button type="button" class="tab active" data-tab="digest">Driving Digest</button>
+      <button type="button" class="tab" data-tab="qa">Questions &amp; Answers</button>
+      <button type="button" class="tab" data-tab="cards">Flashcards</button>
+      <button type="button" class="tab" data-tab="custom">Custom Material</button>
+    </section>
+
+    <section class="view active" id="view-digest">
+      <p class="subtle">Quick reminders before testing.</p>
+      <ul id="digestList" class="digest-list"></ul>
+    </section>
+
+    <section class="view" id="view-qa">
+      <p id="qaProgress" class="subtle"></p>
+      <div class="qa-box">
+        <p id="qaQuestion" class="qa-question"></p>
+        <p id="qaAnswer" class="qa-answer"></p>
+      </div>
+      <div class="row">
+        <button id="qaPrev" class="btn" type="button">Previous</button>
+        <button id="qaShow" class="btn primary" type="button">Show Answer</button>
+        <button id="qaNext" class="btn" type="button">Next</button>
+      </div>
+    </section>
+
+    <section class="view" id="view-cards">
+      <p id="cardProgress" class="subtle"></p>
+      <div class="flash-wrap">
+        <div id="flashcard" class="flashcard" role="button" tabindex="0" aria-label="Flip card">
+          <div class="flash-inner">
+            <div class="face front">
+              <span class="card-tag">Question</span>
+              <p id="cardFront"></p>
+            </div>
+            <div class="face back">
+              <span class="card-tag">Answer</span>
+              <p id="cardBack"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <button id="cardPrev" class="btn" type="button">Previous</button>
+        <button id="cardFlip" class="btn primary" type="button">Flip</button>
+        <button id="cardNext" class="btn" type="button">Next</button>
+      </div>
+      <p class="subtle" style="margin-top:10px">Tip: click the card, or press <strong>Space</strong> to flip.</p>
+    </section>
+
+    <section class="view" id="view-custom">
+      <p class="subtle">Paste study lines in the format <strong>Question || Answer</strong> (one pair per line). You can also use <strong>Q:</strong> and <strong>A:</strong>.</p>
+      <textarea id="customInput" placeholder="What is a stop sign shape? || Octagon\nQ: How far before turning should you signal?\nA: About 100 feet"></textarea>
+      <div class="row">
+        <button id="loadCustom" class="btn primary" type="button">Load Custom Deck</button>
+        <button id="clearCustom" class="btn warn" type="button">Clear Custom Deck</button>
+        <button id="sampleCustom" class="btn" type="button">Insert Sample</button>
+      </div>
+      <p id="customStatus" class="status"></p>
+    </section>
+  </main>
+
+<script>
+const STORAGE_KEY = 'driverLicenseStudyCustomDeck';
+
+const PACKS = {
+  en: {
+    label: 'English',
+    digest: [
+      'Keep a 3-second following distance in normal traffic; increase in rain or at night.',
+      'Stop fully at stop signs and before crosswalk lines.',
+      'Use turn signals at least 100 feet before turning.',
+      'Seat belts are required for drivers and passengers.',
+      'Do not pass a stopped school bus with flashing red lights.',
+      'Yield to pedestrians in crosswalks, even if they are crossing slowly.',
+      'Never drive distracted. Phones should stay hands-free and brief.',
+      'If emergency lights are behind you, signal and pull over safely.'
+    ],
+    qa: [
+      { q: 'What shape is a standard stop sign?', a: 'An octagon.' },
+      { q: 'When should you signal before a turn?', a: 'At least 100 feet before turning.' },
+      { q: 'What does a solid yellow center line mean?', a: 'Traffic moves in opposite directions; passing is restricted based on line pattern.' },
+      { q: 'What should you do when approaching a stopped school bus with red lights flashing?', a: 'Stop and remain stopped until the lights stop flashing and it is safe.' },
+      { q: 'What is a safe minimum following distance in clear conditions?', a: 'About 3 seconds.' },
+      { q: 'Who has priority in a marked crosswalk?', a: 'Pedestrians.' },
+      { q: 'What is the first action when an emergency vehicle approaches from behind?', a: 'Signal and pull to the right safely, then stop.' },
+      { q: 'Why is distracted driving dangerous?', a: 'It delays reaction time and greatly increases crash risk.' }
+    ]
+  },
+  es: {
+    label: 'Español',
+    digest: [
+      'Mantenga una distancia de 3 segundos en tráfico normal; aumente con lluvia o de noche.',
+      'Deténgase por completo en señales de ALTO y antes del paso peatonal.',
+      'Use direccionales al menos 100 pies antes de girar.',
+      'El cinturón de seguridad es obligatorio para conductor y pasajeros.',
+      'No adelante a un autobús escolar detenido con luces rojas intermitentes.',
+      'Ceda el paso a peatones en cruces peatonales.',
+      'No conduzca distraído; use el teléfono solo en modo manos libres.',
+      'Si vienen luces de emergencia detrás, señale y oríllese con seguridad.'
+    ],
+    qa: [
+      { q: '¿Qué forma tiene una señal de ALTO?', a: 'Un octágono.' },
+      { q: '¿Cuándo debe usar direccional antes de girar?', a: 'Al menos 100 pies antes de girar.' },
+      { q: '¿Qué indica una línea amarilla continua al centro?', a: 'Tráfico en sentidos opuestos; el rebase está restringido.' },
+      { q: '¿Qué hacer ante un autobús escolar detenido con luces rojas?', a: 'Detenerse y permanecer detenido hasta que sea seguro avanzar.' },
+      { q: '¿Distancia mínima recomendada en condiciones normales?', a: 'Aproximadamente 3 segundos.' },
+      { q: '¿Quién tiene prioridad en un cruce peatonal marcado?', a: 'Los peatones.' },
+      { q: '¿Primera acción ante un vehículo de emergencia detrás?', a: 'Señalizar, orillarse a la derecha y detenerse con seguridad.' },
+      { q: '¿Por qué es peligrosa la conducción distraída?', a: 'Reduce el tiempo de reacción y aumenta el riesgo de choque.' }
+    ]
+  },
+  uk: {
+    label: 'Українська',
+    digest: [
+      'Тримайте дистанцію щонайменше 3 секунди; у дощ або вночі збільшуйте.',
+      'Повністю зупиняйтесь на знаку STOP і перед пішохідним переходом.',
+      'Вмикайте поворотник щонайменше за 100 футів до повороту.',
+      'Ремені безпеки обов’язкові для водія та пасажирів.',
+      'Не обганяйте шкільний автобус, що стоїть із червоними мигалками.',
+      'Пропускайте пішоходів на переході.',
+      'Не відволікайтеся на телефон під час керування.',
+      'Коли позаду спецтранспорт з маячками, безпечно з’їдьте праворуч і зупиніться.'
+    ],
+    qa: [
+      { q: 'Яку форму має знак STOP?', a: 'Восьмикутник (октагон).' },
+      { q: 'Коли потрібно подавати сигнал повороту?', a: 'Приблизно за 100 футів до повороту.' },
+      { q: 'Що означає суцільна жовта лінія посередині?', a: 'Рух у протилежних напрямках; обгін обмежений.' },
+      { q: 'Що робити біля шкільного автобуса з червоними вогнями?', a: 'Повністю зупинитися і чекати, доки рух стане безпечним.' },
+      { q: 'Яка мінімальна безпечна дистанція в нормальних умовах?', a: 'Близько 3 секунд.' },
+      { q: 'Хто має перевагу на позначеному переході?', a: 'Пішоходи.' },
+      { q: 'Перша дія, якщо позаду спецавто з маячками?', a: 'Увімкнути сигнал, з’їхати праворуч і зупинитися.' },
+      { q: 'Чому небезпечно керувати відволікаючись?', a: 'Погіршується реакція і зростає ризик ДТП.' }
+    ]
+  },
+  ru: {
+    label: 'Русский',
+    digest: [
+      'Соблюдайте дистанцию не менее 3 секунд, в дождь и ночью увеличивайте.',
+      'Полностью останавливайтесь у знака STOP и перед переходом.',
+      'Включайте поворотник минимум за 100 футов до поворота.',
+      'Ремни безопасности обязательны для всех в автомобиле.',
+      'Нельзя обгонять школьный автобус с мигающими красными огнями.',
+      'Уступайте пешеходам на переходах.',
+      'Не отвлекайтесь на телефон за рулем.',
+      'При приближении спецтранспорта сзади безопасно примите вправо и остановитесь.'
+    ],
+    qa: [
+      { q: 'Какой формы знак STOP?', a: 'Восьмиугольник.' },
+      { q: 'Когда включать поворотник перед поворотом?', a: 'Не менее чем за 100 футов.' },
+      { q: 'Что означает сплошная желтая линия в центре?', a: 'Встречные направления движения; обгон ограничен.' },
+      { q: 'Что делать при школьном автобусе с красными огнями?', a: 'Остановиться и ждать до безопасного продолжения движения.' },
+      { q: 'Какая минимальная безопасная дистанция в обычных условиях?', a: 'Около 3 секунд.' },
+      { q: 'Кто имеет приоритет на пешеходном переходе?', a: 'Пешеходы.' },
+      { q: 'Первое действие при спецмашине сзади?', a: 'Подать сигнал, прижаться вправо и остановиться.' },
+      { q: 'Почему опасно отвлекаться за рулем?', a: 'Снижается скорость реакции и растет риск аварии.' }
+    ]
+  },
+  de: {
+    label: 'Deutsch',
+    digest: [
+      'Halten Sie mindestens 3 Sekunden Abstand; bei Regen oder nachts mehr.',
+      'An STOP-Schildern und vor Zebrastreifen vollständig anhalten.',
+      'Blinken Sie mindestens 100 Fuß vor dem Abbiegen.',
+      'Sicherheitsgurte sind für alle Insassen Pflicht.',
+      'Einen stehenden Schulbus mit rotem Blinklicht nicht überholen.',
+      'Fußgänger an markierten Überwegen haben Vorrang.',
+      'Nicht abgelenkt fahren; Handy nur kurz und freihändig.',
+      'Bei Einsatzfahrzeug von hinten: rechts ranfahren und sicher anhalten.'
+    ],
+    qa: [
+      { q: 'Welche Form hat ein STOP-Schild?', a: 'Ein Achteck.' },
+      { q: 'Wann muss vor dem Abbiegen geblinkt werden?', a: 'Mindestens 100 Fuß vorher.' },
+      { q: 'Was bedeutet eine durchgezogene gelbe Mittellinie?', a: 'Gegenverkehr; Überholen ist eingeschränkt.' },
+      { q: 'Was tun bei einem stehenden Schulbus mit rotem Blinklicht?', a: 'Anhalten und warten, bis Weiterfahren sicher ist.' },
+      { q: 'Wie groß ist der minimale Sicherheitsabstand bei guter Sicht?', a: 'Etwa 3 Sekunden.' },
+      { q: 'Wer hat am Zebrastreifen Vorrang?', a: 'Fußgänger.' },
+      { q: 'Erste Reaktion auf ein Einsatzfahrzeug von hinten?', a: 'Blinken, rechts ranfahren und anhalten.' },
+      { q: 'Warum ist abgelenktes Fahren gefährlich?', a: 'Die Reaktionszeit wird schlechter und das Unfallrisiko steigt.' }
+    ]
+  },
+  fr: {
+    label: 'Français',
+    digest: [
+      'Gardez au moins 3 secondes de distance; augmentez par pluie ou la nuit.',
+      'Arrêt complet au panneau STOP et avant les passages piétons.',
+      'Mettez le clignotant au moins 100 pieds avant de tourner.',
+      'La ceinture est obligatoire pour le conducteur et les passagers.',
+      'Ne dépassez pas un bus scolaire arrêté avec feux rouges clignotants.',
+      'Cédez toujours le passage aux piétons aux passages marqués.',
+      'Ne conduisez pas distrait: téléphone en mode mains libres seulement.',
+      'Si un véhicule d’urgence arrive derrière vous, signalez et rangez-vous à droite.'
+    ],
+    qa: [
+      { q: 'Quelle est la forme d’un panneau STOP?', a: 'Un octogone.' },
+      { q: 'Quand signaler avant de tourner?', a: 'Au moins 100 pieds avant le virage.' },
+      { q: 'Que signifie une ligne jaune continue au centre?', a: 'Circulation en sens opposés; dépassement limité.' },
+      { q: 'Que faire devant un bus scolaire arrêté avec feux rouges?', a: 'S’arrêter et attendre que ce soit sûr de repartir.' },
+      { q: 'Quelle distance minimale en conditions normales?', a: 'Environ 3 secondes.' },
+      { q: 'Qui est prioritaire sur un passage piéton marqué?', a: 'Les piétons.' },
+      { q: 'Première action face à un véhicule d’urgence derrière?', a: 'Signaler, se rabattre à droite et s’arrêter.' },
+      { q: 'Pourquoi la conduite distraite est-elle dangereuse?', a: 'Elle réduit le temps de réaction et augmente le risque d’accident.' }
+    ]
+  }
+};
+
+const state = {
+  lang: 'en',
+  deck: 'builtin',
+  customDeck: [],
+  order: [],
+  qaIndex: 0,
+  cardIndex: 0,
+  cardFlipped: false,
+  activeTab: 'digest'
+};
+
+const el = {
+  langSelect: document.getElementById('langSelect'),
+  deckSelect: document.getElementById('deckSelect'),
+  shuffleBtn: document.getElementById('shuffleBtn'),
+  digestList: document.getElementById('digestList'),
+  qaProgress: document.getElementById('qaProgress'),
+  qaQuestion: document.getElementById('qaQuestion'),
+  qaAnswer: document.getElementById('qaAnswer'),
+  qaPrev: document.getElementById('qaPrev'),
+  qaShow: document.getElementById('qaShow'),
+  qaNext: document.getElementById('qaNext'),
+  cardProgress: document.getElementById('cardProgress'),
+  flashcard: document.getElementById('flashcard'),
+  cardFront: document.getElementById('cardFront'),
+  cardBack: document.getElementById('cardBack'),
+  cardPrev: document.getElementById('cardPrev'),
+  cardFlip: document.getElementById('cardFlip'),
+  cardNext: document.getElementById('cardNext'),
+  customInput: document.getElementById('customInput'),
+  loadCustom: document.getElementById('loadCustom'),
+  clearCustom: document.getElementById('clearCustom'),
+  sampleCustom: document.getElementById('sampleCustom'),
+  customStatus: document.getElementById('customStatus'),
+  tabs: Array.from(document.querySelectorAll('.tab')),
+  views: Array.from(document.querySelectorAll('.view'))
+};
+
+function activeDeck() {
+  if (state.deck === 'custom') return state.customDeck;
+  return PACKS[state.lang].qa;
+}
+
+function currentCardFrom(deckIndex) {
+  const deck = activeDeck();
+  if (!deck.length) return null;
+  const orderIndex = state.order[deckIndex];
+  return deck[orderIndex];
+}
+
+function rebuildOrder() {
+  const len = activeDeck().length;
+  state.order = Array.from({ length: len }, (_, i) => i);
+  state.qaIndex = 0;
+  state.cardIndex = 0;
+  state.cardFlipped = false;
+}
+
+function shuffleOrder() {
+  for (let i = state.order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [state.order[i], state.order[j]] = [state.order[j], state.order[i]];
+  }
+  state.qaIndex = 0;
+  state.cardIndex = 0;
+  state.cardFlipped = false;
+}
+
+function renderDigest() {
+  const digest = PACKS[state.lang].digest;
+  el.digestList.innerHTML = digest.map(line => `<li>${line}</li>`).join('');
+}
+
+function showNoDeck(message) {
+  el.qaProgress.textContent = message;
+  el.qaQuestion.textContent = 'No cards available.';
+  el.qaAnswer.textContent = 'Load a custom deck, or switch to the built-in driver deck.';
+  el.qaAnswer.classList.add('open');
+  el.cardProgress.textContent = message;
+  el.cardFront.textContent = 'No flashcards available.';
+  el.cardBack.textContent = 'Open Custom Material to load cards.';
+}
+
+function renderQA() {
+  const deck = activeDeck();
+  if (!deck.length) {
+    showNoDeck('0 / 0 cards');
+    return;
+  }
+
+  if (state.qaIndex < 0) state.qaIndex = deck.length - 1;
+  if (state.qaIndex >= deck.length) state.qaIndex = 0;
+
+  const card = currentCardFrom(state.qaIndex);
+  el.qaProgress.textContent = `${state.qaIndex + 1} / ${deck.length} cards`;
+  el.qaQuestion.textContent = card.q;
+  el.qaAnswer.textContent = card.a;
+  el.qaAnswer.classList.remove('open');
+}
+
+function renderCards() {
+  const deck = activeDeck();
+  if (!deck.length) {
+    showNoDeck('0 / 0 cards');
+    return;
+  }
+
+  if (state.cardIndex < 0) state.cardIndex = deck.length - 1;
+  if (state.cardIndex >= deck.length) state.cardIndex = 0;
+
+  const card = currentCardFrom(state.cardIndex);
+  el.cardProgress.textContent = `${state.cardIndex + 1} / ${deck.length} cards`;
+  el.cardFront.textContent = card.q;
+  el.cardBack.textContent = card.a;
+  el.flashcard.classList.toggle('flipped', state.cardFlipped);
+}
+
+function renderCustomStatus(msg, kind) {
+  el.customStatus.textContent = msg;
+  el.customStatus.className = 'status';
+  if (kind) el.customStatus.classList.add(kind);
+}
+
+function parseCustomDeck(raw) {
+  const lines = raw
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean);
+
+  const out = [];
+  let pendingQ = null;
+
+  for (const line of lines) {
+    if (line.includes('||')) {
+      const parts = line.split('||');
+      const q = (parts[0] || '').trim();
+      const a = parts.slice(1).join('||').trim();
+      if (q && a) out.push({ q, a });
+      pendingQ = null;
+      continue;
+    }
+
+    const qMatch = line.match(/^q(?:uestion)?\s*[:\-]\s*(.+)$/i);
+    if (qMatch) {
+      pendingQ = qMatch[1].trim();
+      continue;
+    }
+
+    const aMatch = line.match(/^a(?:nswer)?\s*[:\-]\s*(.+)$/i);
+    if (aMatch) {
+      if (pendingQ) out.push({ q: pendingQ, a: aMatch[1].trim() });
+      pendingQ = null;
+      continue;
+    }
+
+    if (pendingQ) {
+      out.push({ q: pendingQ, a: line });
+      pendingQ = null;
+    }
+  }
+
+  return out.filter(item => item.q && item.a);
+}
+
+function saveCustomDeck(raw, deck) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ raw, deck }));
+}
+
+function loadCustomDeck() {
+  try {
+    const payload = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    if (payload.raw) el.customInput.value = payload.raw;
+    if (Array.isArray(payload.deck)) {
+      state.customDeck = payload.deck.filter(row => row && row.q && row.a);
+    }
+  } catch (_) {
+    state.customDeck = [];
+  }
+}
+
+function switchTab(tab) {
+  state.activeTab = tab;
+  el.tabs.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
+  el.views.forEach(view => {
+    view.classList.toggle('active', view.id === `view-${tab}`);
+  });
+}
+
+function bootLanguageOptions() {
+  const options = Object.entries(PACKS)
+    .map(([key, item]) => `<option value="${key}">${item.label}</option>`)
+    .join('');
+  el.langSelect.innerHTML = options;
+  el.langSelect.value = state.lang;
+}
+
+function refreshAll() {
+  renderDigest();
+  renderQA();
+  renderCards();
+}
+
+el.langSelect.addEventListener('change', () => {
+  state.lang = el.langSelect.value;
+  if (state.deck === 'builtin') rebuildOrder();
+  renderDigest();
+  renderQA();
+  renderCards();
+});
+
+el.deckSelect.addEventListener('change', () => {
+  state.deck = el.deckSelect.value;
+  rebuildOrder();
+  renderQA();
+  renderCards();
+  if (state.deck === 'custom' && !state.customDeck.length) {
+    renderCustomStatus('Custom deck is empty. Add lines in Custom Material and click "Load Custom Deck".', 'err');
+  }
+});
+
+el.shuffleBtn.addEventListener('click', () => {
+  if (!state.order.length) return;
+  shuffleOrder();
+  renderQA();
+  renderCards();
+});
+
+el.qaPrev.addEventListener('click', () => {
+  state.qaIndex -= 1;
+  renderQA();
+});
+
+el.qaNext.addEventListener('click', () => {
+  state.qaIndex += 1;
+  renderQA();
+});
+
+el.qaShow.addEventListener('click', () => {
+  el.qaAnswer.classList.toggle('open');
+});
+
+function flipCard() {
+  state.cardFlipped = !state.cardFlipped;
+  el.flashcard.classList.toggle('flipped', state.cardFlipped);
+}
+
+el.cardPrev.addEventListener('click', () => {
+  state.cardIndex -= 1;
+  state.cardFlipped = false;
+  renderCards();
+});
+
+el.cardNext.addEventListener('click', () => {
+  state.cardIndex += 1;
+  state.cardFlipped = false;
+  renderCards();
+});
+
+el.cardFlip.addEventListener('click', flipCard);
+el.flashcard.addEventListener('click', flipCard);
+el.flashcard.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    flipCard();
+  }
+});
+
+el.loadCustom.addEventListener('click', () => {
+  const raw = el.customInput.value.trim();
+  const parsed = parseCustomDeck(raw);
+  if (!parsed.length) {
+    renderCustomStatus('No valid pairs found. Use "Question || Answer" or Q:/A: lines.', 'err');
+    return;
+  }
+
+  state.customDeck = parsed;
+  saveCustomDeck(raw, parsed);
+  state.deck = 'custom';
+  el.deckSelect.value = 'custom';
+  rebuildOrder();
+  refreshAll();
+  renderCustomStatus(`Loaded ${parsed.length} cards into the custom deck.`, 'ok');
+});
+
+el.clearCustom.addEventListener('click', () => {
+  state.customDeck = [];
+  el.customInput.value = '';
+  localStorage.removeItem(STORAGE_KEY);
+  if (state.deck === 'custom') {
+    state.deck = 'builtin';
+    el.deckSelect.value = 'builtin';
+  }
+  rebuildOrder();
+  refreshAll();
+  renderCustomStatus('Custom deck cleared.', 'ok');
+});
+
+el.sampleCustom.addEventListener('click', () => {
+  el.customInput.value = [
+    'What does a flashing yellow traffic signal mean? || Slow down and proceed with caution.',
+    'Q: What should you do before changing lanes?',
+    'A: Check mirrors, blind spot, and signal before moving.'
+  ].join('\n');
+  renderCustomStatus('Sample inserted. Click "Load Custom Deck" to activate it.');
+});
+
+el.tabs.forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'ArrowRight') {
+    if (state.activeTab === 'qa') {
+      state.qaIndex += 1;
+      renderQA();
+    } else if (state.activeTab === 'cards') {
+      state.cardIndex += 1;
+      state.cardFlipped = false;
+      renderCards();
+    }
+  }
+
+  if (event.key === 'ArrowLeft') {
+    if (state.activeTab === 'qa') {
+      state.qaIndex -= 1;
+      renderQA();
+    } else if (state.activeTab === 'cards') {
+      state.cardIndex -= 1;
+      state.cardFlipped = false;
+      renderCards();
+    }
+  }
+
+  if (event.key === ' ' && state.activeTab === 'cards') {
+    event.preventDefault();
+    flipCard();
+  }
+});
+
+function init() {
+  bootLanguageOptions();
+  loadCustomDeck();
+  rebuildOrder();
+  refreshAll();
+
+  if (state.customDeck.length) {
+    renderCustomStatus(`Loaded saved custom deck with ${state.customDeck.length} cards.`, 'ok');
+  } else {
+    renderCustomStatus('No custom deck loaded yet.');
+  }
+}
+
+init();
+</script>
+  <script src="../shared/help-content.js"></script>
+  <script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

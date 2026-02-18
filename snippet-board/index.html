@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Snippet Board — One-Shot (SQLite + PIN)</title>
+  <style>
+    :root{
+      --bg:#0f1216; --panel:#161a20; --panel-2:#1b2028; --text:#e7edf5; --muted:#a9b3c1; --accent:#79ffe1; --accent-2:#5bc8ff;
+      --danger:#ff6b6b; --ok:#6bff95; --warn:#ffd166; --border:#263041; --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --radius:14px;
+    }
+    html,body{height:100%;}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:linear-gradient(180deg,#0e1116,#0b0e12 60%,#0e1116);color:var(--text);}    
+    a{color:var(--accent-2);text-decoration:none}
+    .app{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+    .sidebar{background:linear-gradient(180deg,var(--panel),#11151a);border-right:1px solid var(--border);position:sticky;top:0;height:100vh;overflow:auto;}
+    .sidebar header{display:flex;align-items:center;gap:.6rem;padding:1rem 1.2rem;border-bottom:1px solid var(--border)}
+    .logo{width:28px;height:28px;border-radius:8px;background:conic-gradient(from 210deg at 50% 50%,#5bc8ff, #79ffe1, #8eecf5, #5bc8ff);box-shadow:var(--shadow)}
+    .brand{font-weight:700;letter-spacing:.2px}
+    .burger{display:none}
+    .side-section{padding:1rem 1.2rem}
+    .side-title{font-size:.9rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12rem;margin:.6rem 0 .4rem}
+    .input, select, textarea{width:100%;box-sizing:border-box;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:.7rem .8rem;border-radius:10px;outline:none}
+    textarea{min-height:120px;resize:vertical}
+    .chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem}
+    .chip{padding:.2rem .6rem;border-radius:999px;border:1px solid var(--border);background:#121720;color:var(--muted);cursor:pointer;font-size:.8rem}
+    .chip.active{background:#0d2730;color:var(--text);border-color:#134155}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;background:linear-gradient(180deg,#183247,#132433); color:var(--text);border:1px solid #1e2c3f;border-bottom-color:#0d1622;border-radius:10px;padding:.6rem .9rem;cursor:pointer;box-shadow:var(--shadow)}
+    .btn:active{transform:translateY(1px)}
+    .btn.warn{background:linear-gradient(180deg,#493517,#2c2411); border-color:#3d2c11}
+    .btn.danger{background:linear-gradient(180deg,#4a1616,#2b0f10); border-color:#3a1013}
+    .actions{display:flex;gap:.5rem;flex-wrap:wrap}
+
+    .main{min-width:0}
+    .topbar{display:flex;align-items:center;gap:.8rem;padding:1rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(15,18,22,0.8);backdrop-filter:blur(8px);z-index:5}
+    .search{flex:1;display:flex;gap:.6rem}
+    .grid{padding:1rem;display:grid;grid-template-columns:repeat(auto-fill, minmax(260px,1fr));gap:1rem}
+
+    .group{grid-column:1/-1}
+    .group-header{display:flex;align-items:center;justify-content:space-between;margin:1rem 0 .6rem}
+    .group-header h3{margin:0;font-size:1rem;color:var(--muted);letter-spacing:.6px}
+
+    .card{background:linear-gradient(180deg,#141922,#11161d);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem;box-shadow:var(--shadow);min-height:120px;display:flex;flex-direction:column;gap:.6rem}
+    .card[draggable=true]{cursor:grab}
+    .card.dragging{opacity:.55;outline:2px dashed #3d7bb6}
+    .card .title{font-weight:700}
+    .card .meta{display:flex;gap:.4rem;flex-wrap:wrap}
+    .tag{font-size:.75rem;padding:.15rem .5rem;border:1px solid var(--border);border-radius:999px;color:var(--muted)}
+    .card .body{white-space:pre-wrap;color:#cdd6e3;overflow:auto;max-height:160px}
+    .card .controls{display:flex;gap:.4rem;margin-top:auto}
+
+    .droppable{outline:2px dashed transparent;border-radius:12px;transition:.12s ease}
+    .droppable.active{outline-color:#2e6b9b;background:rgba(46,107,155,.08)}
+
+    .foot{padding:1rem;border-top:1px solid var(--border);color:var(--muted);font-size:.85rem}
+
+    /* Modals */
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:99}
+    .modal{width:min(560px,92vw);background:linear-gradient(180deg,#131820,#0f141b);border:1px solid var(--border);border-radius:16px;padding:1rem 1.1rem;box-shadow:var(--shadow)}
+    .modal h2{margin:.3rem 0 .6rem}
+
+    /* Small screens */
+    @media (max-width: 980px){
+      .app{grid-template-columns:1fr}
+      .sidebar{position:fixed;z-index:40;left:0;top:0;transform:translateX(-100%);transition:transform .2s ease}
+      .sidebar.open{transform:translateX(0)}
+      .burger{display:inline-flex;margin-right:.4rem}
+      .topbar{gap:.5rem}
+    }
+  
+/* Suite nav */
+.suite-nav{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:hsl(222,30%,10%);border-bottom:1px solid hsl(222,15%,20%);font-size:12px;font-family:'DM Sans',system-ui,sans-serif}
+.suite-nav a{color:hsl(215,15%,55%);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .15s}
+.suite-nav a:hover{color:hsl(160,60%,45%)}
+.suite-nav .suite-name{color:hsl(215,10%,40%);font-family:'DM Mono',monospace;font-size:11px}
+</style>
+  <!-- SQL.js via CDN (WASM fetched from same CDN). For full offline, host these locally and adjust locateFile below. -->
+  <script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.2/dist/sql-wasm.js"></script>
+</head>
+<body>
+<nav class="suite-nav">
+  <a href="../index.html">← Back to Suite</a>
+  <span class="suite-name">ProSe Pilot</span>
+</nav>
+
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <header>
+        <div class="logo"></div>
+        <div class="brand">Snippet Board</div>
+      </header>
+
+      <div class="side-section">
+        <div class="side-title">Add snippet</div>
+        <div style="display:grid;gap:.6rem">
+          <input id="new-title" class="input" placeholder="Title" />
+          <textarea id="new-content" class="input" placeholder="Your text…"></textarea>
+          <input id="new-tags" class="input" placeholder="Tags (comma‘separated)" />
+          <div class="actions">
+            <button class="btn" id="add-snippet">Add</button>
+            <button class="btn" id="clear-form" title="Clear form">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="side-section">
+        <div class="side-title">Groups</div>
+        <div class="actions" style="margin-bottom:.6rem">
+          <input id="new-group-name" class="input" placeholder="New group name"/>
+          <button class="btn" id="add-group">Create</button>
+        </div>
+        <div id="group-list" style="display:flex;flex-direction:column;gap:.4rem"></div>
+      </div>
+
+      <div class="side-section">
+        <div class="side-title">Settings</div>
+        <div style="display:grid;gap:.6rem">
+          <button class="btn" id="change-pin">Change PIN</button>
+          <button class="btn" id="export-db">Export DB</button>
+          <label class="btn" for="import-db-input">Import DB</label>
+          <input id="import-db-input" type="file" accept="application/octet-stream,.sqlite,.db" style="display:none"/>
+          <small style="color:var(--muted)">Local‘only. Clearing browser data will remove your snippets unless you export a backup.</small>
+        </div>
+      </div>
+
+      <div class="foot">
+        v1.0 — Local SQLite (sql.js). Drag cards onto group headers. Search & filters at top.
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <button class="btn burger" id="burger">✘°</button>
+        <div class="search">
+          <input id="q" class="input" placeholder="Search title/content… (âŒ˜/Ctrl+K)" />
+          <select id="sort" class="input" title="Sort">
+            <option value="updated_desc">Updated (newest)</option>
+            <option value="created_desc">Created (newest)</option>
+            <option value="title_asc">Title (Aâ†’Z)</option>
+          </select>
+        </div>
+        <div id="active-tags" class="chips"></div>
+      </div>
+
+      <div id="grid" class="grid"></div>
+    </main>
+  </div>
+
+  <!-- Login / Onboarding Modals -->
+  <div class="overlay" id="lock-overlay" style="display:none">
+    <div class="modal">
+      <h2>Unlock your board</h2>
+      <div style="display:grid;gap:.6rem">
+        <input id="pin-input" class="input" type="password" inputmode="numeric" autocomplete="off" placeholder="Enter PIN"/>
+        <div class="actions" style="justify-content:space-between">
+          <button class="btn" id="pin-submit">Unlock</button>
+          <button class="btn warn" id="forgot-pin">Forgot PIN?</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="onboard-overlay" style="display:none">
+    <div class="modal">
+      <h2>Set up security</h2>
+      <div style="display:grid;gap:.6rem">
+        <input id="setup-pin" class="input" type="password" inputmode="numeric" placeholder="Choose a PIN"/>
+        <input id="setup-pin2" class="input" type="password" inputmode="numeric" placeholder="Confirm PIN"/>
+        <input id="setup-q" class="input" placeholder="Security question (e.g., Favorite teacher?)"/>
+        <input id="setup-a" class="input" type="password" placeholder="Answer"/>
+        <div class="actions"><button class="btn" id="setup-save">Save & Enter</button></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ---------------------------
+  // Utilities
+  // ---------------------------
+  const $ = sel => document.querySelector(sel);
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
+  const sleep = ms => new Promise(r=>setTimeout(r,ms));
+  const nowIso = () => new Date().toISOString();
+
+  // Base64 helpers for Uint8Array <-> base64 (no unicode)
+  function u8ToB64(u8){let s=""; u8.forEach(b=>s+=String.fromCharCode(b)); return btoa(s)}
+  function b64ToU8(b64){const s=atob(b64); const u=new Uint8Array(s.length); for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i); return u}
+
+  // WebCrypto SHA-256 with per-value salt
+  async function sha256Base64(str){const enc=new TextEncoder(); const buf=await crypto.subtle.digest('SHA-256', enc.encode(str)); return u8ToB64(new Uint8Array(buf))}
+  function randomSalt(len=16){const u=new Uint8Array(len); crypto.getRandomValues(u); return u8ToB64(u)}
+  async function saltedHash(value, salt){return await sha256Base64(`${salt}:${value}`)}
+
+  // ---------------------------
+  // SQL.js (SQLite in WASM)
+  // ---------------------------
+  let SQL, db;
+
+  async function initSql(){
+    SQL = await initSqlJs({ locateFile: file => `https://cdn.jsdelivr.net/npm/sql.js@1.10.2/dist/${file}` });
+    const saved = localStorage.getItem('snippet_db');
+    if(saved){ db = new SQL.Database(b64ToU8(saved)); }
+    else { db = new SQL.Database(); createSchema(); saveDB(); }
+  }
+
+  function createSchema(){
+    db.run(`
+      PRAGMA user_version = 1;
+      CREATE TABLE IF NOT EXISTS settings (
+        id INTEGER PRIMARY KEY CHECK (id=1),
+        pin_hash TEXT, pin_salt TEXT, q TEXT, a_hash TEXT, a_salt TEXT, created_at TEXT
+      );
+      INSERT OR IGNORE INTO settings (id, created_at) VALUES (1, '${nowIso()}');
+
+      CREATE TABLE IF NOT EXISTS groups (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS snippets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        tags TEXT, -- JSON array
+        color TEXT,
+        group_id INTEGER,
+        sort_order REAL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY(group_id) REFERENCES groups(id) ON DELETE SET NULL
+      );
+    `);
+  }
+
+  function saveDB(){ try { const data = db.export(); localStorage.setItem('snippet_db', u8ToB64(data)); } catch(e){ console.error('Save failed', e);} }
+
+  function all(sql, params=[]){ const stmt = db.prepare(sql); stmt.bind(params); const rows=[]; while(stmt.step()) rows.push(stmt.getAsObject()); stmt.free(); return rows }
+  function get(sql, params=[]){ const r = all(sql, params); return r[0] }
+  function run(sql, params=[]){ const stmt = db.prepare(sql); stmt.run(params); stmt.free(); }
+
+  // ---------------------------
+  // Security (PIN + Security Q)
+  // ---------------------------
+  async function hasPin(){ const row = get('SELECT pin_hash AS h FROM settings WHERE id=1'); return !!row && !!row.h }
+  async function ensureLock(){ if(await hasPin()) { $('#lock-overlay').style.display='flex' } else { $('#onboard-overlay').style.display='flex' } }
+
+  async function attemptUnlock(pin){ const s = get('SELECT pin_hash, pin_salt FROM settings WHERE id=1'); if(!s||!s.pin_salt||!s.pin_hash) return false; const h = await saltedHash(pin, s.pin_salt); return h===s.pin_hash }
+
+  async function setPinAndQA(pin, q, a){ const pSalt = randomSalt(); const aSalt = randomSalt(); const pinHash = await saltedHash(pin, pSalt); const aHash = a ? await saltedHash(a, aSalt) : null; run('UPDATE settings SET pin_hash=?, pin_salt=?, q=?, a_hash=?, a_salt=?, created_at=COALESCE(created_at,?) WHERE id=1', [pinHash,pSalt,q||null,aHash,aSalt, nowIso()]); saveDB(); }
+
+  async function changePin(oldPin, newPin){ if(!(await attemptUnlock(oldPin))) throw new Error('Invalid current PIN'); const pSalt=randomSalt(); const pinHash=await saltedHash(newPin,pSalt); run('UPDATE settings SET pin_hash=?, pin_salt=? WHERE id=1',[pinHash,pSalt]); saveDB(); }
+
+  async function resetPinWithAnswer(newPin, answer){ const s=get('SELECT a_hash, a_salt FROM settings WHERE id=1'); if(!s||!s.a_hash||!s.a_salt) throw new Error('Security answer not set'); const h=await saltedHash(answer, s.a_salt); if(h!==s.a_hash) throw new Error('Incorrect answer'); const pSalt=randomSalt(); const pinHash=await saltedHash(newPin,pSalt); run('UPDATE settings SET pin_hash=?, pin_salt=? WHERE id=1',[pinHash,pSalt]); saveDB(); }
+
+  // ---------------------------
+  // App Logic
+  // ---------------------------
+  const state = { q:"", sort:"updated_desc", tagFilter: new Set(), groups:[], snippets:[], sidebarOpen:false }
+
+  function computeTags(rows){ const set=new Set(); rows.forEach(r=>{ try{ (JSON.parse(r.tags||'[]')||[]).forEach(t=>set.add(t)) }catch{} }); return Array.from(set).sort((a,b)=>a.localeCompare(b)) }
+
+  function fetchData(){
+    state.groups = all('SELECT id, name, created_at FROM groups ORDER BY name COLLATE NOCASE');
+    state.snippets = all('SELECT * FROM snippets');
+  }
+
+  function filterSort(rows){
+    const q = state.q.trim().toLowerCase();
+    let r = rows.filter(x=>{
+      const hitQ = !q || x.title.toLowerCase().includes(q) || x.content.toLowerCase().includes(q);
+      let hitTags = true;
+      if(state.tagFilter.size){
+        try{ const tags = new Set(JSON.parse(x.tags||'[]')); state.tagFilter.forEach(t=>{ if(!tags.has(t)) hitTags=false; }); }catch{ hitTags=false; }
+      }
+      return hitQ && hitTags;
+    });
+    switch(state.sort){
+      case 'updated_desc': r.sort((a,b)=> (b.updated_at||'').localeCompare(a.updated_at||'')); break;
+      case 'created_desc': r.sort((a,b)=> (b.created_at||'').localeCompare(a.created_at||'')); break;
+      case 'title_asc': r.sort((a,b)=> (a.title||'').localeCompare(b.title||'')); break;
+    }
+    return r;
+  }
+
+  function renderGroups(){
+    const grid = $('#grid'); grid.innerHTML='';
+    const rowsByGroup = new Map();
+    state.groups.forEach(g=>rowsByGroup.set(g.id,[]));
+    rowsByGroup.set(null, []); // ungrouped
+
+    filterSort(state.snippets).forEach(sn=>{ rowsByGroup.get(sn.group_id||null).push(sn) });
+
+    function groupSection(title, groupId){
+      const sec = document.createElement('div'); sec.className='group';
+      const header = document.createElement('div'); header.className='group-header droppable'; header.dataset.groupId = groupId===null? '' : String(groupId);
+      header.innerHTML = `<h3>${title}</h3><div style="font-size:.85rem;color:var(--muted)">Drop here to assign</div>`;
+      sec.appendChild(header);
+      header.addEventListener('dragover', e=>{ e.preventDefault(); header.classList.add('active') });
+      header.addEventListener('dragleave', ()=> header.classList.remove('active'));
+      header.addEventListener('drop', e=>{ e.preventDefault(); header.classList.remove('active'); const id = Number(e.dataTransfer.getData('text/plain')); if(Number.isFinite(id)){ assignToGroup(id, groupId) } });
+
+      const wrap = document.createElement('div'); wrap.className='grid';
+      (rowsByGroup.get(groupId)||[]).forEach(sn=> wrap.appendChild(snippetCard(sn)) );
+      sec.appendChild(wrap);
+      grid.appendChild(sec);
+    }
+
+    // Group sections
+    if(state.groups.length){ state.groups.forEach(g=> groupSection(g.name, g.id)); }
+    // Ungrouped always last
+    groupSection('Ungrouped', null);
+  }
+
+  function snippetCard(sn){
+    const el = document.createElement('div'); el.className='card'; el.draggable=true; el.dataset.id=sn.id;
+    el.innerHTML = `
+      <div class="title">${escapeHtml(sn.title)}</div>
+      <div class="meta">${renderTagBadges(sn.tags)}</div>
+      <div class="body">${escapeHtml(sn.content)}</div>
+      <div class="controls">
+        <button class="btn" data-act="edit">Edit</button>
+        <button class="btn danger" data-act="del">Delete</button>
+      </div>`;
+
+    el.addEventListener('dragstart', e=>{ el.classList.add('dragging'); e.dataTransfer.setData('text/plain', String(sn.id)); e.dataTransfer.effectAllowed='move'; });
+    el.addEventListener('dragend', ()=> el.classList.remove('dragging'));
+
+    el.querySelector('[data-act="edit"]').addEventListener('click', ()=> editSnippetDialog(sn.id));
+    el.querySelector('[data-act="del"]').addEventListener('click', ()=> deleteSnippetConfirm(sn.id));
+    return el;
+  }
+
+  function renderTagBadges(tagsText){
+    try{ const arr = JSON.parse(tagsText||'[]'); return arr.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join(''); }catch{ return '' }
+  }
+
+  function escapeHtml(s){ return (s||'').replace(/[&<>\"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])) }
+
+  function renderActiveTags(){
+    const tags = computeTags(state.snippets);
+    const ctr = $('#active-tags'); ctr.innerHTML='';
+    tags.forEach(t=>{
+      const c = document.createElement('div'); c.className='chip' + (state.tagFilter.has(t)?' active':''); c.textContent=t; c.addEventListener('click', ()=>{ if(state.tagFilter.has(t)) state.tagFilter.delete(t); else state.tagFilter.add(t); render() }); ctr.appendChild(c);
+    })
+  }
+
+  function renderGroupList(){
+    const box = $('#group-list'); box.innerHTML='';
+    state.groups.forEach(g=>{
+      const row = document.createElement('div'); row.style.display='flex'; row.style.gap='.4rem'; row.style.alignItems='center';
+      row.innerHTML = `<div class="chip" style="flex:1">${escapeHtml(g.name)}</div><button class="btn" data-id="${g.id}" data-act="rename">Rename</button><button class="btn danger" data-id="${g.id}" data-act="remove">âœ•</button>`;
+      row.querySelector('[data-act="rename"]').addEventListener('click', ()=> renameGroup(g.id));
+      row.querySelector('[data-act="remove"]').addEventListener('click', ()=> deleteGroup(g.id));
+      box.appendChild(row);
+    })
+  }
+
+  function render(){ fetchData(); renderActiveTags(); renderGroupList(); renderGroups(); }
+
+  // ---------------------------
+  // Snippet CRUD
+  // ---------------------------
+  function parseTagsInput(text){ return JSON.stringify((text||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,20)) }
+
+  function addSnippetFromForm(){
+    const title = $('#new-title').value.trim();
+    const content = $('#new-content').value.trim();
+    const tags = parseTagsInput($('#new-tags').value);
+    if(!title || !content){ alert('Title and content are required.'); return }
+    const t = nowIso();
+    run('INSERT INTO snippets (title, content, tags, color, group_id, sort_order, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)', [title, content, tags, null, null, Date.now(), t, t]);
+    saveDB();
+    $('#new-title').value=''; $('#new-content').value=''; $('#new-tags').value='';
+    render();
+  }
+
+  function editSnippetDialog(id){
+    const sn = get('SELECT * FROM snippets WHERE id=?',[id]); if(!sn) return;
+    const modal = document.createElement('div'); modal.className='overlay'; modal.innerHTML = `
+      <div class="modal">
+        <h2>Edit snippet</h2>
+        <div style="display:grid;gap:.6rem">
+          <input id="e-title" class="input" value="${escapeHtml(sn.title)}"/>
+          <textarea id="e-content" class="input">${escapeHtml(sn.content)}</textarea>
+          <input id="e-tags" class="input" value="${escapeHtml((JSON.parse(sn.tags||'[]')||[]).join(', '))}"/>
+          <div class="actions" style="justify-content:space-between">
+            <button class="btn" id="e-save">Save</button>
+            <button class="btn warn" id="e-cancel">Cancel</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.querySelector('#e-cancel').onclick=()=> modal.remove();
+    modal.querySelector('#e-save').onclick=()=>{
+      const title = modal.querySelector('#e-title').value.trim();
+      const content = modal.querySelector('#e-content').value.trim();
+      const tags = parseTagsInput(modal.querySelector('#e-tags').value);
+      if(!title||!content){ alert('Title and content are required.'); return }
+      run('UPDATE snippets SET title=?, content=?, tags=?, updated_at=? WHERE id=?', [title,content,tags, nowIso(), id]);
+      saveDB(); modal.remove(); render();
+    }
+  }
+
+  function deleteSnippetConfirm(id){ if(confirm('Delete this snippet permanently?')){ run('DELETE FROM snippets WHERE id=?',[id]); saveDB(); render(); } }
+
+  function assignToGroup(snippetId, groupId){ run('UPDATE snippets SET group_id=?, updated_at=? WHERE id=?', [groupId, nowIso(), snippetId]); saveDB(); render(); }
+
+  // ---------------------------
+  // Groups
+  // ---------------------------
+  function addGroup(){ const name = $('#new-group-name').value.trim(); if(!name) return; run('INSERT INTO groups (name, created_at) VALUES (?,?)',[name, nowIso()]); saveDB(); $('#new-group-name').value=''; render(); }
+  function renameGroup(id){ const g=get('SELECT * FROM groups WHERE id=?',[id]); if(!g) return; const name=prompt('Rename group:', g.name); if(name&&name.trim()){ run('UPDATE groups SET name=? WHERE id=?',[name.trim(), id]); saveDB(); render(); } }
+  function deleteGroup(id){ if(!confirm('Delete group? Snippets will stay (ungrouped).')) return; run('UPDATE snippets SET group_id=NULL WHERE group_id=?',[id]); run('DELETE FROM groups WHERE id=?',[id]); saveDB(); render(); }
+
+  // ---------------------------
+  // Event wiring
+  // ---------------------------
+  function wire(){
+    $('#add-snippet').addEventListener('click', addSnippetFromForm);
+    $('#clear-form').addEventListener('click', ()=>{ $('#new-title').value=''; $('#new-content').value=''; $('#new-tags').value='' });
+    $('#add-group').addEventListener('click', addGroup);
+
+    $('#q').addEventListener('input', e=>{ state.q=e.target.value; renderGroups() })
+    $('#sort').addEventListener('change', e=>{ state.sort=e.target.value; renderGroups() })
+    document.addEventListener('keydown', e=>{ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){ e.preventDefault(); $('#q').focus(); }});
+
+    $('#burger').addEventListener('click', ()=>{ state.sidebarOpen=!state.sidebarOpen; $('#sidebar').classList.toggle('open', state.sidebarOpen) });
+
+    // Export / Import
+    $('#export-db').addEventListener('click', ()=>{ const data=db.export(); const blob=new Blob([data],{type:'application/octet-stream'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='snippet-board.sqlite'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000); });
+    $('#import-db-input').addEventListener('change', async (e)=>{
+      const f=e.target.files[0]; if(!f) return; const buf=new Uint8Array(await f.arrayBuffer()); db.close(); db=new SQL.Database(buf); saveDB(); location.reload();
+    });
+
+    // Change PIN flow
+    $('#change-pin').addEventListener('click', ()=>{
+      const modal = document.createElement('div'); modal.className='overlay'; modal.innerHTML = `
+        <div class="modal"><h2>Change PIN</h2>
+          <div style="display:grid;gap:.6rem">
+            <input id="cp-old" class="input" type="password" placeholder="Current PIN"/>
+            <input id="cp-new" class="input" type="password" placeholder="New PIN"/>
+            <div class="actions"><button class="btn" id="cp-save">Save</button><button class="btn warn" id="cp-cancel">Cancel</button></div>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+      modal.querySelector('#cp-cancel').onclick=()=> modal.remove();
+      modal.querySelector('#cp-save').onclick=async ()=>{
+        try{ await changePin(modal.querySelector('#cp-old').value, modal.querySelector('#cp-new').value); alert('PIN changed.'); modal.remove(); }
+        catch(err){ alert(err.message||String(err)) }
+      }
+    });
+  }
+
+  // ---------------------------
+  // Lock & Onboarding wiring
+  // ---------------------------
+  function wireSecurity(){
+    // Unlock
+    $('#pin-submit').addEventListener('click', async ()=>{
+      const ok = await attemptUnlock($('#pin-input').value); if(ok){ $('#lock-overlay').style.display='none'; } else { alert('Invalid PIN'); }
+    });
+    $('#pin-input').addEventListener('keydown', async (e)=>{ if(e.key==='Enter'){ $('#pin-submit').click(); }});
+
+    // Forgot PIN
+    $('#forgot-pin').addEventListener('click', ()=>{
+      const s=get('SELECT q FROM settings WHERE id=1'); const q=s&&s.q ? s.q : '(no security question set)';
+      const modal = document.createElement('div'); modal.className='overlay'; modal.innerHTML = `
+        <div class="modal"><h2>Reset PIN</h2>
+          <div style="display:grid;gap:.6rem">
+            <div style="color:var(--muted)">Security question:</div>
+            <div style="background:var(--panel-2);border:1px solid var(--border);padding:.6rem;border-radius:10px">${escapeHtml(q)}</div>
+            <input id="ra" class="input" type="password" placeholder="Answer"/>
+            <input id="rn" class="input" type="password" placeholder="New PIN"/>
+            <div class="actions"><button class="btn" id="r-go">Reset</button><button class="btn warn" id="r-cancel">Cancel</button></div>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+      modal.querySelector('#r-cancel').onclick=()=> modal.remove();
+      modal.querySelector('#r-go').onclick=async ()=>{
+        try{ await resetPinWithAnswer($('#rn').value, $('#ra').value); alert('PIN reset. Enter new PIN to unlock.'); modal.remove(); }
+        catch(err){ alert(err.message||String(err)) }
+      }
+    });
+
+    // Onboarding
+    $('#setup-save').addEventListener('click', async ()=>{
+      const p1=$('#setup-pin').value, p2=$('#setup-pin2').value, q=$('#setup-q').value.trim(), a=$('#setup-a').value;
+      if(!p1 || p1!==p2){ alert('PINs do not match.'); return }
+      await setPinAndQA(p1,q,a); $('#onboard-overlay').style.display='none'; $('#lock-overlay').style.display='flex';
+    });
+  }
+
+  // ---------------------------
+  // Boot
+  // ---------------------------
+  (async function(){
+    try{ await initSql(); wire(); wireSecurity(); await ensureLock(); fetchData(); render(); }
+    catch(err){ console.error(err); alert('Failed to initialize database. Check console for details.'); }
+  })();
+
+  </script>
+  <script src="../shared/help-content.js"></script>
+  <script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

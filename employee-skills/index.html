@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Employee Skills Matrix — Ultimate + Branding + Watermark</title>
+<style>
+  :root {
+    --bg:#0f1115;--panel:#161a22;--muted:#8892a6;--text:#e6eaf2;
+    --lvl-0:#2b3447;--lvl-1:#3a6ea5;--lvl-2:#3aa675;--lvl-3:#8f6fec;
+    --bar-0:#5b667d;--bar-1:#5c91cc;--bar-2:#58c791;--bar-3:#b19cff;
+    --grid:#232a42;--chip:#1e2433;--chip-h:#242b3d;--accent:#6ea8fe;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px system-ui,Segoe UI,Roboto,Arial}
+  header{position:sticky;top:0;z-index:20;background:#0f1115;border-bottom:1px solid #20263a}
+  .wrap{max-width:1200px;margin:0 auto;padding:12px}
+  h1{margin:0;font-size:20px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:6px 0}
+  .btn,.chip,.input,select{background:var(--chip);color:var(--text);border:1px solid #29314a;border-radius:8px;padding:6px 10px;cursor:pointer}
+  .btn:hover,.chip:hover{background:var(--chip-h)}
+  .btn.primary{background:#2a3350;border-color:#2f3860}
+  .btn.danger{border-color:#4a2630}
+  .pill{padding:6px 10px;border-radius:999px;background:#1b2233;border:1px solid #27304a}
+  .legend .lvl{padding:4px 8px;border:1px solid #2a314a;border-radius:6px;font-weight:700;cursor:pointer}
+  .legend .lvl[data-v="0"]{background:var(--lvl-0)} .legend .lvl[data-v="1"]{background:var(--lvl-1)}
+  .legend .lvl[data-v="2"]{background:var(--lvl-2)} .legend .lvl[data-v="3"]{background:var(--lvl-3)}
+  .legend .active{outline:2px solid var(--accent)}
+  .matrix{margin-top:10px;border:1px solid var(--grid);border-radius:10px;overflow:auto}
+  table{border-collapse:collapse;width:100%;min-width:700px}
+  thead th{position:sticky;top:0;background:#121722}
+  th,td{padding:8px;border:1px solid #232a42}
+  .skill-col{position:sticky;left:0;background:#121722;z-index:1}
+  .lvl{display:inline-block;min-width:30px;text-align:center;border-radius:6px;padding:4px}
+  .lvl[data-v="0"]{background:var(--lvl-0)} .lvl[data-v="1"]{background:var(--lvl-1)}
+  .lvl[data-v="2"]{background:var(--lvl-2)} .lvl[data-v="3"]{background:var(--lvl-3)}
+  .ghost{opacity:.4}
+  .hidden{display:none!important}
+
+  /* Brand block */
+  .brand{display:flex;align-items:center;gap:12px;min-height:40px}
+  .brand img{height:40px;width:auto;border-radius:6px;border:1px solid #27304a;background:#0c1018;object-fit:contain}
+  .brand-text{display:flex;flex-direction:column;gap:2px}
+  .brand-title{font-size:20px;font-weight:700;outline:none}
+  .brand-sub{font-size:12px;color:var(--muted);outline:none}
+  .brand-date{font-size:12px;color:var(--muted)}
+  .logo-actions{display:flex;gap:8px;align-items:center}
+  .title-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+  /* Charts */
+  #charts, #domains {margin-top:16px}
+  .charts-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  @media (max-width:900px){ .charts-grid{grid-template-columns:1fr} }
+  .chart-card{background:var(--panel);border:1px solid var(--grid);border-radius:10px;padding:12px}
+  .chart-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:var(--muted)}
+  .bar{display:flex;height:14px;border-radius:999px;overflow:hidden;border:1px solid #2a314a}
+  .bar > span{height:100%}
+  .b0{background:var(--bar-0)} .b1{background:var(--bar-1)} .b2{background:var(--bar-2)} .b3{background:var(--bar-3)}
+  .chart-legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;color:var(--muted);font-size:12px}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}
+
+  /* Watermark overlay (shown only when printing & enabled) */
+  .watermark{position:fixed;inset:0;display:none;align-items:center;justify-content:center;pointer-events:none;z-index:0}
+  .watermark.on{display:flex}
+  .watermark .wm-text{font-size:120px;letter-spacing:.2em;color:#000;opacity:0.08;transform:rotate(-30deg);text-transform:uppercase;text-align:center;line-height:1.1;padding:20px}
+
+  /* Heatmap + print adjustments */
+  @media print {
+    .controls-only,.legend,.row .btn:not(.print-keep),#team-modal,#taxonomy-modal,#sandbox-modal{display:none!important}
+    body{background:#fff;color:#000}
+    .lvl[data-v="0"]{background:#ffcccc!important}
+    .lvl[data-v="1"]{background:#ffe680!important}
+    .lvl[data-v="2"]{background:#c6f5c6!important}
+    .lvl[data-v="3"]{background:#8fc1ff!important}
+    header{position:static;border:none}
+    .brand img{height:44px;border:1px solid #000}
+    .brand-title{font-size:22px}
+    .brand-sub{font-size:13px;color:#333}
+    .brand-date{color:#333}
+  }
+
+  /* Modal */
+  .modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:100}
+  .modal.active{display:flex}
+  .modal-content{background:var(--panel);padding:20px;border-radius:10px;max-width:700px;max-height:80vh;overflow:auto}
+  .modal-content h2{margin-top:0}
+
+/* Suite nav */
+.suite-nav{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:hsl(222,30%,10%);border-bottom:1px solid hsl(222,15%,20%);font-size:12px;font-family:'DM Sans',system-ui,sans-serif}
+.suite-nav a{color:hsl(215,15%,55%);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .15s}
+.suite-nav a:hover{color:hsl(160,60%,45%)}
+.suite-nav .suite-name{color:hsl(215,10%,40%);font-family:'DM Mono',monospace;font-size:11px}
+
+/* Mobile responsive fixes */
+@media(max-width:480px){
+  table{font-size:12px}
+  th,td{padding:4px 6px!important}
+}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+</style>
+</head>
+<body>
+<nav class="suite-nav">
+  <a href="../index.html">← Back to Suite</a>
+  <span class="suite-name">ProSe Pilot</span>
+</nav>
+
+<!-- Print watermark container -->
+<div id="wm" class="watermark"><div class="wm-text" id="wm-text">CONFIDENTIAL</div></div>
+
+<header>
+  <div class="wrap">
+    <!-- Brand row: Logo + Title/Sub + actions -->
+    <div class="row">
+      <div class="brand">
+        <img id="brand-logo" alt="Company Logo" src="" class="hidden"/>
+        <div class="brand-text">
+          <div id="brand-title" class="brand-title" contenteditable="true" spellcheck="false" title="Click to edit title">Employee Skills Matrix</div>
+          <div id="brand-sub" class="brand-sub" contenteditable="true" spellcheck="false" title="Click to edit subtitle">Coverage overview and training plan</div>
+          <div id="brand-date" class="brand-date"></div>
+        </div>
+      </div>
+      <div class="logo-actions">
+        <label class="btn print-keep">
+          Upload Logo
+          <input id="logo-input" type="file" accept="image/*" style="display:none">
+        </label>
+        <button id="remove-logo" class="btn danger">Remove Logo</button>
+      </div>
+    </div>
+
+    <!-- Title/sub inputs + core controls -->
+    <div class="row">
+      <div class="title-actions">
+        <input id="title-input" class="input" placeholder="Report title" style="min-width:260px"/>
+        <input id="sub-input" class="input" placeholder="Subtitle/tagline" style="min-width:260px"/>
+        <button class="btn" id="save-title">Save Title</button>
+        <!-- Watermark controls -->
+        <label class="pill">
+          <input type="checkbox" id="wm-enable" style="vertical-align:middle;margin-right:6px"> Watermark on print
+        </label>
+        <input id="wm-input" class="input" placeholder="Watermark text (e.g., CONFIDENTIAL)" style="min-width:220px" />
+        <button class="btn" id="wm-save">Save Watermark</button>
+      </div>
+      <div>
+        <span class="pill">Role
+          <select id="role"><option>HR</option><option>Manager</option><option>Team Member</option></select>
+        </span>
+        <span id="me-scope" class="pill hidden">Me <select id="me"></select></span>
+        <span class="pill">Target Level
+          <select id="target"><option value="1">L1</option><option value="2" selected>L2</option><option value="3">L3</option></select>
+        </span>
+        <div class="legend" style="display:inline-flex;gap:8px;margin-left:8px">
+          Paint:
+          <span class="lvl active" data-v="1">1</span><span class="lvl" data-v="2">2</span>
+          <span class="lvl" data-v="3">3</span><span class="lvl" data-v="0">0</span>
+        </div>
+        <button class="btn print-keep" id="print">Print Report</button>
+        <button class="btn" id="train-plan">Suggest Training Plan</button>
+        <button class="btn" id="toggle-charts">Charts On/Off</button>
+        <button class="btn" id="toggle-domains">Domains On/Off</button>
+        <button class="btn" id="sandbox-btn">What-If Hire</button>
+        <button class="btn controls-only" id="edit-teams">Edit Teams</button>
+        <button class="btn controls-only" id="edit-taxonomy">Edit Taxonomy</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="matrix"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+
+  <section id="charts"><h2>Coverage Charts</h2><div class="charts-grid" id="charts-grid"></div></section>
+  <section id="domains"><h2>Domain Coverage</h2><div class="charts-grid" id="domains-grid"></div></section>
+</main>
+
+<!-- Modals -->
+<div class="modal" id="modal"><div class="modal-content"><h2>Training Plan</h2><div id="plan-body"></div><p><button class="btn" onclick="closeModal()">Close</button></p></div></div>
+<div class="modal" id="team-modal"><div class="modal-content"><h2>Edit Teams</h2><textarea id="teams-json" style="width:100%;height:200px"></textarea><p><button class="btn primary" onclick="saveTeams()">Save</button><button class="btn" onclick="closeTeamModal()">Cancel</button></p></div></div>
+<div class="modal" id="taxonomy-modal"><div class="modal-content"><h2>Edit Taxonomy (Domainâ†’Skills)</h2><textarea id="taxonomy-json" style="width:100%;height:200px"></textarea><p><button class="btn primary" onclick="saveTaxonomy()">Save</button><button class="btn" onclick="closeTaxonomy()">Cancel</button></p></div></div>
+<div class="modal" id="sandbox-modal"><div class="modal-content"><h2>What-If Hiring Sandbox</h2><p>Name: <input id="sandbox-name" placeholder="Candidate"></p><p>Levels (JSON: {"Skill":level,...}):</p><textarea id="sandbox-json" style="width:100%;height:120px"></textarea><p><button class="btn primary" onclick="applySandbox()">Apply</button><button class="btn" onclick="closeSandbox()">Cancel</button></p></div></div>
+
+<script>
+/* ==== State ==== */
+let state=load()||seed();
+let teams=JSON.parse(localStorage.getItem("skills-matrix:teams")||'{"Luis Manager":["Ava Chen","Luis Ramirez"]}');
+let taxonomy=JSON.parse(localStorage.getItem("skills-matrix:taxonomy")||'{"Frontend":["React"],"Backend":["Node.js","SQL","Python"],"QA":["QA Automation"],"Management":["Project Mgmt","Cloud (GCP)"]}');
+let sandbox=null;
+
+/* ==== Branding & Watermark Persistence ==== */
+const LOGO_KEY='skills-matrix:logo';
+const TITLE_KEY='skills-matrix:title';
+const SUB_KEY='skills-matrix:subtitle';
+const DATE_KEY='skills-matrix:date'; // last updated text
+const WM_ENABLE_KEY='skills-matrix:wm:enable';
+const WM_TEXT_KEY='skills-matrix:wm:text';
+
+function loadLogo(){
+  const data=localStorage.getItem(LOGO_KEY);
+  const img=document.getElementById('brand-logo');
+  if(data){ img.src=data; img.classList.remove('hidden'); }
+  else { img.src=''; img.classList.add('hidden'); }
+}
+function setLogo(file){
+  const reader=new FileReader();
+  reader.onload=()=>{ localStorage.setItem(LOGO_KEY, reader.result); loadLogo(); };
+  reader.readAsDataURL(file);
+}
+function removeLogo(){ localStorage.removeItem(LOGO_KEY); loadLogo(); }
+
+function formatDate(d){
+  try{
+    // Format like "September 7, 2025" using browser locale
+    return d.toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});
+  }catch{ return d.toDateString(); }
+}
+function updateDateStamp(){
+  const now = new Date();
+  const stamp = `Updated: ${formatDate(now)}`;
+  document.getElementById('brand-date').textContent = stamp;
+  localStorage.setItem(DATE_KEY, stamp);
+}
+function loadDateStamp(){
+  const saved = localStorage.getItem(DATE_KEY);
+  if(saved){ document.getElementById('brand-date').textContent = saved; }
+  else { updateDateStamp(); }
+}
+
+function loadTitle(){
+  const t = localStorage.getItem(TITLE_KEY) || 'Employee Skills Matrix';
+  const s = localStorage.getItem(SUB_KEY) || 'Coverage overview and training plan';
+  document.getElementById('brand-title').textContent = t;
+  document.getElementById('brand-sub').textContent = s;
+  document.getElementById('title-input').value = t;
+  document.getElementById('sub-input').value = s;
+}
+function saveTitle(){
+  const tEl=document.getElementById('brand-title');
+  const sEl=document.getElementById('brand-sub');
+  const t=tEl.textContent.trim()||'Employee Skills Matrix';
+  const s=sEl.textContent.trim()||'Coverage overview and training plan';
+  localStorage.setItem(TITLE_KEY,t);
+  localStorage.setItem(SUB_KEY,s);
+  document.getElementById('title-input').value=t;
+  document.getElementById('sub-input').value=s;
+  updateDateStamp();
+}
+function applyTitleFromInputs(){
+  const t=document.getElementById('title-input').value.trim()||'Employee Skills Matrix';
+  const s=document.getElementById('sub-input').value.trim()||'Coverage overview and training plan';
+  document.getElementById('brand-title').textContent=t;
+  document.getElementById('brand-sub').textContent=s;
+  localStorage.setItem(TITLE_KEY,t);
+  localStorage.setItem(SUB_KEY,s);
+  updateDateStamp();
+}
+
+/* Watermark */
+function loadWatermark(){
+  const enabled = localStorage.getItem(WM_ENABLE_KEY)==='true';
+  const text = localStorage.getItem(WM_TEXT_KEY) || 'CONFIDENTIAL';
+  document.getElementById('wm-enable').checked = enabled;
+  document.getElementById('wm-input').value = text;
+  document.getElementById('wm-text').textContent = text;
+}
+function saveWatermark(){
+  const enabled = document.getElementById('wm-enable').checked;
+  const text = (document.getElementById('wm-input').value || 'CONFIDENTIAL').toUpperCase();
+  localStorage.setItem(WM_ENABLE_KEY, String(enabled));
+  localStorage.setItem(WM_TEXT_KEY, text);
+  document.getElementById('wm-text').textContent = text;
+}
+function beforePrint(){
+  const enabled = localStorage.getItem(WM_ENABLE_KEY)==='true';
+  const text = localStorage.getItem(WM_TEXT_KEY) || 'CONFIDENTIAL';
+  const wm = document.getElementById('wm');
+  document.getElementById('wm-text').textContent = text;
+  wm.classList.toggle('on', enabled);
+}
+function afterPrint(){
+  document.getElementById('wm').classList.remove('on');
+}
+if(window.matchMedia){ // ensure watermark toggles for print preview too
+  const mediaQueryList = window.matchMedia('print');
+  mediaQueryList.addEventListener('change', e=>{ if(e.matches) beforePrint(); else afterPrint(); });
+}
+window.onbeforeprint = beforePrint;
+window.onafterprint = afterPrint;
+
+/* ==== Core Seed & Storage ==== */
+function seed(){const s={employees:["Ava Chen","Luis Ramirez","Noah Patel","Emma Williams"],skills:["React","Node.js","SQL","Python","Cloud (GCP)","QA Automation","Project Mgmt"],matrix:{}};setCell(s,"React","Ava Chen",3);setCell(s,"Node.js","Ava Chen",2);setCell(s,"SQL","Luis Ramirez",2);setCell(s,"QA Automation","Emma Williams",3);setCell(s,"Cloud (GCP)","Noah Patel",2);return s;}
+function key(s,e){return s+"||"+e}
+function getCell(st,s,e){return st.matrix[key(s,e)]??0}
+function setCell(st,s,e,v){st.matrix[key(s,e)]=Math.max(0,Math.min(3,v))}
+function save(){localStorage.setItem("skills-matrix:v5",JSON.stringify(state))}
+function load(){try{return JSON.parse(localStorage.getItem("skills-matrix:v5"))}catch{return null}}
+
+/* ==== Rendering ==== */
+const thead=document.getElementById("thead"),tbody=document.getElementById("tbody");
+let paintLevel=1;
+document.querySelectorAll(".legend .lvl").forEach(el=>el.onclick=()=>{paintLevel=+el.dataset.v;document.querySelectorAll(".legend .lvl").forEach(x=>x.classList.remove("active"));el.classList.add("active");});
+
+function currentScope(){
+  const role=document.getElementById("role").value;const meSel=document.getElementById("me");
+  document.getElementById("me-scope").classList.toggle("hidden",role!=="Team Member");
+  if(role==="Team Member"){
+    if(!meSel.value){meSel.innerHTML=state.employees.map(e=>`<option>${e}</option>`).join("");}
+    return{employees:[meSel.value||state.employees[0]]};
+  }
+  if(role==="Manager"){
+    const mgr=Object.keys(teams)[0];
+    return{employees:(teams[mgr]||[]).filter(e=>state.employees.includes(e))};
+  }
+  return{employees:state.employees.slice()};
+}
+
+function render(){
+  const emps=currentScope().employees.concat(sandbox?[sandbox.name]:[]);
+  thead.innerHTML="<tr><th class='skill-col'>Skill</th>"+emps.map(e=>"<th>"+escapeHTML(e)+"</th>").join("")+"</tr>";
+  tbody.innerHTML=state.skills.map(skill=>{
+    const cells=emps.map(emp=>{
+      let v=(sandbox&&emp===sandbox.name)?(sandbox.levels[skill]||0):getCell(state,skill,emp);
+      return `<td><span class="lvl" data-v="${v}" onclick="paint('${escapeAttr(skill)}','${escapeAttr(emp)}')">${v}</span></td>`;
+    }).join("");
+    return `<tr><th class='skill-col'>${escapeHTML(skill)}</th>${cells}</tr>`;
+  }).join("");
+  renderCharts();renderDomains();
+}
+
+function paint(skill,emp){
+  if(document.getElementById("role").value==="Team Member")return; // read-only
+  if(sandbox&&emp===sandbox.name){sandbox.levels[skill]=paintLevel;}
+  else{setCell(state,skill,emp,paintLevel);save();}
+  updateDateStamp();
+  render();
+}
+
+/* ==== Charts ==== */
+function renderCharts(){
+  const target=+document.getElementById("target").value;
+  const emps=currentScope().employees.concat(sandbox?[sandbox.name]:[]);
+  const total=emps.length||1;
+  const cg=document.getElementById("charts-grid");
+  cg.innerHTML=state.skills.map(skill=>{
+    const dist=[0,0,0,0];
+    for(const e of emps){
+      const v=(sandbox&&e===sandbox.name)?sandbox.levels[skill]||0:getCell(state,skill,e);
+      dist[v]++;
+    }
+    const cover=Math.round(100*dist.slice(target).reduce((a,b)=>a+b,0)/total);
+    const w=dist.map(d=>100*d/total);
+    return `<div class="chart-card">
+      <div class="chart-title"><strong>${escapeHTML(skill)}</strong><span>${cover}% L${target}+</span></div>
+      <div class="bar"><span class="b0" style="width:${w[0]}%"></span><span class="b1" style="width:${w[1]}%"></span><span class="b2" style="width:${w[2]}%"></span><span class="b3" style="width:${w[3]}%"></span></div>
+    </div>`;
+  }).join("");
+}
+
+/* ==== Domains ==== */
+function renderDomains(){
+  const target=+document.getElementById("target").value;
+  const emps=currentScope().employees.concat(sandbox?[sandbox.name]:[]);
+  const dg=document.getElementById("domains-grid");
+  dg.innerHTML=Object.entries(taxonomy).map(([dom,skills])=>{
+    let dist=[0,0,0,0];
+    for(const s of skills){
+      if(!state.skills.includes(s))continue;
+      for(const e of emps){
+        const v=(sandbox&&e===sandbox.name)?sandbox.levels[s]||0:getCell(state,s,e);
+        dist[v]++;
+      }
+    }
+    const total=skills.length*emps.length||1;
+    const cover=Math.round(100*dist.slice(target).reduce((a,b)=>a+b,0)/total);
+    const w=dist.map(d=>100*d/total);
+    return `<div class="chart-card">
+      <div class="chart-title"><strong>${escapeHTML(dom)}</strong><span>${cover}% L${target}+</span></div>
+      <div class="bar"><span class="b0" style="width:${w[0]}%"></span><span class="b1" style="width:${w[1]}%"></span><span class="b2" style="width:${w[2]}%"></span><span class="b3" style="width:${w[3]}%"></span></div>
+    </div>`;
+  }).join("");
+}
+
+/* ==== Training Plan ==== */
+function suggestPlan(){
+  const target=+document.getElementById("target").value;
+  const emps=state.employees;
+  const thr=Math.ceil(emps.length/2);
+  const sugg=[];
+  for(const s of state.skills){
+    let cov=0;
+    for(const e of emps){ if(getCell(state,s,e)>=target) cov++; }
+    if(cov<thr){
+      const near=emps.filter(e=>getCell(state,s,e)===target-1);
+      const zeros=emps.filter(e=>getCell(state,s,e)<target-1);
+      const need=thr-cov;
+      sugg.push(`<div class="chart-card" style="margin-bottom:10px">
+        <strong>${escapeHTML(s)}</strong> — ${cov}/${emps.length} at L${target}+ (needs +${need})
+        <div style="margin-top:6px">
+          <div><span class="muted">Quick wins (promote to L${target}):</span> ${near.length?near.join(", "):"<em>none</em>"}</div>
+          <div><span class="muted">Train from scratch:</span> ${zeros.length?zeros.join(", "):"<em>none</em>"}</div>
+        </div>
+      </div>`);
+    }
+  }
+  document.getElementById("plan-body").innerHTML = sugg.length?sugg.join(""):"<p>Coverage looks good at the selected Target Level.</p>";
+  document.getElementById("modal").classList.add("active");
+}
+function closeModal(){document.getElementById("modal").classList.remove("active")}
+
+/* ==== Teams/Taxonomy ==== */
+function editTeams(){document.getElementById("teams-json").value=JSON.stringify(teams,null,2);document.getElementById("team-modal").classList.add("active")}
+function closeTeamModal(){document.getElementById("team-modal").classList.remove("active")}
+function saveTeams(){try{teams=JSON.parse(document.getElementById("teams-json").value);localStorage.setItem("skills-matrix:teams",JSON.stringify(teams));closeTeamModal();render()}catch(e){alert("Bad JSON")}}
+function editTaxonomy(){document.getElementById("taxonomy-json").value=JSON.stringify(taxonomy,null,2);document.getElementById("taxonomy-modal").classList.add("active")}
+function closeTaxonomy(){document.getElementById("taxonomy-modal").classList.remove("active")}
+function saveTaxonomy(){try{taxonomy=JSON.parse(document.getElementById("taxonomy-json").value);localStorage.setItem("skills-matrix:taxonomy",JSON.stringify(taxonomy));closeTaxonomy();render()}catch(e){alert("Bad JSON")}}
+
+/* ==== Sandbox ==== */
+function openSandbox(){document.getElementById("sandbox-json").value="{}";document.getElementById("sandbox-name").value="Candidate";document.getElementById("sandbox-modal").classList.add("active")}
+function closeSandbox(){document.getElementById("sandbox-modal").classList.remove("active")}
+function applySandbox(){try{sandbox={name:document.getElementById("sandbox-name").value||"Candidate",levels:JSON.parse(document.getElementById("sandbox-json").value)};closeSandbox();render()}catch(e){alert("Bad JSON")}}
+
+/* ==== Utils ==== */
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]))}
+function escapeAttr(s){return escapeHTML(s).replace(/"/g,"&quot;")}
+
+/* ==== Events ==== */
+document.getElementById("role").onchange=render;
+document.getElementById("me").onchange=render;
+document.getElementById("target").onchange=()=>{renderCharts();renderDomains()};
+document.getElementById("print").onclick=()=>window.print();
+document.getElementById("train-plan").onclick=suggestPlan;
+document.getElementById("edit-teams").onclick=editTeams;
+document.getElementById("edit-taxonomy").onclick=editTaxonomy;
+document.getElementById("sandbox-btn").onclick=openSandbox;
+document.getElementById("toggle-charts").onclick=()=>document.getElementById("charts").classList.toggle("hidden");
+document.getElementById("toggle-domains").onclick=()=>document.getElementById("domains").classList.toggle("hidden");
+/* Logo */
+document.getElementById("logo-input").addEventListener("change",(e)=>{const f=e.target.files?.[0]; if(f) setLogo(f); e.target.value="";});
+document.getElementById("remove-logo").onclick=removeLogo;
+/* Title & Subtitle */
+document.getElementById("save-title").onclick=applyTitleFromInputs;
+document.getElementById("title-input").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();applyTitleFromInputs();}});
+document.getElementById("sub-input").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();applyTitleFromInputs();}});
+document.getElementById("brand-title").addEventListener("blur",saveTitle);
+document.getElementById("brand-sub").addEventListener("blur",saveTitle);
+/* Watermark */
+document.getElementById("wm-save").onclick=()=>{saveWatermark();};
+document.getElementById("wm-enable").addEventListener('change',saveWatermark);
+
+/* ==== Init ==== */
+loadLogo();
+loadTitle();
+loadDateStamp(); // show prior or initialize
+loadWatermark();
+updateDateStamp(); // refresh to today's date on open
+render();
+</script>
+  <script src="../shared/help-content.js"></script>
+  <script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

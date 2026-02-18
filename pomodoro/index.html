@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Pomodoro — SQLite • Tags • Focus • Weekly • Phase Sounds</title>
+<link rel="stylesheet" href="../../shared/theme.css">
+<style>
+  :root {
+    --bg:#f9fafb; --panel:#ffffff; --text:#1f2937; --muted:#6b7280;
+    --accent:#ef4444; --ok:#22c55e; --info:#3b82f6; --long:#a855f7; --ring:#e5e7eb;
+  }
+  .dark {
+    --bg:#0b0f14; --panel:#0f172a; --text:#e5e7eb; --muted:#94a3b8;
+    --accent:#f87171; --ok:#34d399; --info:#60a5fa; --long:#c084fc; --ring:#1f2937;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    display:grid;place-items:center;min-height:100vh;padding:16px
+  }
+  .app{
+    width:100%;max-width:1060px;background:var(--panel);
+    border:1px solid var(--ring);border-radius:16px;padding:20px;
+    box-shadow:0 10px 24px rgba(0,0,0,.06)
+  }
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+  h1{margin:0;font-size:20px}
+  .tag{font-size:12px;padding:4px 8px;border-radius:999px;color:#fff;background:var(--accent)}
+  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .timer{
+    display:grid;place-items:center;padding:16px;border-radius:14px;border:1px dashed var(--ring);
+    margin:10px 0;background:linear-gradient(135deg,transparent 0 60%,rgba(239,68,68,.06) 60% 100%)
+  }
+  #timer{font-variant-numeric:tabular-nums;font-size:clamp(44px,9vw,72px);line-height:1;font-weight:800;letter-spacing:1px}
+  .btn{border:0;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:700}
+  .primary{background:var(--accent);color:#fff}
+  .ghost{background:transparent;color:var(--text);border:1px solid var(--ring)}
+  .danger{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+  .muted{color:var(--muted);font-size:12px}
+  .settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:6px}
+  .cell{border:1px solid var(--ring);border-radius:10px;padding:10px}
+  .cell label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+  .cell input[type="number"], .cell input[type="datetime-local"], .cell select, .cell input[type="text"]{
+    width:100%;padding:8px;border-radius:8px;border:1px solid var(--ring);background:transparent;color:var(--text)
+  }
+  .switch{display:flex;align-items:center;gap:8px}
+  .log{max-height:220px;overflow:auto;border:1px solid var(--ring);border-radius:10px;padding:10px;margin-top:14px;background:rgba(0,0,0,.02)}
+  .log .item{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-bottom:1px dashed var(--ring)}
+  .log .item:last-child{border-bottom:0}
+  .badge{font-size:11px;padding:2px 8px;border-radius:999px;color:#fff}
+  .work{background:var(--ok)} .short{background:var(--info)} .long{background:var(--long)}
+  svg{width:100%;height:160px;display:block;margin-top:12px}
+  footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:10px;flex-wrap:wrap}
+  .dark-btn{width:40px;height:40px;border-radius:10px;border:1px solid var(--ring);background:transparent;cursor:pointer}
+  .kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;padding:2px 6px;border:1px solid var(--ring);border-radius:6px;}
+  .pill{padding:6px 10px;border:1px solid var(--ring);border-radius:999px;background:transparent}
+
+  /* goals ribbon */
+  .goals{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;
+    border:1px solid var(--ring);border-radius:12px;padding:8px 10px;margin:6px 0;background:rgba(0,0,0,.03)
+  }
+  .progress{position:relative;height:10px;background:var(--ring);border-radius:999px;flex:1;min-width:180px}
+  .progress > span{position:absolute;inset:0;transform-origin:left;transform:scaleX(0);background:linear-gradient(90deg,var(--ok),var(--info));border-radius:999px}
+
+  /* weekly */
+  .weekly{border:1px solid var(--ring);border-radius:12px;padding:10px;margin-top:10px;background:rgba(0,0,0,.02)}
+  .weekly h3{margin:0 0 6px 0;font-size:14px}
+  #weekChart{height:130px}
+  .tiny{font-size:12px;color:var(--muted)}
+
+  /* Compact mode */
+  .compact #timer{font-size:clamp(34px,7vw,56px)}
+  .compact .btn{padding:6px 10px;border-radius:8px;font-weight:600}
+  .compact .cell{padding:8px;border-radius:8px}
+  .compact .settings{gap:8px}
+  .compact header h1{font-size:18px}
+  .compact .muted{font-size:11px}
+  .compact .dark-btn{width:34px;height:34px}
+
+  /* Focus overlay */
+  #focusOverlay{position:fixed;inset:0;background:var(--bg);z-index:70;display:none;align-items:center;justify-content:center;flex-direction:column;gap:24px}
+  #focusTimer{font-variant-numeric:tabular-nums;font-size:min(20vw,180px);font-weight:900;letter-spacing:2px}
+  .focusControls{display:flex;gap:10px;flex-wrap:wrap}
+  .help{color:var(--muted);font-size:13px}
+
+/* Mobile responsive */
+@media(max-width:480px){
+  .settings{grid-template-columns:1fr!important}
+  #phaseSoundsCfg{grid-template-columns:1fr 1fr!important}
+  .grid{grid-template-columns:1fr!important}
+  .card{padding:10px!important}
+}
+/* Suite nav */
+.suite-nav{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:hsl(222,30%,10%);border-bottom:1px solid hsl(222,15%,20%);font-size:12px;font-family:'DM Sans',system-ui,sans-serif}
+.suite-nav a{color:hsl(215,15%,55%);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .15s}
+.suite-nav a:hover{color:hsl(160,60%,45%)}
+.suite-nav .suite-name{color:hsl(215,10%,40%);font-family:'DM Mono',monospace;font-size:11px}
+</style>
+</head>
+<body>
+<nav class="suite-nav">
+  <a href="../index.html">← Back to Suite</a>
+  <span class="suite-name">ProSe Pilot</span>
+</nav>
+
+  <div class="app">
+    <header>
+      <div class="row">
+        <h1>â±ï¸ Pomodoro</h1>
+        <span id="phaseTag" class="tag">Work</span>
+      </div>
+      <div class="row">
+        <button class="dark-btn" id="focusBtn" title="Focus-only full-screen">🌱Ž¯</button>
+        <button class="dark-btn" id="compactBtn" title="Toggle compact mode">🌱—œï¸</button>
+        <button class="dark-btn" id="darkBtn" title="Toggle dark mode">🌱Œ™</button>
+      </div>
+    </header>
+
+    <!-- Goals ribbon + Tag filter/current tag -->
+    <div class="goals">
+      <div class="muted" id="goalText">Today: 0/4 sessions • Streak: 0 days</div>
+      <div class="row">
+        <label class="muted" for="tagFilter">Filter:</label>
+        <select id="tagFilter" class="pill">
+          <option value="__ALL__">All tags</option>
+        </select>
+        <label class="muted" for="currentTag" style="margin-left:6px">Current tag:</label>
+        <input id="currentTag" class="pill" list="tagsDatalist" placeholder="e.g., ProjectX / Writing" />
+        <datalist id="tagsDatalist"></datalist>
+      </div>
+      <div class="progress" aria-label="Goal progress"><span id="goalBar"></span></div>
+    </div>
+
+    <div class="timer">
+      <div id="timer">25:00</div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn primary" id="startBtn">Start</button>
+        <button class="btn ghost" id="pauseBtn">Pause</button>
+        <button class="btn ghost" id="resetBtn">Reset</button>
+        <button class="btn ghost" id="skipBtn" title="Finish this phase now (log it)">Skip –¶ï¸Ž</button>
+        <button class="btn ghost" id="skipNoLogBtn" title="Skip to next phase without logging">Skip (no log)</button>
+        <span class="muted" id="streakHint">0 work sessions completed</span>
+      </div>
+    </div>
+
+    <section class="settings">
+      <div class="cell">
+        <label for="workMins">Work (minutes)</label>
+        <input type="number" id="workMins" value="25" min="1" />
+      </div>
+      <div class="cell">
+        <label for="breakMins">Short Break (minutes)</label>
+        <input type="number" id="breakMins" value="5" min="1" />
+      </div>
+      <div class="cell">
+        <label for="longBreakMins">Long Break (minutes)</label>
+        <input type="number" id="longBreakMins" value="15" min="1" />
+      </div>
+      <div class="cell">
+        <label for="longBreakEvery">Long Break Every N Work Sessions</label>
+        <input type="number" id="longBreakEvery" value="4" min="2" />
+      </div>
+
+      <div class="cell switch">
+        <input type="checkbox" id="autoStart" />
+        <label for="autoStart">Auto-start next session</label>
+      </div>
+      <div class="cell switch">
+        <input type="checkbox" id="soundOn" checked />
+        <label for="soundOn">Play sound on finish</label>
+      </div>
+
+      <div class="cell">
+        <label>Sound tone</label>
+        <select id="soundTone">
+          <option value="classic">Classic</option>
+          <option value="soft">Soft</option>
+          <option value="chime">Chime</option>
+          <option value="none">None</option>
+        </select>
+        <div class="tiny" style="margin-top:6px;display:flex;gap:8px;align-items:center">
+          <label for="soundVol">Volume</label>
+          <input type="range" id="soundVol" min="0" max="100" value="70" />
+          <button class="btn ghost" id="testSoundBtn" title="Test sound">Test</button>
+        </div>
+        <div class="switch" style="margin-top:8px">
+          <input type="checkbox" id="phaseSounds" />
+          <label for="phaseSounds">Use different sounds per phase</label>
+        </div>
+        <div id="phaseSoundsCfg" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:6px">
+          <div>
+            <label class="tiny" for="toneWork">Work</label>
+            <select id="toneWork">
+              <option value="classic">Classic</option><option value="soft">Soft</option><option value="chime">Chime</option><option value="none">None</option>
+            </select>
+          </div>
+          <div>
+            <label class="tiny" for="toneShort">Short Break</label>
+            <select id="toneShort">
+              <option value="soft">Soft</option><option value="classic">Classic</option><option value="chime">Chime</option><option value="none">None</option>
+            </select>
+          </div>
+          <div>
+            <label class="tiny" for="toneLong">Long Break</label>
+            <select id="toneLong">
+              <option value="chime">Chime</option><option value="classic">Classic</option><option value="soft">Soft</option><option value="none">None</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="cell switch">
+        <input type="checkbox" id="autoPersist" checked />
+        <label for="autoPersist">Auto-persist DB to browser</label>
+        <span class="muted">(<span class="kbd">localStorage</span>)</span>
+      </div>
+      <div class="cell switch">
+        <input type="checkbox" id="notifyOn" />
+        <label for="notifyOn">Desktop notifications</label>
+      </div>
+      <div class="cell switch">
+        <input type="checkbox" id="notifyStart" />
+        <label for="notifyStart">Notify on start</label>
+      </div>
+
+      <div class="cell">
+        <label for="goalType">Goal type</label>
+        <select id="goalType">
+          <option value="sessions">Work sessions</option>
+          <option value="minutes">Work minutes</option>
+        </select>
+      </div>
+      <div class="cell">
+        <label for="goalValue">Goal value</label>
+        <input type="number" id="goalValue" value="4" min="1" />
+      </div>
+    </section>
+
+    <svg id="chart" aria-label="Sessions chart"></svg>
+
+    <!-- Weekly summary -->
+    <section class="weekly">
+      <h3>Weekly Summary (last 7 days)</h3>
+      <div class="tiny" id="weekText">—</div>
+      <svg id="weekChart" aria-label="Weekly work minutes chart"></svg>
+    </section>
+
+    <div class="log" id="log" aria-label="Session log"></div>
+
+    <footer>
+      <span class="muted">Work=green • Short break=blue • Long break=violet</span>
+      <div class="row">
+        <button class="btn ghost" id="exportJsonBtn" title="Export log JSON">Export JSON</button>
+        <button class="btn ghost" id="exportCsvBtn"  title="Export log CSV">Export CSV</button>
+        <button class="btn ghost" id="importJsonBtn" title="Import log JSON">Import JSON</button>
+        <button class="btn ghost" id="importCsvBtn"  title="Import CSV">Import CSV</button>
+        <button class="btn ghost" id="saveSqliteBtn" title="Download SQLite DB">Save .sqlite</button>
+        <button class="btn ghost" id="loadSqliteBtn" title="Load .sqlite">Load .sqlite</button>
+        <button class="btn ghost" id="backupNowBtn" title="Save DB to localStorage now">Backup Now</button>
+        <button class="btn ghost" id="restoreBackupBtn" title="Restore DB from localStorage">Restore Backup</button>
+        <button class="btn ghost" id="clearBackupBtn" title="Delete localStorage backup">Clear Backup</button>
+        <button class="btn ghost" id="exportSettingsBtn" title="Export settings JSON">Export Settings</button>
+        <button class="btn ghost" id="importSettingsBtn" title="Import settings JSON">Import Settings</button>
+        <button class="btn ghost" id="addSessionBtn" title="Add session manually">Add Session</button>
+        <button class="btn ghost" id="editLastBtn" title="Edit last session">Edit Last</button>
+        <button class="btn danger" id="deleteLastBtn" title="Delete last session">Delete Last</button>
+        <button class="btn primary" id="focusBtn2" title="Open focus view">Focus</button>
+        <input type="file" id="fileJson" accept="application/json" style="display:none" />
+        <input type="file" id="fileCsv" accept=".csv,text/csv" style="display:none" />
+        <input type="file" id="fileSqlite" accept=".sqlite,.db,application/octet-stream" style="display:none" />
+        <input type="file" id="fileSettings" accept="application/json" style="display:none" />
+      </div>
+    </footer>
+  </div>
+
+  <!-- Focus overlay -->
+  <div id="focusOverlay">
+    <div class="row" style="gap:12px">
+      <span class="tag" id="focusPhaseTag">Work</span>
+      <span class="pill" id="focusTagPill">#no-tag</span>
+    </div>
+    <div id="focusTimer">25:00</div>
+    <div class="focusControls">
+      <button class="btn primary" id="fStart">Start (Space)</button>
+      <button class="btn ghost" id="fPause">Pause</button>
+      <button class="btn ghost" id="fSkip">Skip –¶ï¸Ž (S)</button>
+      <button class="btn ghost" id="fSkipNo">Skip (no log) (N)</button>
+      <button class="btn ghost" id="fReset">Reset (R)</button>
+      <button class="btn ghost" id="fMinus">âˆ’1m (â†“)</button>
+      <button class="btn ghost" id="fPlus">+1m (â†‘)</button>
+      <button class="btn danger" id="fExit">Exit (F)</button>
+    </div>
+    <div class="help">Shortcuts: <span class="kbd">Space</span> start/pause • <span class="kbd">S</span> skip • <span class="kbd">N</span> skip no-log • <span class="kbd">R</span> reset • <span class="kbd">â†‘/â†“</span> Â±1m • <span class="kbd">F</span> toggle focus</div>
+  </div>
+
+  <!-- Modal for Add/Edit -->
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true" style="display:none;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.45);position:fixed;inset:0;z-index:60">
+    <div class="modal" style="max-width:560px;width:100%;background:var(--panel);border:1px solid var(--ring);border-radius:14px;padding:16px">
+      <header style="display:flex;justify-content:space-between;align-items:center;margin:0 0 10px 0">
+        <h3 id="modalTitle" style="margin:0;font-size:18px">Add Session</h3>
+        <button class="btn ghost" id="modalCloseBtn">âœ•</button>
+      </header>
+      <div class="grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="cell">
+          <label for="modalType">Type</label>
+          <select id="modalType">
+            <option>Work</option>
+            <option>Short Break</option>
+            <option>Long Break</option>
+          </select>
+        </div>
+        <div class="cell">
+          <label for="modalDuration">Duration (minutes)</label>
+          <input type="number" id="modalDuration" value="25" min="1" />
+        </div>
+        <div class="cell">
+          <label for="modalTag">Tag (optional)</label>
+          <input type="text" id="modalTag" list="tagsDatalist" placeholder="e.g., ProjectX" />
+        </div>
+        <div class="cell" style="grid-column:1/-1">
+          <label for="modalEnded">Ended at (optional)</label>
+          <input type="datetime-local" id="modalEnded" />
+          <div class="muted" style="margin-top:4px">Leave empty to use —œnow—. Start time will be computed from duration.</div>
+        </div>
+      </div>
+      <div class="actions" style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px">
+        <button class="btn ghost" id="modalCancelBtn">Cancel</button>
+        <button class="btn primary" id="modalSaveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- sql.js (SQLite compiled to WASM) -->
+  <script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.2/dist/sql-wasm.js"></script>
+
+<script>
+/* =========================== Keys =========================== */
+const LSK_DB = 'pomodoro_sqlite_v2'; // bump for tag column
+const LSK_SETTINGS = 'pomodoro_settings_v4'; // bump for tags + focus
+
+/* ========================= Core State ======================== */
+let timer=null, remaining=0, running=false, isWork=true, workCount=0;
+let sessions=[]; // {id,type,started,ended,durationSec,tag}
+let phaseStart=null;
+let tagFilter='__ALL__';
+
+const $ = id => document.getElementById(id);
+const pad2 = n => String(n).padStart(2,'0');
+const fmt = s => `${pad2(Math.floor(s/60))}:${pad2(s%60)}`;
+const getNum = (id,fallback)=>{ const v=parseInt($(id).value,10); return (isFinite(v)&&v>0)?v:fallback; };
+
+/* ====================== Settings Persist ===================== */
+function saveSettings(){
+  const settings = {
+    workMins: getNum('workMins', 25),
+    breakMins: getNum('breakMins', 5),
+    longBreakMins: getNum('longBreakMins', 15),
+    longBreakEvery: getNum('longBreakEvery', 4),
+    autoStart: $('autoStart').checked,
+    soundOn: $('soundOn').checked,
+    soundTone: $('soundTone').value,
+    soundVol: Math.max(0, parseInt($('soundVol').value,10) || 70),
+    phaseSounds: $('phaseSounds').checked,
+    toneWork: $('toneWork').value,
+    toneShort: $('toneShort').value,
+    toneLong: $('toneLong').value,
+    autoPersist: $('autoPersist').checked,
+    notifyOn: $('notifyOn').checked,
+    notifyStart: $('notifyStart').checked,
+    goalType: $('goalType').value,
+    goalValue: Math.max(1, parseInt($('goalValue').value,10) || 4),
+    dark: document.body.classList.contains('dark'),
+    compact: document.body.classList.contains('compact'),
+    currentTag: $('currentTag').value || '',
+    tagFilter: $('#tagFilter')?.value || '__ALL__',
+  };
+  try { localStorage.setItem(LSK_SETTINGS, JSON.stringify(settings)); } catch(e){}
+}
+function loadSettings(){
+  try {
+    const s = JSON.parse(localStorage.getItem(LSK_SETTINGS) || '{}');
+    if (s.workMins) $('workMins').value = s.workMins;
+    if (s.breakMins) $('breakMins').value = s.breakMins;
+    if (s.longBreakMins) $('longBreakMins').value = s.longBreakMins;
+    if (s.longBreakEvery) $('longBreakEvery').value = s.longBreakEvery;
+    if (typeof s.autoStart === 'boolean') $('autoStart').checked = s.autoStart;
+
+    if (typeof s.soundOn === 'boolean') $('soundOn').checked = s.soundOn;
+    if (s.soundTone) $('soundTone').value = s.soundTone;
+    if (Number.isFinite(+s.soundVol)) $('soundVol').value = s.soundVol;
+    if (typeof s.phaseSounds === 'boolean') $('phaseSounds').checked = s.phaseSounds;
+    if (s.toneWork) $('toneWork').value = s.toneWork;
+    if (s.toneShort) $('toneShort').value = s.toneShort;
+    if (s.toneLong) $('toneLong').value = s.toneLong;
+    togglePhaseSoundUI();
+
+    if (typeof s.autoPersist === 'boolean') $('autoPersist').checked = s.autoPersist;
+    if (typeof s.notifyOn === 'boolean') $('notifyOn').checked = s.notifyOn;
+    if (typeof s.notifyStart === 'boolean') $('notifyStart').checked = s.notifyStart;
+    if (s.goalType) $('goalType').value = s.goalType;
+    if (s.goalValue) $('goalValue').value = s.goalValue;
+    if (s.dark) document.body.classList.add('dark');
+    if (s.compact) document.body.classList.add('compact');
+    if (typeof s.currentTag === 'string') $('currentTag').value = s.currentTag;
+    if (typeof s.tagFilter === 'string') tagFilter = s.tagFilter;
+  } catch(e){}
+}
+['workMins','breakMins','longBreakMins','longBreakEvery','goalValue','soundVol','currentTag'].forEach(id=>{
+  document.addEventListener('input', (ev)=>{
+    if (ev.target && ev.target.id === id) {
+      saveSettings();
+      if (!running && (id==='workMins'||id==='breakMins'||id==='longBreakMins'||id==='longBreakEvery')) setInitialRemaining();
+      recomputeGoals();
+    }
+  });
+});
+['autoStart','soundOn','soundTone','phaseSounds','toneWork','toneShort','toneLong','autoPersist','notifyOn','notifyStart','goalType'].forEach(id=>{
+  document.addEventListener('change', async (ev)=>{
+    if (ev.target && ev.target.id === id) {
+      if ((id === 'notifyOn' || id==='notifyStart') && ($('notifyOn').checked || $('notifyStart').checked)) {
+        await ensureNotifyPermission();
+      }
+      if (id==='phaseSounds') togglePhaseSoundUI();
+      saveSettings();
+      recomputeGoals();
+    }
+  });
+});
+function getCurrentSettings(){ // for export
+  return JSON.parse(localStorage.getItem(LSK_SETTINGS) || '{}');
+}
+function applySettings(s){
+  // reuse load logic
+  localStorage.setItem(LSK_SETTINGS, JSON.stringify(s));
+  loadSettings();
+  if (!running) setInitialRemaining();
+  recomputeGoals(); drawChart(); recomputeWeeklySummary(); refreshTagFilterUI();
+}
+
+/* ======================== Notifications ======================= */
+function notificationsSupported(){ return 'Notification' in window; }
+async function ensureNotifyPermission(){
+  if (!notificationsSupported()) return false;
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') return false;
+  try { return (await Notification.requestPermission()) === 'granted'; }
+  catch { return false; }
+}
+function sendNotification(title, body){
+  if (!notificationsSupported()) return;
+  if (!($('notifyOn').checked || $('notifyStart').checked)) return;
+  if (Notification.permission !== 'granted') return;
+  try {
+    const n = new Notification(title, { body, silent: true });
+    setTimeout(()=> n.close && n.close(), 6000);
+  } catch {}
+}
+
+/* ========================= Phases/Timer ======================= */
+function nextBreakKind(){
+  const every = getNum('longBreakEvery',4);
+  return (workCount>0 && workCount % every===0) ? 'Long Break' : 'Short Break';
+}
+function currentPhaseLabel(){ return isWork ? 'Work' : nextBreakKind(); }
+function setPhaseTag(){
+  const tag=$('phaseTag'); const ftag=$('focusPhaseTag');
+  const label = currentPhaseLabel();
+  tag.textContent = label; ftag.textContent = label;
+  const css = getComputedStyle(document.documentElement);
+  const color = isWork ? css.getPropertyValue('--ok')
+              : (nextBreakKind()==='Long Break' ? css.getPropertyValue('--long') : css.getPropertyValue('--info'));
+  tag.style.background = color; ftag.style.background = color;
+}
+function setInitialRemaining(){
+  remaining = (isWork ? getNum('workMins',25)
+                      : (nextBreakKind()==='Long Break' ? getNum('longBreakMins',15) : getNum('breakMins',5))) * 60;
+  $('timer').textContent = fmt(remaining);
+  $('focusTimer').textContent = fmt(remaining);
+  setPhaseTag();
+}
+function updateDisplay(){
+  const t = fmt(remaining);
+  $('timer').textContent = t; $('focusTimer').textContent = t;
+  $('focusTagPill').textContent = '#' + (($('currentTag').value||'no-tag'));
+}
+
+/* ======================= Sound (per phase) ==================== */
+function getVolume(){ return Math.max(0, Math.min(1, (parseInt($('soundVol').value,10)||0)/100)); }
+function playTone(freq=660, dur=0.20, when=0, type='sine', vol=0.12){
+  const Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx) return;
+  const ctx=new Ctx();
+  const osc=ctx.createOscillator(), g=ctx.createGain();
+  osc.type = type; osc.frequency.value=freq; osc.connect(g); g.connect(ctx.destination);
+  const now=ctx.currentTime + when;
+  const gain = Math.max(0.0001, vol * getVolume());
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(gain, now + 0.02);
+  osc.start(now); osc.stop(now + Math.max(0.05, dur));
+}
+function playNamedTone(name, variant='end'){
+  if (!$('soundOn').checked || name==='none' || getVolume()<=0) return;
+  if (name==='classic'){
+    if (variant==='long'){ playTone(880,0.18,0,'square',0.10); playTone(523.25,0.20,0.22,'sine',0.12); }
+    else { playTone(660,0.22,0,'sine',0.12); }
+  } else if (name==='soft'){
+    playTone(392,0.18,0,'sine',0.09); playTone(494,0.20,0.02,'sine',0.08); playTone(587,0.22,0.04,'sine',0.07);
+  } else if (name==='chime'){
+    playTone(880,0.12,0,'triangle',0.08); playTone(1318.5,0.25,0.05,'triangle',0.07);
+  }
+}
+function resolveToneForPhase(variant='end'){
+  if ($('phaseSounds').checked){
+    const label = currentPhaseLabel();
+    if (label==='Work') return $('toneWork').value;
+    if (label==='Short Break') return $('toneShort').value;
+    if (label==='Long Break') return $('toneLong').value;
+  }
+  return $('soundTone').value;
+}
+function beep(variant='end'){ playNamedTone(resolveToneForPhase(variant), variant); }
+$('testSoundBtn').addEventListener('click', ()=> playNamedTone(resolveToneForPhase('end'),'end'));
+function togglePhaseSoundUI(){
+  const on = $('phaseSounds').checked;
+  $('phaseSoundsCfg').style.opacity = on ? '1' : '0.5';
+  Array.from($('phaseSoundsCfg').querySelectorAll('select')).forEach(el=> el.disabled = !on);
+}
+
+/* ====================== SQLite + Migration ==================== */
+let SQL=null, db=null;
+
+function u8ToB64(u8){ let bin=''; for (let i=0;i<u8.length;i++) bin+=String.fromCharCode(u8[i]); return btoa(bin); }
+function b64ToU8(b64){ const bin=atob(b64); const u8=new Uint8Array(bin.length); for (let i=0;i<bin.length;i++) u8[i]=bin.charCodeAt(i); return u8; }
+
+function persistToLocalStorage(){
+  if (!$('autoPersist').checked) return;
+  try{ const bytes = db.export(); localStorage.setItem(LSK_DB, u8ToB64(bytes)); }catch(e){ console.warn('Persist failed:', e); }
+}
+function restoreFromLocalStorage(){
+  const b64 = localStorage.getItem(LSK_DB);
+  if (!b64) return false;
+  try{ const buf = b64ToU8(b64); if (db) db.close(); db = new SQL.Database(buf); return true; }
+  catch(e){ console.warn('Restore failed:', e); return false; }
+}
+function migrateAddTag(){
+  try { db.run('ALTER TABLE sessions ADD COLUMN tag TEXT DEFAULT ""'); } catch(e){ /* already exists */ }
+}
+async function initSqlite(){
+  if (SQL && db) return;
+  SQL = await initSqlJs({ locateFile: f => `https://cdn.jsdelivr.net/npm/sql.js@1.10.2/dist/${f}` });
+  if (!restoreFromLocalStorage()){
+    db = new SQL.Database();
+    db.run(`
+      CREATE TABLE IF NOT EXISTS sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL,
+        started_ms INTEGER NOT NULL,
+        ended_ms INTEGER NOT NULL,
+        duration_sec INTEGER NOT NULL,
+        tag TEXT DEFAULT ''
+      );
+      CREATE INDEX IF NOT EXISTS idx_sessions_ended ON sessions(ended_ms);
+      CREATE INDEX IF NOT EXISTS idx_sessions_tag ON sessions(tag);
+    `);
+    seedDemoRows(); persistToLocalStorage();
+  } else {
+    // Ensure tag column exists on old DBs
+    migrateAddTag();
+    db.run(`CREATE INDEX IF NOT EXISTS idx_sessions_ended ON sessions(ended_ms);`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_sessions_tag ON sessions(tag);`);
+  }
+  sessions = selectAllSessions();
+  workCount = sessions.filter(s=>s.type==='Work').length;
+  rebuildUIFromSessions();
+}
+function seedDemoRows(){
+  const now = Date.now();
+  const demo = [
+    ['Work', 25*60,'Setup'], ['Short Break', 5*60,''],
+    ['Work', 25*60,'FeatureA'], ['Short Break', 5*60,''],
+    ['Work', 25*60,'FeatureA'], ['Short Break', 5*60,''],
+    ['Work', 25*60,'Docs'], ['Long Break', 15*60,''],
+  ];
+  let t = now - demo.length*1800000;
+  const stmt = db.prepare('INSERT INTO sessions (type, started_ms, ended_ms, duration_sec, tag) VALUES (?,?,?,?,?)');
+  let wc=0;
+  for (const [type,dur,tag] of demo){
+    const start=t, end=t+dur*1000;
+    stmt.run([type, start, end, dur, tag]);
+    if (type==='Work') wc++;
+    t = end;
+  }
+  stmt.free(); workCount = wc;
+}
+function insertSessionToDB(type, started, ended, durationSec, tag=''){
+  const stmt = db.prepare('INSERT INTO sessions (type, started_ms, ended_ms, duration_sec, tag) VALUES (?,?,?,?,?)');
+  stmt.run([type, started, ended, durationSec, tag]); stmt.free();
+  const id = db.exec('SELECT last_insert_rowid() AS id')[0].values[0][0];
+  persistToLocalStorage(); return id;
+}
+function updateSessionInDB(id, type, started, ended, durationSec, tag=''){
+  const stmt = db.prepare('UPDATE sessions SET type=?, started_ms=?, ended_ms=?, duration_sec=?, tag=? WHERE id=?');
+  stmt.run([type, started, ended, durationSec, tag, id]); stmt.free(); persistToLocalStorage();
+}
+function deleteSessionInDB(id){
+  const stmt = db.prepare('DELETE FROM sessions WHERE id=?');
+  stmt.run([id]); stmt.free(); persistToLocalStorage();
+}
+function selectAllSessions(limit=10000){
+  const res = db.exec(`SELECT id, type, started_ms, ended_ms, duration_sec, COALESCE(tag,'') FROM sessions ORDER BY ended_ms ASC LIMIT ${limit}`);
+  if (!res[0]) return [];
+  return res[0].values.map(([id, type, started_ms, ended_ms, duration_sec, tag])=>({ id, type, started: started_ms, ended: ended_ms, durationSec: duration_sec, tag: tag||'' }));
+}
+
+/* ===================== Tag Helpers/Filter ==================== */
+function uniqueTags(){
+  const set = new Set(sessions.map(s=>s.tag).filter(Boolean));
+  return Array.from(set).sort((a,b)=>a.localeCompare(b));
+}
+function refreshTagFilterUI(){
+  const sel = $('tagFilter'); const list = $('tagsDatalist');
+  sel.innerHTML = `<option value="__ALL__">All tags</option>` + uniqueTags().map(t=>`<option value="${t}">${t}</option>`).join('');
+  if (tagFilter && tagFilter!=='__ALL__') sel.value = tagFilter;
+  list.innerHTML = uniqueTags().map(t=>`<option value="${t}"></option>`).join('');
+}
+$('tagFilter').addEventListener('change', (e)=>{ tagFilter = e.target.value; saveSettings(); rebuildUIFromSessions(); });
+function filteredSessions(){
+  if (tagFilter==='__ALL__') return sessions;
+  return sessions.filter(s=> (s.tag||'') === tagFilter);
+}
+
+/* ================== UI + Chart + Weekly + Goals =============== */
+function addLogItem(s){
+  const div = document.createElement('div');
+  div.className = 'item';
+  const dt = new Date(s.ended).toLocaleTimeString();
+  const label = document.createElement('span'); label.textContent = `${dt} ${s.tag? '• #'+s.tag:''}`;
+  const badge = document.createElement('span');
+  badge.className = 'badge ' + (s.type==='Work' ? 'work' : (s.type==='Long Break' ? 'long' : 'short'));
+  badge.textContent = `${s.type} • ${Math.round(s.durationSec/60)}m`;
+  div.appendChild(label); div.appendChild(badge);
+  $('log').prepend(div);
+}
+function rebuildUIFromSessions(){
+  $('log').innerHTML='';
+  filteredSessions().slice().reverse().forEach(addLogItem);
+  $('streakHint').textContent = `${sessions.filter(s=>s.type==='Work').length} work sessions completed`;
+  drawChart(); recomputeGoals(); recomputeWeeklySummary(); refreshTagFilterUI();
+}
+function drawChart(){
+  const svg = $('chart'); svg.innerHTML = '';
+  const w = svg.clientWidth || svg.getBoundingClientRect().width || 640;
+  const h = svg.clientHeight || 160, pad=10;
+  const bars = filteredSessions().slice(-30); if (!bars.length) return;
+  const maxDur = Math.max(...bars.map(b=>b.durationSec));
+  const scaleY = sec => (sec/maxDur)*(h-pad*2);
+  const barW = Math.max(8, (w - pad*2)/bars.length - 4);
+  const css = getComputedStyle(document.documentElement);
+  const colorFor = t => t==='Work' ? css.getPropertyValue('--ok').trim()
+                     : t==='Long Break' ? css.getPropertyValue('--long').trim()
+                     : css.getPropertyValue('--info').trim();
+  bars.forEach((b,i)=>{
+    const x = pad + i*(barW+4);
+    const bh = scaleY(b.durationSec);
+    const y = h - pad - bh;
+    const r = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    r.setAttribute('x',x); r.setAttribute('y',y);
+    r.setAttribute('width',barW); r.setAttribute('height',bh);
+    r.setAttribute('rx','4'); r.setAttribute('fill', colorFor(b.type)); r.setAttribute('opacity','0.95');
+    svg.appendChild(r);
+  });
+  const base = document.createElementNS('http://www.w3.org/2000/svg','line');
+  base.setAttribute('x1',pad); base.setAttribute('y1',h-pad);
+  base.setAttribute('x2',w-pad); base.setAttribute('y2',h-pad);
+  base.setAttribute('stroke', getComputedStyle(document.documentElement).getPropertyValue('--ring').trim());
+  base.setAttribute('stroke-width','1'); svg.appendChild(base);
+}
+
+/* Weekly summary */
+function localISODate(ts){
+  const d = new Date(ts);
+  const off = d.getTimezoneOffset()*60000;
+  const local = new Date(ts - off);
+  return local.toISOString().slice(0,10);
+}
+function recomputeWeeklySummary(){
+  const today = new Date();
+  const days = [];
+  for (let i=6;i>=0;i--){ const d = new Date(); d.setDate(today.getDate()-i);
+    const key = localISODate(+d); days.push({key, label: d.toLocaleDateString(undefined,{weekday:'short'}), ts:+d});
+  }
+  const src = filteredSessions();
+  const sums = days.map(d=>{
+    const rows = src.filter(r=> localISODate(r.ended) === d.key && r.type==='Work');
+    const min = rows.reduce((a,r)=> a + r.durationSec/60, 0);
+    const cnt = rows.length; return {label:d.label, minutes:min, count:cnt};
+  });
+  const totalMin = sums.reduce((a,x)=>a+x.minutes,0);
+  const totalCnt = sums.reduce((a,x)=>a+x.count,0);
+  const best = sums.reduce((m,x)=> x.minutes>m.minutes?x:m, {label:'—', minutes:-1});
+  $('weekText').textContent = `This week: ${Math.round(totalMin)} min across ${totalCnt} sessions • Best: ${best.label} (${Math.round(best.minutes)} min)` + (tagFilter!=='__ALL__'?` • Filter: #${tagFilter}`:'');
+
+  const svg = $('weekChart'); svg.innerHTML='';
+  const w = svg.clientWidth || svg.getBoundingClientRect().width || 640;
+  const h = svg.clientHeight || 130, pad=16;
+  const max = Math.max(30, ...sums.map(s=>s.minutes));
+  const barW = Math.max(12, (w - pad*2)/sums.length - 8);
+  const css = getComputedStyle(document.documentElement);
+  const fill = css.getPropertyValue('--ok').trim();
+  sums.forEach((s,i)=>{
+    const x = pad + i*(barW+8);
+    const bh = (s.minutes/max)*(h-pad*2);
+    const y = h - pad - bh;
+    const r = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    r.setAttribute('x',x); r.setAttribute('y',y);
+    r.setAttribute('width',barW); r.setAttribute('height',bh);
+    r.setAttribute('rx','4'); r.setAttribute('fill',fill); r.setAttribute('opacity','0.95'); svg.appendChild(r);
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x', x + barW/2); t.setAttribute('y', h - 4);
+    t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','11');
+    t.setAttribute('fill', css.getPropertyValue('--muted').trim()); t.textContent = s.label; svg.appendChild(t);
+  });
+  const base = document.createElementNS('http://www.w3.org/2000/svg','line');
+  base.setAttribute('x1',pad); base.setAttribute('y1',h-pad);
+  base.setAttribute('x2',w-pad); base.setAttribute('y2',h-pad);
+  base.setAttribute('stroke', getComputedStyle(document.documentElement).getPropertyValue('--ring').trim());
+  base.setAttribute('stroke-width','1'); svg.appendChild(base);
+}
+
+/* Goals & Streaks (respects tag filter) */
+function groupByLocalDay(rows){
+  const map = new Map();
+  rows.forEach(r=>{
+    const day = localISODate(r.ended);
+    if (!map.has(day)) map.set(day, []);
+    map.get(day).push(r);
+  });
+  return map;
+}
+function goalAchievedForDay(rows) {
+  const type = $('goalType').value;
+  const goal = Math.max(1, parseInt($('goalValue').value,10) || 4);
+  const works = rows.filter(r=>r.type==='Work');
+  if (type==='sessions') return works.length >= goal;
+  const minutes = works.reduce((a,r)=>a + r.durationSec/60, 0);
+  return minutes >= goal;
+}
+function recomputeGoals(){
+  const type = $('goalType').value;
+  const goal = Math.max(1, parseInt($('goalValue').value,10) || 4);
+
+  const src = filteredSessions();
+  const byDay = groupByLocalDay(src);
+  const todayKey = localISODate(Date.now());
+  const todayRows = byDay.get(todayKey) || [];
+  let current = 0;
+  if (type==='sessions') current = todayRows.filter(r=>r.type==='Work').length;
+  else current = todayRows.filter(r=>r.type==='Work').reduce((a,r)=>a + r.durationSec/60, 0);
+
+  let streak = 0;
+  for (let i=0; ; i++){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const key = localISODate(d.getTime());
+    const rows = byDay.get(key) || [];
+    if (!rows.length && i!==0) break;
+    if (goalAchievedForDay(rows)) streak++; else { if (i>0) break; }
+  }
+
+  const units = type==='sessions' ? 'sessions' : 'min';
+  $('goalText').textContent = `Today: ${units==='min' ? Math.floor(current) : current}/${goal} ${units} • Streak: ${streak} day${streak===1?'':'s'}` + (tagFilter!=='__ALL__'?` • Filter: #${tagFilter}`:'');
+  const pct = Math.max(0, Math.min(1, current/goal));
+  $('goalBar').style.transform = `scaleX(${pct})`;
+}
+
+/* ======================= Control Logic ======================== */
+function startTimer(){
+  if (running) return;
+  if (!remaining || remaining<=0) setInitialRemaining();
+  running=true; phaseStart=Date.now();
+  if ($('notifyStart').checked) {
+    const phaseName = currentPhaseLabel();
+    const endsAt = new Date(Date.now() + remaining*1000).toLocaleTimeString();
+    sendNotification(`${phaseName} started`, `Ends at ${endsAt}`);
+  }
+  timer=setInterval(tick,1000);
+}
+function finishPhase(manualElapsedSec=null){
+  let ended = Date.now();
+  let durationSec;
+  if (manualElapsedSec!=null) durationSec = Math.max(0, Math.round(manualElapsedSec));
+  else if (running && phaseStart) durationSec = Math.max(0, Math.round((ended - phaseStart)/1000));
+  else durationSec = 0;
+
+  clearInterval(timer); running=false;
+  const finishedType = currentPhaseLabel();
+  const tag = ($('currentTag').value || '').trim();
+
+  const id = insertSessionToDB(finishedType, ended - durationSec*1000, ended, durationSec, tag);
+  const row = {id, type: finishedType, started: ended - durationSec*1000, ended, durationSec, tag};
+  sessions.push(row);
+  addLogItem(row);
+  drawChart(); recomputeWeeklySummary(); refreshTagFilterUI();
+
+  beep(finishedType==='Long Break' ? 'long' : 'end');
+  const upcoming = isWork ? nextBreakKind() : 'Work';
+  sendNotification(`${finishedType} done`, `Next: ${upcoming} — ready when you are.`);
+
+  if (isWork) workCount++;
+  isWork = !isWork;
+  setInitialRemaining();
+  $('streakHint').textContent = `${sessions.filter(s=>s.type==='Work').length} work sessions completed`;
+  recomputeGoals();
+  if ($('autoStart').checked) startTimer();
+}
+function skipWithoutLogging(){
+  clearInterval(timer); running=false; beep('end');
+  isWork = !isWork; setInitialRemaining();
+  if ($('autoStart').checked) startTimer();
+}
+function tick(){
+  remaining--; if (remaining<0) remaining=0;
+  updateDisplay(); if (remaining===0) finishPhase();
+}
+function pauseTimer(){ if (!running) return; clearInterval(timer); running=false; }
+function resetTimer(){ clearInterval(timer); running=false; isWork=true; setInitialRemaining(); }
+
+/* ======================= Export / Import ====================== */
+$('exportJsonBtn').addEventListener('click', ()=>{
+  const data = JSON.stringify({sessions, workCount}, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=`pomodoro-log-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
+$('exportCsvBtn').addEventListener('click', ()=>{
+  const rows = db.exec(`SELECT type, started_ms, ended_ms, duration_sec, COALESCE(tag,'') FROM sessions ORDER BY ended_ms ASC`);
+  const vals = rows[0]?.values || [];
+  const header = ['date','type','duration_min','start_iso','end_iso','tag'];
+  const csvRows = [header.join(',')];
+  vals.forEach(([type, started, ended, duration, tag])=>{
+    const date = new Date(ended).toISOString().slice(0,10);
+    const durMin = (duration/60).toFixed(2);
+    const startIso = new Date(started).toISOString();
+    const endIso = new Date(ended).toISOString();
+    const esc = v => `"${String(v).replace(/"/g,'""')}"`;
+    csvRows.push([date,type,durMin,startIso,endIso,tag||''].map(esc).join(','));
+  });
+  const blob = new Blob([csvRows.join('\n')], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=`pomodoro-log-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
+
+/* CSV import (+tag) */
+$('importCsvBtn').addEventListener('click', ()=> $('fileCsv').click());
+$('fileCsv').addEventListener('change', async e=>{
+  const f = e.target.files[0]; if (!f) return;
+  try{
+    const text = await f.text();
+    const rows = parseCSV(text);
+    const recs = rows.map(r=>{
+      const type = normType(r.type || r.Type || '');
+      const durationMin = parseFloat(r.duration_min || r.duration || r.minutes || '0') || 0;
+      const endIso = (r.end_iso || r.end || r.ended || '').trim();
+      const startIso = (r.start_iso || r.start || r.started || '').trim();
+      const dateOnly = (r.date || '').trim();
+      const tag = (r.tag || r.Tag || '').trim();
+      let endedMs = NaN, startedMs = NaN, durSec = Math.round(durationMin*60);
+      if (endIso) endedMs = Date.parse(endIso);
+      if (startIso) startedMs = Date.parse(startIso);
+      if (!isNaN(endedMs) && !isNaN(startedMs)) durSec = Math.max(0, Math.round((endedMs - startedMs)/1000));
+      else if (!isNaN(endedMs) && isFinite(durSec) && durSec>0) startedMs = endedMs - durSec*1000;
+      else if (dateOnly && isFinite(durSec) && durSec>0) { const base = new Date(dateOnly + 'T18:00:00').getTime(); endedMs = base; startedMs = base - durSec*1000; }
+      else { endedMs = Date.now(); startedMs = endedMs - durSec*1000; }
+      return { type, started: startedMs, ended: endedMs, durationSec: durSec, tag };
+    }).filter(r=>r.type && Number.isFinite(r.started) && Number.isFinite(r.ended) && Number.isFinite(r.durationSec));
+    if (!recs.length) throw new Error('No valid rows');
+    const replace = confirm('CSV import: OK = Replace existing log, Cancel = Append to log.');
+    if (replace) db.run('DELETE FROM sessions;');
+    const stmt = db.prepare('INSERT INTO sessions (type, started_ms, ended_ms, duration_sec, tag) VALUES (?,?,?,?,?)');
+    recs.forEach(x=> stmt.run([x.type, x.started, x.ended, x.durationSec, x.tag||'']));
+    stmt.free();
+    sessions = selectAllSessions();
+    workCount = sessions.filter(s=>s.type==='Work').length;
+    rebuildUIFromSessions(); persistToLocalStorage();
+    alert(`Imported ${recs.length} rows.`);
+  }catch(err){ console.error(err); alert('CSV import failed.'); }
+  finally { e.target.value=''; }
+});
+function normType(t){
+  const s = String(t).toLowerCase();
+  if (/^work/.test(s)) return 'Work';
+  if (/(long)/.test(s)) return 'Long Break';
+  if (/(short)/.test(s) || /break/.test(s)) return 'Short Break';
+  return t ? 'Work' : '';
+}
+function parseCSV(text){
+  const lines = text.split(/\r?\n/).filter(l=>l.trim().length>0);
+  if (!lines.length) return [];
+  const headers = splitCSVLine(lines[0]).map(h=>h.trim().replace(/(^"|"$)/g,''));
+  const out = [];
+  for (let i=1;i<lines.length;i++){
+    const cols = splitCSVLine(lines[i]).map(c=>c.replace(/(^"|"$)/g,''));
+    if (cols.length===1 && cols[0].trim()==='') continue;
+    const obj = {}; headers.forEach((h,idx)=> obj[h]=cols[idx] ?? ''); out.push(obj);
+  }
+  return out;
+}
+function splitCSVLine(line){
+  const res=[]; let cur='', inQ=false;
+  for (let i=0;i<line.length;i++){
+    const ch=line[i];
+    if (ch === '"'){ if (inQ && line[i+1] === '"'){ cur+='"'; i++; } else inQ=!inQ; }
+    else if (ch===',' && !inQ){ res.push(cur); cur=''; }
+    else cur+=ch;
+  }
+  res.push(cur); return res;
+}
+
+/* JSON import */
+$('importJsonBtn').addEventListener('click', ()=> $('fileJson').click());
+$('fileJson').addEventListener('change', async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try{
+    const {sessions: s, workCount: wc} = JSON.parse(await f.text());
+    const replace = confirm('JSON import: OK = Replace existing log, Cancel = Append to log.');
+    if (replace) db.run('DELETE FROM sessions;');
+    if (Array.isArray(s)) {
+      const stmt = db.prepare('INSERT INTO sessions (type, started_ms, ended_ms, duration_sec, tag) VALUES (?,?,?,?,?)');
+      s.forEach(x=> stmt.run([x.type, x.started, x.ended, x.durationSec, (x.tag||'')]));
+      stmt.free();
+    }
+    workCount = Number.isInteger(wc) && wc>=0 ? wc : selectAllSessions().filter(x=>x.type==='Work').length;
+    sessions = selectAllSessions();
+    rebuildUIFromSessions();
+    persistToLocalStorage();
+  }catch(err){ alert('Invalid JSON.'); }
+  finally{ e.target.value=''; }
+});
+
+/* SQLite save/load & backup */
+$('saveSqliteBtn').addEventListener('click', ()=>{
+  const binaryArray = db.export();
+  const blob = new Blob([binaryArray], {type:'application/octet-stream'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `pomodoro.sqlite`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
+$('loadSqliteBtn').addEventListener('click', ()=> $('fileSqlite').click());
+$('fileSqlite').addEventListener('change', async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try{
+    const buf = new Uint8Array(await f.arrayBuffer());
+    if (db) db.close();
+    db = new SQL.Database(buf);
+    migrateAddTag(); // in case the file is older
+    sessions = selectAllSessions();
+    workCount = sessions.filter(s=>s.type==='Work').length;
+    rebuildUIFromSessions();
+    persistToLocalStorage();
+  }catch(err){ console.error(err); alert('Failed to load SQLite file.'); }
+  finally{ e.target.value=''; }
+});
+$('backupNowBtn').addEventListener('click', ()=>{ persistToLocalStorage(); alert('Backup saved to browser.'); });
+$('restoreBackupBtn').addEventListener('click', ()=>{
+  if (restoreFromLocalStorage()){
+    migrateAddTag();
+    sessions = selectAllSessions();
+    workCount = sessions.filter(s=>s.type==='Work').length;
+    rebuildUIFromSessions();
+    alert('Backup restored from browser.');
+  } else { alert('No valid backup found in browser.'); }
+});
+$('clearBackupBtn').addEventListener('click', ()=>{ localStorage.removeItem(LSK_DB); alert('Browser backup cleared.'); });
+
+/* Settings export/import */
+$('exportSettingsBtn').addEventListener('click', () => {
+  saveSettings();
+  const data = JSON.stringify(getCurrentSettings(), null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'pomodoro-settings.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+});
+$('importSettingsBtn').addEventListener('click', () => $('fileSettings').click());
+$('fileSettings').addEventListener('change', async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const text = await f.text();
+    const s = JSON.parse(text);
+    if (typeof s !== 'object' || s === null) throw new Error('Invalid settings');
+    applySettings(s);
+    if ($('notifyOn').checked || $('notifyStart').checked) await ensureNotifyPermission();
+    alert('Settings imported.');
+  } catch (err) {
+    alert('Invalid settings file.');
+  } finally { e.target.value = ''; }
+});
+
+/* ========================= Modal (Add/Edit) =================== */
+let editingLast = false;
+function openModal({title, type='Work', durationMin=25, endedISO='', tag='' }={}){
+  editingLast = (title && title.toLowerCase().includes('edit'));
+  $('modalTitle').textContent = title || 'Add Session';
+  $('modalType').value = type;
+  $('modalDuration').value = durationMin;
+  $('modalEnded').value = endedISO;
+  $('modalTag').value = tag;
+  const mb = $('modalBackdrop'); mb.style.display='flex'; mb.setAttribute('aria-hidden','false');
+}
+function closeModal(){ const mb = $('modalBackdrop'); mb.style.display='none'; mb.setAttribute('aria-hidden','true'); }
+function parseDatetimeLocal(str){ if (!str) return null; const d=new Date(str); return isNaN(d)?null:d.getTime(); }
+
+$('addSessionBtn').addEventListener('click', ()=>{
+  openModal({title:'Add Session', type:'Work', durationMin:25, endedISO:'', tag:$('currentTag').value||''});
+});
+$('editLastBtn').addEventListener('click', ()=>{
+  if (!sessions.length) return alert('No sessions to edit.');
+  const last = sessions[sessions.length-1];
+  const endedISO = new Date(last.ended - (new Date().getTimezoneOffset()*60000)).toISOString().slice(0,16);
+  openModal({title:'Edit Last Session', type:last.type, durationMin:Math.max(1,Math.round(last.durationSec/60)), endedISO, tag:last.tag||''});
+});
+$('deleteLastBtn').addEventListener('click', ()=>{
+  if (!sessions.length) return alert('No sessions to delete.');
+  const last = sessions[sessions.length-1];
+  if (!confirm(`Delete last session?\n${last.type} • ${Math.round(last.durationSec/60)}m ${last.tag? '• #'+last.tag:''} @ ${new Date(last.ended).toLocaleString()}`)) return;
+  deleteSessionInDB(last.id); sessions.pop();
+  workCount = sessions.filter(s=>s.type==='Work').length;
+  rebuildUIFromSessions();
+});
+$('modalCloseBtn').addEventListener('click', closeModal);
+$('modalCancelBtn').addEventListener('click', closeModal);
+$('modalSaveBtn').addEventListener('click', ()=>{
+  const type = $('modalType').value;
+  const minutes = Math.max(1, parseInt($('modalDuration').value,10) || 25);
+  const endMs = parseDatetimeLocal($('modalEnded').value) ?? Date.now();
+  const durationSec = minutes*60;
+  const startMs = endMs - durationSec*1000;
+  const tag = ($('modalTag').value||'').trim();
+
+  if (editingLast){
+    if (!sessions.length) { closeModal(); return; }
+    const last = sessions[sessions.length-1];
+    updateSessionInDB(last.id, type, startMs, endMs, durationSec, tag);
+    Object.assign(last, {type, started:startMs, ended:endMs, durationSec, tag});
+  } else {
+    const id = insertSessionToDB(type, startMs, endMs, durationSec, tag);
+    sessions.push({id, type, started:startMs, ended:endMs, durationSec, tag});
+  }
+  workCount = sessions.filter(s=>s.type==='Work').length;
+  rebuildUIFromSessions(); closeModal();
+});
+
+/* ===================== Dark/Compact/Focus ===================== */
+$('darkBtn').addEventListener('click', ()=>{ document.body.classList.toggle('dark'); drawChart(); recomputeWeeklySummary(); saveSettings(); });
+$('compactBtn').addEventListener('click', ()=>{ document.body.classList.toggle('compact'); drawChart(); recomputeWeeklySummary(); saveSettings(); });
+
+function openFocus(){
+  const ov=$('focusOverlay'); ov.style.display='flex'; updateDisplay();
+  try{ (document.documentElement.requestFullscreen||document.body.requestFullscreen)?.call(document.documentElement); }catch{}
+}
+function closeFocus(){
+  const ov=$('focusOverlay'); ov.style.display='none';
+  try{ document.exitFullscreen?.(); }catch{}
+}
+function toggleFocus(){ if ($('focusOverlay').style.display==='flex') closeFocus(); else openFocus(); saveSettings(); }
+$('focusBtn').addEventListener('click', toggleFocus);
+$('focusBtn2').addEventListener('click', toggleFocus);
+$('fExit').addEventListener('click', toggleFocus);
+$('fStart').addEventListener('click', startTimer);
+$('fPause').addEventListener('click', pauseTimer);
+$('fSkip').addEventListener('click', ()=> finishPhase());
+$('fSkipNo').addEventListener('click', skipWithoutLogging);
+$('fReset').addEventListener('click', resetTimer);
+$('fPlus').addEventListener('click', ()=>{ remaining+=60; updateDisplay(); });
+$('fMinus').addEventListener('click', ()=>{ remaining=Math.max(0,remaining-60); updateDisplay(); });
+
+/* Keyboard in focus */
+document.addEventListener('keydown', (e)=>{
+  if ($('focusOverlay').style.display!=='flex') return;
+  if (['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+  if (e.code==='Space'){ e.preventDefault(); running?pauseTimer():startTimer(); }
+  else if (e.key==='s' || e.key==='S'){ e.preventDefault(); finishPhase(); }
+  else if (e.key==='n' || e.key==='N'){ e.preventDefault(); skipWithoutLogging(); }
+  else if (e.key==='r' || e.key==='R'){ e.preventDefault(); resetTimer(); }
+  else if (e.key==='f' || e.key==='F'){ e.preventDefault(); toggleFocus(); }
+  else if (e.key==='ArrowUp'){ e.preventDefault(); remaining+=60; updateDisplay(); }
+  else if (e.key==='ArrowDown'){ e.preventDefault(); remaining=Math.max(0,remaining-60); updateDisplay(); }
+});
+
+/* Core controls */
+$('startBtn').addEventListener('click', startTimer);
+$('pauseBtn').addEventListener('click', pauseTimer);
+$('resetBtn').addEventListener('click', ()=>{
+  sessions = selectAllSessions(); workCount = sessions.filter(s=>s.type==='Work').length;
+  $('log').innerHTML=''; rebuildUIFromSessions(); resetTimer();
+});
+$('skipBtn').addEventListener('click', ()=> finishPhase());
+$('skipNoLogBtn').addEventListener('click', skipWithoutLogging);
+
+/* ============================ Boot ============================ */
+async function init(){
+  loadSettings();
+  setInitialRemaining();
+  if ($('notifyOn').checked || $('notifyStart').checked) await ensureNotifyPermission();
+  await initSqlite();
+  recomputeGoals(); recomputeWeeklySummary();
+  togglePhaseSoundUI(); refreshTagFilterUI();
+  // If saved filter exists, set select now
+  if (tagFilter && tagFilter!=='__ALL__') $('tagFilter').value = tagFilter;
+}
+init();
+</script>
+<script src="../../shared/components.js"></script>
+  <script src="../shared/help-content.js"></script>
+  <script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

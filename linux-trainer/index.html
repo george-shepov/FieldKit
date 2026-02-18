@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Linux Pocket Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#1c2333;
+  --border:#30363d;--border2:#444c56;
+  --green:#3fb950;--green2:#238636;
+  --red:#f85149;--blue:#58a6ff;--yellow:#d29922;--cyan:#39d353;--purple:#bc8cff;--orange:#f0883e;
+  --text:#c9d1d9;--text2:#8b949e;--text3:#484f58;--white:#f0f6fc;
+  --mono:'DM Mono','Courier New',Courier,monospace;
+}
+html{font-family:var(--mono);background:var(--bg);color:var(--green);font-size:14px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+body{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+.sn{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:11px;flex-shrink:0}
+.sn a{color:var(--text2);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .15s}
+.sn a:hover{color:var(--green)}
+.sn span{color:var(--text3);font-size:10px}
+#T{flex:1;padding:10px 12px;overflow-y:auto;font-size:13px;line-height:1.55;-webkit-overflow-scrolling:touch;word-wrap:break-word}
+#T::-webkit-scrollbar{width:6px}
+#T::-webkit-scrollbar-track{background:var(--bg)}
+#T::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.g{color:var(--green)}.r{color:var(--red)}.b{color:var(--blue)}.y{color:var(--yellow)}.p{color:var(--purple)}.o{color:var(--orange)}
+.d{color:var(--text2)}.dd{color:var(--text3)}.w{color:var(--white)}
+.bld{font-weight:500}
+.echo{color:var(--text3)}
+#qk{display:flex;background:var(--bg2);padding:5px 3px;overflow-x:auto;border-top:1px solid var(--border);flex-shrink:0;gap:3px}
+.qk{background:var(--bg3);color:var(--text);border:1px solid var(--border);padding:6px 10px;border-radius:4px;font-family:var(--mono);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;user-select:none;-webkit-user-select:none}
+.qk:active{background:var(--border);transform:translateY(1px)}
+.pr{display:flex;padding:8px 12px;background:var(--bg2);border-top:1px solid var(--border);align-items:center;flex-shrink:0}
+.pr label{color:var(--green);margin-right:6px;font-weight:500;flex-shrink:0;font-size:13px}
+.pr input{flex:1;background:transparent;border:none;color:var(--white);font-family:var(--mono);font-size:15px;outline:none;min-width:0}
+@media(max-width:480px){body{font-size:12px}.pr input{font-size:14px}.qk{padding:5px 8px;font-size:11px}}
+</style>
+</head>
+<body>
+<nav class="sn"><a href="../index.html">← Suite</a><span>ProSe Pilot</span></nav>
+<div id="T"></div>
+<div id="qk">
+<button class="qk" onclick="ty('/')">/</button>
+<button class="qk" onclick="ty('-')">-</button>
+<button class="qk" onclick="ty('|')">|</button>
+<button class="qk" onclick="ty('~')">~</button>
+<button class="qk" onclick="ty('>')">></button>
+<button class="qk" onclick="ty('>>')">»</button>
+<button class="qk" onclick="ty('2>')">2></button>
+<button class="qk" onclick="ty('$')">$</button>
+<button class="qk" onclick="ty('Ctrl+')">Ctrl+</button>
+<button class="qk" onclick="ty('sudo ')">sudo</button>
+<button class="qk" onclick="ty('grep ')">grep</button>
+<button class="qk" onclick="ty('chmod ')">chmod</button>
+<button class="qk" onclick="ty('find ')">find</button>
+<button class="qk" onclick="ty('sed ')">sed</button>
+<button class="qk" onclick="ty('tar ')">tar</button>
+<button class="qk" onclick="ty('ssh ')">ssh</button>
+<button class="qk" onclick="go()">⏎</button>
+</div>
+<div class="pr"><label>user@linux:~$</label><input type="text" id="I" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+
+<script>
+const LS='lpt5',T=document.getElementById('T'),I=document.getElementById('I');
+let hist=[],hIdx=-1;
+
+/* ═══════════════════════════════════════
+   SHELL SIMULATION — real commands work
+   outside quiz mode
+   ═══════════════════════════════════════ */
+const SH={
+'pwd':'/home/user',
+'whoami':'user',
+'hostname':'linux-workstation',
+'hostname -f':'linux-workstation.localdomain',
+'date':'Wed Feb 11 15:42:31 EST 2026',
+'cal':'   February 2026\nSu Mo Tu We Th Fr Sa\n 1  2  3  4  5  6  7\n 8  9 10 11 12 13 14\n15 16 17 18 19 20 21\n22 23 24 25 26 27 28',
+'uptime':' 15:42 up 47 days, 3:12,  1 user,  load: 0.15, 0.10, 0.08',
+'uname':'Linux','uname -a':'Linux linux-workstation 5.15.0-91-generic #101-Ubuntu SMP x86_64 GNU/Linux',
+'uname -r':'5.15.0-91-generic','uname -m':'x86_64','uname -s':'Linux','uname -n':'linux-workstation','uname -o':'GNU/Linux','uname -v':'#101-Ubuntu SMP Tue Nov 14 13:30:08 UTC 2023',
+'id':'uid=1000(user) gid=1000(user) groups=1000(user),4(adm),27(sudo)',
+'groups':'user adm sudo',
+'echo $SHELL':'/bin/bash','echo $HOME':'/home/user','echo $PATH':'/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
+'echo $USER':'user','echo $PWD':'/home/user','echo $TERM':'xterm-256color','echo $LANG':'en_US.UTF-8',
+'echo "Hello World"':'Hello World','echo Hello World':'Hello World',
+'printenv':'SHELL=/bin/bash\nHOME=/home/user\nUSER=user\nPATH=/usr/local/bin:/usr/bin:/bin\nLANG=en_US.UTF-8\nTERM=xterm-256color',
+'env':'SHELL=/bin/bash\nHOME=/home/user\nUSER=user\nPATH=/usr/local/bin:/usr/bin:/bin',
+'set':'BASH=/usr/bin/bash\nBASH_VERSION=5.1.16\nHOME=/home/user\nHOSTNAME=linux-workstation\nPATH=/usr/local/bin:/usr/bin:/bin',
+'ls':'Desktop  Documents  Downloads  Music  Pictures  Public  Templates  Videos',
+'ls -l':'total 32\ndrwxr-xr-x 2 user user 4096 Feb 10 09:15 Desktop\ndrwxr-xr-x 3 user user 4096 Feb 10 09:15 Documents\ndrwxr-xr-x 2 user user 4096 Feb 11 14:22 Downloads\ndrwxr-xr-x 2 user user 4096 Feb 10 09:15 Music\ndrwxr-xr-x 2 user user 4096 Feb 10 09:15 Pictures\ndrwxr-xr-x 2 user user 4096 Feb 10 09:15 Public\ndrwxr-xr-x 2 user user 4096 Feb 10 09:15 Templates\ndrwxr-xr-x 2 user user 4096 Feb 10 09:15 Videos',
+'ls -a':'.  ..  .bash_history  .bashrc  .profile  Desktop  Documents  Downloads  Music  Pictures  Public  Templates  Videos',
+'ls -la':'total 48\ndrwxr-xr-x 10 user user 4096 Feb 11 14:22 .\ndrwxr-xr-x  3 root root 4096 Jan 15 08:00 ..\n-rw-------  1 user user  978 Feb 11 15:40 .bash_history\n-rw-r--r--  1 user user  220 Jan 15 08:00 .bashrc\n-rw-r--r--  1 user user  807 Jan 15 08:00 .profile\ndrwxr-xr-x  2 user user 4096 Feb 10 09:15 Desktop\ndrwxr-xr-x  3 user user 4096 Feb 10 09:15 Documents\ndrwxr-xr-x  2 user user 4096 Feb 11 14:22 Downloads',
+'ls -lh':'total 32K\ndrwxr-xr-x 2 user user 4.0K Feb 10 09:15 Desktop\ndrwxr-xr-x 3 user user 4.0K Feb 10 09:15 Documents\ndrwxr-xr-x 2 user user 4.0K Feb 11 14:22 Downloads',
+'ls -lt':'total 32\ndrwxr-xr-x 2 user user 4096 Feb 11 14:22 Downloads\ndrwxr-xr-x 2 user user 4096 Feb 10 09:15 Desktop\ndrwxr-xr-x 3 user user 4096 Feb 10 09:15 Documents',
+'ls -R':'.:\nDesktop  Documents  Downloads  Music  Pictures\n\n./Desktop:\nproject.txt  notes.md\n\n./Documents:\nreport.pdf  budget.xlsx\n\n./Downloads:\nlinux-book.pdf',
+'ls -F':'Desktop/  Documents/  Downloads/  Music/  Pictures/  Public/  Templates/  Videos/',
+'ls -d */':'Desktop/  Documents/  Downloads/  Music/  Pictures/  Public/  Templates/  Videos/',
+'ls /':'bin  boot  dev  etc  home  lib  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var',
+'ls /usr':'bin  games  include  lib  local  sbin  share  src',
+'ls /etc':'apt  bash.bashrc  crontab  fstab  group  hostname  hosts  init.d  network  os-release  passwd  resolv.conf  shadow  ssh  sudoers  sysctl.conf',
+'df':'Filesystem     1K-blocks    Used Available Use% Mounted on\n/dev/sda1       41251136 8234772  30884648  22% /\ntmpfs            2013780       0   2013780   0% /dev/shm',
+'df -h':'Filesystem  Size  Used Avail Use% Mounted on\n/dev/sda1    40G  7.9G   30G  22% /\ntmpfs       2.0G     0  2.0G   0% /dev/shm',
+'free':'              total        used        free\nMem:        4027560     1542340     1024892\nSwap:       2097148           0     2097148',
+'free -h':'              total   used   free\nMem:          3.8Gi  1.5Gi  1.0Gi\nSwap:         2.0Gi     0B  2.0Gi',
+'ps':'  PID TTY      TIME CMD\n 1234 pts/0  00:00:00 bash\n 5678 pts/0  00:00:00 ps',
+'ps aux':'USER   PID %CPU %MEM   VSZ   RSS TTY   STAT TIME COMMAND\nroot     1  0.0  0.1 16934  1168 ?    Ss   0:12 /sbin/init\nuser  1234  0.0  0.1 24688  5280 pts/0 Ss   0:00 -bash\nuser  5678  0.0  0.0 10624  3072 pts/0 R+   0:00 ps aux',
+'ps -ef':'UID    PID  PPID C STIME TTY      TIME CMD\nroot     1     0 0 Jan15 ?    00:00:12 /sbin/init\nuser  1234  1233 0 15:30 pts/0 00:00:00 -bash',
+'du -sh *':'4.0K\tDesktop\n8.0K\tDocuments\n52K\tDownloads\n4.0K\tMusic\n24K\tPictures\n4.0K\tPublic\n4.0K\tTemplates\n4.0K\tVideos',
+'mount':'/dev/sda1 on / type ext4 (rw,relatime)\ntmpfs on /tmp type tmpfs (rw,nosuid,nodev)\nproc on /proc type proc (rw,nosuid,nodev,noexec)',
+'lsblk':'NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT\nsda      8:0    0   40G  0 disk\n└─sda1   8:1    0   40G  0 part /',
+'cat /etc/os-release':'NAME="Ubuntu"\nVERSION="22.04.3 LTS (Jammy Jellyfish)"\nID=ubuntu\nVERSION_ID="22.04"\nPRETTY_NAME="Ubuntu 22.04.3 LTS"',
+'lsb_release -a':'Distributor ID: Ubuntu\nDescription:    Ubuntu 22.04.3 LTS\nRelease:        22.04\nCodename:       jammy',
+'cat /etc/hosts':'127.0.0.1   localhost\n127.0.1.1   linux-workstation\n::1         localhost ip6-localhost',
+'cat /etc/resolv.conf':'nameserver 8.8.8.8\nnameserver 8.8.4.4',
+'cat /etc/shells':'/bin/sh\n/bin/bash\n/usr/bin/bash\n/bin/zsh\n/usr/bin/zsh',
+'type ls':'ls is aliased to \'ls --color=auto\'','type cd':'cd is a shell builtin','type cp':'cp is /usr/bin/cp',
+'which ls':'/usr/bin/ls','which bash':'/usr/bin/bash','which cp':'/usr/bin/cp',
+'whatis ls':'ls (1) - list directory contents','whatis bash':'bash (1) - GNU Bourne-Again SHell',
+'history':'  997  cd Documents\n  998  ls -la\n  999  pwd\n 1000  history',
+'ip addr':'1: lo: <LOOPBACK,UP> mtu 65536\n    inet 127.0.0.1/8 scope host lo\n2: eth0: <BROADCAST,UP> mtu 1500\n    inet 192.168.1.100/24 scope global eth0',
+'ip a':'1: lo: inet 127.0.0.1/8\n2: eth0: inet 192.168.1.100/24',
+'ip route show':'default via 192.168.1.1 dev eth0\n192.168.1.0/24 dev eth0 proto kernel scope link src 192.168.1.100',
+'ip route':'default via 192.168.1.1 dev eth0\n192.168.1.0/24 dev eth0 proto kernel',
+'route -n':'Destination     Gateway       Genmask         Flags Iface\n0.0.0.0         192.168.1.1   0.0.0.0         UG    eth0\n192.168.1.0     0.0.0.0       255.255.255.0   U     eth0',
+'netstat -tuln':'Proto Local Address       Foreign Address  State\ntcp   0.0.0.0:22          0.0.0.0:*        LISTEN\ntcp   0.0.0.0:80          0.0.0.0:*        LISTEN',
+'umask':'0022','lscpu':'Architecture:  x86_64\nCPU(s):        4\nModel name:    Intel Core i5-8250U @ 1.60GHz',
+'jobs':'','fg':'bash: fg: current: no such job','bg':'bash: bg: current: no such job',
+'echo $?':'0',
+'echo ~':'/home/user',
+'echo $((2+2))':'4','echo $(((5**2)*3))':'75','echo $((100/3))':'33',
+'echo file{1,2,3}':'file1 file2 file3','echo file{A,B,C}':'fileA fileB fileC',
+'echo {1..10}':'1 2 3 4 5 6 7 8 9 10','echo {A..Z}':'A B C D E F G H I J K L M N O P Q R S T U V W X Y Z',
+'echo *':'Desktop Documents Downloads Music Pictures Public Templates Videos',
+// Bare commands without args - return helpful usage messages
+'ssh':'ssh: usage: ssh [user@]hostname [command]',
+'scp':'scp: usage: scp [user@]host:file localfile or scp localfile [user@]host:file',
+'grep':'grep: usage: grep [OPTIONS] PATTERN [FILE...]',
+'find':'find: usage: find [path...] [expression]',
+'sed':'sed: usage: sed [OPTIONS] script [input-file...]',
+'tar':'tar: usage: tar [OPTIONS] [ARCHIVE] [FILE...]',
+'chmod':'chmod: usage: chmod [OPTIONS] MODE FILE...',
+'chown':'chown: usage: chown [OPTIONS] OWNER[:GROUP] FILE...',
+'chgrp':'chgrp: usage: chgrp [OPTIONS] GROUP FILE...',
+};
+
+function simShell(cmd){
+  // Handle empty/whitespace-only input
+  if(!cmd||!cmd.trim()) return '';
+  
+  // Handle standalone special characters and shell operators
+  if(cmd==='/') return '/: this is a path separator, not a command. Try: ls /';
+  if(cmd==='|') return '|: pipe operator - connects command output to input. Try: ls | grep pattern';
+  if(cmd==='>') return '>: redirect output to file (overwrite). Try: echo hello > file.txt';
+  if(cmd==='>>') return '>>: redirect output to file (append). Try: echo hello >> file.txt';
+  if(cmd==='2>') return '2>: redirect stderr. Try: command 2> errors.txt';
+  if(cmd==='$') return '$: shell variable prefix. Try: echo $USER or echo $HOME';
+  if(cmd==='~') return '/home/user (your home directory)';
+  if(cmd==='-') return '-: previous directory. Try: cd - to go back';
+  if(cmd==='Ctrl+') return 'Ctrl+: keyboard shortcut prefix. Try: Ctrl+C (interrupt), Ctrl+Z (suspend)';
+  
+  if(SH[cmd]!==undefined) return SH[cmd];
+  
+  // Dynamic patterns
+  if(cmd==='clear'){T.innerHTML='';return null;}
+  if(cmd.startsWith('echo ')) return cmd.slice(5).replace(/^["']|["']$/g,'');
+  if(cmd.startsWith('cd ')||cmd==='cd') return '';
+  if(cmd.startsWith('man ')) return `Manual page for ${cmd.slice(4)} — press q to exit in a real terminal.`;
+  if(cmd.startsWith('which ')) return `/usr/bin/${cmd.slice(6)}`;
+  if(cmd.startsWith('type ')){const c=cmd.slice(5);return `${c} is /usr/bin/${c}`;}
+  if(cmd.startsWith('whatis ')) return `${cmd.slice(7)} (1) - ${cmd.slice(7)} command`;
+  if(cmd.startsWith('file ')) return `${cmd.slice(5)}: ASCII text`;
+  if(cmd.startsWith('apropos ')) return `${cmd.slice(8)} (1) - description of ${cmd.slice(8)} related commands`;
+  if(cmd.startsWith('info ')) return `Info document for ${cmd.slice(5)} — press q to exit`;
+  if(cmd.startsWith('help ')) return `${cmd.slice(5)}: ${cmd.slice(5)} is a shell builtin`;
+  if(cmd.startsWith('mkdir ')||cmd.startsWith('touch ')||cmd.startsWith('rm ')||cmd.startsWith('rmdir ')||cmd.startsWith('cp ')||cmd.startsWith('mv ')||cmd.startsWith('ln ')) return '';
+  if(cmd.startsWith('cat ')||cmd.startsWith('less ')||cmd.startsWith('more ')) return `(contents of ${cmd.split(' ').pop()})`;
+  if(cmd.startsWith('head ')){ return `(first 10 lines of ${cmd.split(' ').pop()})`;}
+  if(cmd.startsWith('tail ')){ return `(last 10 lines of ${cmd.split(' ').pop()})`;}
+  if(cmd.startsWith('wc ')) return ` 42  88 2574 ${cmd.split(' ').pop()}`;
+  if(cmd.startsWith('sort ')||cmd==='sort') return '(sorted output)';
+  if(cmd.startsWith('uniq')||cmd==='uniq') return '(unique lines)';
+  if(cmd.startsWith('cut ')) return '(cut fields)';
+  if(cmd.startsWith('tr ')) return '(translated text)';
+  if(cmd.startsWith('sed ')) return '(transformed text)';
+  if(cmd.startsWith('grep ')){const parts=cmd.split(' ');return `(matches for "${parts[1]}" in ${parts.slice(2).join(' ')||'stdin'})`;}
+  if(cmd.startsWith('find ')){return '(found files...)';}
+  if(cmd.startsWith('locate ')) return `(files matching ${cmd.slice(7)})`;
+  if(cmd.startsWith('ping ')){return `PING ${cmd.split(' ')[1]} (93.184.216.34): 56 bytes\n64 bytes: icmp_seq=1 ttl=56 time=11.4 ms`;}
+  if(cmd.startsWith('ssh ')){return `Connecting to ${cmd.split(' ').pop()}...`;}
+  if(cmd.startsWith('scp ')) return '(copying...)';
+  if(cmd.startsWith('wget ')||cmd.startsWith('curl ')) return `Downloading ${cmd.split(' ').pop()}...`;
+  if(cmd.startsWith('chmod ')||cmd.startsWith('chown ')||cmd.startsWith('chgrp ')) return '';
+  if(cmd.startsWith('tar ')) return '(archive operation)';
+  if(cmd.startsWith('gzip ')||cmd.startsWith('gunzip ')||cmd.startsWith('bzip2 ')) return '';
+  if(cmd.startsWith('zip ')||cmd.startsWith('unzip ')) return '';
+  if(cmd.startsWith('rsync ')) return '(syncing...)';
+  if(cmd.startsWith('kill ')||cmd.startsWith('killall ')) return '';
+  if(cmd==='sudo'||cmd==='sudo -i'||cmd==='sudo i'||cmd==='sudo su'||cmd==='su -'||cmd==='su'){return 'root@linux-workstation:/home/user#\n(simulated root shell — type exit to return)';}
+  if(cmd==='sudo -l'){return 'User user may run the following commands:\n    (ALL : ALL) ALL';}
+  if(cmd.startsWith('sudo ')){const inner=simShell(cmd.slice(5));if(inner===undefined)return `sudo: ${cmd.slice(5).split(' ')[0]}: command not found`;return inner;}
+  if(cmd.startsWith('alias ')) return '';
+  if(cmd.startsWith('unalias ')) return '';
+  if(cmd.startsWith('export ')) return '';
+  if(cmd.startsWith('source ')||cmd.startsWith('. ')) return '';
+  if(cmd==='top'||cmd==='htop') return 'PID USER      PR  NI    VIRT    RES  %CPU COMMAND\n  1 root      20   0  169344  11680   0.0 systemd\n(press q to exit in real terminal)';
+  if(cmd.startsWith('vi ')||cmd.startsWith('vim ')||cmd.startsWith('nano ')) return `(opening ${cmd.split(' ').pop()} in editor)`;
+  if(cmd.startsWith('systemctl ')) return `(service operation: ${cmd})`;
+  if(cmd.startsWith('journalctl')) return '(journal log output)';
+  if(cmd.startsWith('useradd ')||cmd.startsWith('userdel ')||cmd.startsWith('adduser ')||cmd.startsWith('passwd ')) return '';
+  if(cmd.startsWith('apt-get ')||cmd.startsWith('apt ')||cmd.startsWith('yum ')||cmd.startsWith('dnf ')||cmd.startsWith('pacman ')) return '(package manager operation)';
+  // Bare commands & dev tools
+  if(cmd==='apt'||cmd==='apt-get') return 'Usage: apt [options] command\n\nMost used commands:\n  list - list packages\n  search - search package descriptions\n  install - install packages\n  update - update list of available packages\n  upgrade - upgrade the system';
+  if(cmd==='npm') return 'Usage: npm <command>\n\nCommon commands:\n  npm init          create a package.json\n  npm install       install all dependencies\n  npm install <pkg> add a package\n  npm start         run the start script\n  npm test          run tests\n  npm run <script>  run a named script';
+  if(cmd.startsWith('npm ')) return `npm: simulated — ${cmd}`;
+  if(cmd==='pip'||cmd==='pip3') return 'Usage: pip <command> [options]\n\nCommands:\n  install     Install packages\n  uninstall   Uninstall packages\n  list        List installed packages\n  show        Show package info\n  freeze      Output installed packages in requirements format\n  search      Search PyPI for packages';
+  if(cmd.startsWith('pip ')||cmd.startsWith('pip3 ')) return `pip: simulated — ${cmd}`;
+  if(cmd==='node'||cmd==='node -v') return cmd==='node'?'Welcome to Node.js v20.11.0.\nType ".help" for more information.\n> ':'v20.11.0';
+  if(cmd.startsWith('node ')) return `(executing ${cmd.split(' ').pop()})`;
+  if(cmd==='python'||cmd==='python3') return 'Python 3.11.6 (main, Oct 2023)\n[GCC 12.3.0] on linux\nType "help", "copyright", "credits" or "license" for more.\n>>> ';
+  if(cmd==='python --version'||cmd==='python3 --version') return 'Python 3.11.6';
+  if(cmd.startsWith('python ')||cmd.startsWith('python3 ')) return `(executing ${cmd.split(' ').pop()})`;
+  if(cmd==='git'||cmd==='git --version') return cmd==='git'?'usage: git <command> [<args>]\n\nCommon commands:\n   clone    Clone a repository\n   init     Create an empty repo\n   add      Add file contents to index\n   commit   Record changes to repo\n   push     Update remote refs\n   pull     Fetch and integrate\n   status   Show working tree status\n   log      Show commit logs\n   branch   List, create, or delete branches\n   checkout Switch branches':'git version 2.39.2';
+  if(cmd.startsWith('git ')) return `(git: ${cmd.slice(4)})`;
+  if(cmd==='docker'||cmd==='docker --version') return cmd==='docker'?'Usage: docker [OPTIONS] COMMAND\n\nCommon commands:\n  run       Create and run a container\n  ps        List containers\n  build     Build an image\n  pull      Download an image\n  images    List images\n  stop      Stop containers':'Docker version 24.0.7';
+  if(cmd.startsWith('docker ')) return `(docker: ${cmd.slice(7)})`;
+  if(cmd==='cargo'||cmd==='rustc --version') return cmd==='cargo'?'Rust package manager\n\nCommon commands:\n  cargo new     Create new project\n  cargo build   Compile the project\n  cargo run     Build and execute\n  cargo test    Run the tests':'rustc 1.75.0';
+  if(cmd==='go'||cmd==='go version') return cmd==='go'?'Go is a tool for managing Go source code.\n\nCommon commands:\n  go build    compile packages\n  go run      compile and run\n  go test     test packages\n  go mod init initialize new module':'go version go1.21.6 linux/amd64';
+  if(cmd==='gcc --version') return 'gcc (Ubuntu 12.3.0) 12.3.0';
+  if(cmd==='make') return 'make: *** No targets specified. Stop.';
+  if(cmd.startsWith('make ')) return `(building ${cmd.slice(5)}...)`;
+  if(cmd==='curl --version') return 'curl 8.1.2 (x86_64-pc-linux-gnu)';
+  if(cmd==='which node') return '/usr/bin/node';
+  if(cmd==='which python3') return '/usr/bin/python3';
+  if(cmd==='which git') return '/usr/bin/git';
+  if(cmd==='which npm') return '/usr/bin/npm';
+  if(cmd==='which pip') return '/usr/bin/pip';
+  if(cmd==='which pip3') return '/usr/bin/pip3';
+  if(cmd.startsWith('mount ')||cmd.startsWith('umount ')) return '';
+  if(cmd.startsWith('fdisk ')||cmd.startsWith('mkfs ')) return '(disk operation)';
+  if(cmd.startsWith('fsck ')) return '(filesystem check)';
+  if(cmd.startsWith('dd ')) return '(data copy)';
+  if(cmd.startsWith('diff ')) return '(differences)';
+  if(cmd.startsWith('patch ')) return '(patched)';
+  if(cmd.startsWith('traceroute ')||cmd.startsWith('tracepath ')) return `traceroute to ${cmd.split(' ')[1]}`;
+  if(cmd.startsWith('read ')) return '(waiting for input)';
+  if(cmd.startsWith('printf ')) return cmd.slice(7).replace(/["']/g,'');
+  if(cmd.startsWith('declare ')) return '';
+  if(cmd.startsWith('local ')) return '';
+  if(cmd==='exit') return '';
+  if(cmd==='passwd') return 'Changing password for user.\n(current) UNIX password:';
+  if(cmd==='reboot'||cmd==='shutdown -h now') return '(system shutting down...)';
+  if(cmd==='ss -tuln') return SH['netstat -tuln'];
+  return undefined;
+}
+
+/* ═══════════════════════════════════════
+   CURRICULUM — The Linux Command Line
+   555 pages, 36 chapters, 4 parts
+   ═══════════════════════════════════════ */
+const M={
+// ──── PART 1: LEARNING THE SHELL ────
+'nav':{id:'nav',p:1,t:'Navigation (Ch 1-2)',q:[
+{q:'Print current working directory',a:['pwd']},
+{q:'List contents of current directory',a:['ls']},
+{q:'Change to /usr/bin directory',a:['cd /usr/bin']},
+{q:'Go up one directory level',a:['cd ..']},
+{q:'Go to your home directory',a:['cd','cd ~','cd $HOME']},
+{q:'Navigate to the previous directory you were in',a:['cd -']},
+{q:'Show today\'s date',a:['date']},
+{q:'Show a calendar',a:['cal']},
+{q:'Show disk space of mounted filesystems',a:['df']},
+{q:'Show current free/used memory',a:['free']},
+{q:'End the terminal session',a:['exit']},
+]},
+
+'explore':{id:'explore',p:1,t:'Exploring the System (Ch 3)',q:[
+{q:'List files in long format',a:['ls -l']},
+{q:'List ALL files including hidden (dot files)',a:['ls -a']},
+{q:'Long format with human-readable sizes',a:['ls -lh']},
+{q:'List files sorted by modification time (newest first)',a:['ls -lt']},
+{q:'List directory contents recursively',a:['ls -R']},
+{q:'Show type indicators (/ for dir, * for exec)',a:['ls -F']},
+{q:'Reverse the sort order',a:['ls -r']},
+{q:'List files sorted by size, largest first',a:['ls -lS']},
+{q:'Determine type of file "picture.jpg"',a:['file picture.jpg']},
+{q:'View a file page by page with a pager',a:['less readme.txt','less readme']},
+{q:'View entire file at once (dump to terminal)',a:['cat readme.txt','cat readme']},
+{q:'List details about a directory itself, not its contents',a:['ls -ld','ls -ld /usr']},
+]},
+
+'files':{id:'files',p:1,t:'Manipulating Files & Dirs (Ch 4)',q:[
+{q:'Create directory called "playground"',a:['mkdir playground']},
+{q:'Create nested dirs in one shot: "dir1/dir2/dir3"',a:['mkdir -p dir1/dir2/dir3']},
+{q:'Copy "file1" to "file2"',a:['cp file1 file2']},
+{q:'Copy interactively (prompt before overwrite)',a:['cp -i file1 file2']},
+{q:'Copy "dir1" recursively to "dir2"',a:['cp -r dir1 dir2','cp -R dir1 dir2']},
+{q:'Copy only updated files from dir to backup',a:['cp -u *.html destination','cp -u dir1/* dir2/']},
+{q:'Rename (move) "oldname" to "newname"',a:['mv oldname newname']},
+{q:'Move with interactive safety check',a:['mv -i file1 dir1']},
+{q:'Remove file interactively (ask first)',a:['rm -i junk']},
+{q:'Remove directory and all contents recursively',a:['rm -r dir','rm -rf dir','rm -R dir']},
+{q:'Remove an EMPTY directory only',a:['rmdir temp']},
+{q:'Create empty file or update timestamp of "notes.txt"',a:['touch notes.txt']},
+{q:'Create a hard link: "fun-hard" → "fun"',a:['ln fun fun-hard']},
+{q:'Create a symbolic (soft) link: "fun-sym" → "fun"',a:['ln -s fun fun-sym']},
+]},
+
+'wild':{id:'wild',p:1,t:'Wildcards & Globbing (Ch 4)',q:[
+{q:'List all files starting with capital "D"',a:['ls D*']},
+{q:'List all .txt files',a:['ls *.txt']},
+{q:'Match exactly 3 characters after "Data"',a:['ls Data???']},
+{q:'Copy all HTML files to destination/',a:['cp *.html destination/','cp *.html destination']},
+{q:'List all hidden files (dot files)',a:['ls .*','ls -d .*']},
+{q:'List only subdirectories',a:['ls -d */']},
+{q:'Match files starting with uppercase letter',a:['ls [A-Z]*','ls [[:upper:]]*']},
+{q:'Match files NOT starting with a digit',a:['ls [!0-9]*','ls [^0-9]*']},
+]},
+
+'cmds':{id:'cmds',p:1,t:'Working with Commands (Ch 5)',q:[
+{q:'Show what type of command "ls" is (alias? builtin? file?)',a:['type ls']},
+{q:'Show the exact path of the "cp" executable',a:['which cp']},
+{q:'Read the full manual page for "ls"',a:['man ls']},
+{q:'One-line description of "ls"',a:['whatis ls']},
+{q:'Search for commands related to "partition"',a:['apropos partition']},
+{q:'View the info page for coreutils',a:['info coreutils']},
+{q:'Get help for the shell builtin "cd"',a:['help cd']},
+{q:'Create alias: "ll" runs "ls -la"',a:['alias ll=\'ls -la\'','alias ll="ls -la"']},
+{q:'Remove the alias "ll"',a:['unalias ll']},
+]},
+
+'redir':{id:'redir',p:1,t:'I/O Redirection & Pipelines (Ch 6)',q:[
+{q:'Redirect ls output to file (overwrite)',a:['ls > list.txt','ls -l > list.txt']},
+{q:'Redirect ls output to file (append)',a:['ls >> list.txt']},
+{q:'Redirect ONLY stderr to a file',a:['ls /bad 2> errors.txt']},
+{q:'Redirect both stdout AND stderr to one file (modern)',a:['ls &> output.txt']},
+{q:'Redirect both stdout AND stderr to one file (classic)',a:['ls > output.txt 2>&1']},
+{q:'Discard all errors (send stderr to /dev/null)',a:['ls /bad 2> /dev/null']},
+{q:'Truncate (empty) a file using redirection',a:['> file.txt']},
+{q:'Join multiple movie parts into one file',a:['cat movie.mpeg.0* > movie.mpeg']},
+{q:'Create a file from keyboard input with cat',a:['cat > newfile.txt']},
+{q:'Pipe ls into less for paging',a:['ls -l /usr/bin | less']},
+{q:'Sort the output of ls before displaying',a:['ls | sort']},
+{q:'Count lines, words, bytes in file',a:['wc file.txt','wc']},
+{q:'Remove duplicate adjacent lines from sorted input',a:['sort file.txt | uniq']},
+{q:'Search ls output for files matching "zip"',a:['ls /usr/bin | grep zip']},
+{q:'Show first 5 lines of a file',a:['head -n 5 file.txt','head -5 file.txt']},
+{q:'Show last 5 lines of a file',a:['tail -n 5 file.txt','tail -5 file.txt']},
+{q:'Follow a log file in real time',a:['tail -f /var/log/syslog','tail -f log.txt']},
+{q:'Write output to screen AND to a file simultaneously',a:['ls | tee list.txt']},
+{q:'Tee with append (don\'t overwrite)',a:['ls | tee -a list.txt']},
+]},
+
+'expn':{id:'expn',p:1,t:'Expansion & Quoting (Ch 7)',q:[
+{q:'Pathname expansion: echo all files in current dir',a:['echo *']},
+{q:'Tilde expansion: echo your home path',a:['echo ~']},
+{q:'Arithmetic expansion: calculate 2+2',a:['echo $((2+2))']},
+{q:'Arithmetic: calculate (5 squared) times 3',a:['echo $(((5**2)*3))']},
+{q:'Brace expansion: generate "file1 file2 file3"',a:['echo file{1,2,3}']},
+{q:'Brace expansion: generate numbers 1 through 10',a:['echo {1..10}']},
+{q:'Brace expansion: create dirs "2026-01" through "2026-12"',a:['mkdir 2026-{01..12}']},
+{q:'Parameter expansion: print the $USER variable',a:['echo $USER']},
+{q:'Command substitution: embed output of "which cp"',a:['echo $(which cp)','ls -l $(which cp)']},
+{q:'Double quotes: preserve spaces but allow expansion',a:['echo "Hello World"','echo "$USER"']},
+{q:'Single quotes: suppress ALL expansion',a:['echo \'$USER\'','echo \'text\'']},
+]},
+
+'keys':{id:'keys',p:1,t:'Keyboard Tricks (Ch 8)',q:[
+{q:'Move cursor to BEGINNING of line',a:['Ctrl+A']},
+{q:'Move cursor to END of line',a:['Ctrl+E']},
+{q:'Move forward one word',a:['Alt+F']},
+{q:'Move backward one word',a:['Alt+B']},
+{q:'Clear the terminal screen',a:['Ctrl+L']},
+{q:'Kill (cut) text from cursor to END of line',a:['Ctrl+K']},
+{q:'Kill text from cursor to BEGINNING of line',a:['Ctrl+U']},
+{q:'Kill (cut) the previous word',a:['Ctrl+W']},
+{q:'Yank (paste) the last killed text',a:['Ctrl+Y']},
+{q:'Reverse search through command history',a:['Ctrl+R']},
+{q:'Interrupt / kill current foreground process',a:['Ctrl+C']},
+{q:'Suspend (pause) current foreground process',a:['Ctrl+Z']},
+{q:'Send EOF / logout',a:['Ctrl+D']},
+{q:'Freeze terminal output',a:['Ctrl+S']},
+{q:'Resume frozen terminal output',a:['Ctrl+Q']},
+{q:'Auto-complete file/command name',a:['Tab']},
+]},
+
+'perms':{id:'perms',p:1,t:'Permissions (Ch 9)',q:[
+{q:'View your user ID and group memberships',a:['id']},
+{q:'Make script.sh executable for everyone',a:['chmod +x script.sh','chmod a+x script.sh']},
+{q:'Set octal permissions: rwxr-xr-x',a:['chmod 755 file','chmod 755 script.sh']},
+{q:'Set octal permissions: rw-r--r--',a:['chmod 644 file']},
+{q:'Set octal: owner=rwx only, nothing for group/other',a:['chmod 700 file']},
+{q:'Set octal: rw for owner, nothing for everyone else',a:['chmod 600 file']},
+{q:'Add write permission for group',a:['chmod g+w file']},
+{q:'Remove ALL permissions for others',a:['chmod o-rwx file','chmod o= file']},
+{q:'Display default permission mask',a:['umask']},
+{q:'Change owner of "data.txt" to bob',a:['sudo chown bob data.txt','chown bob data.txt']},
+{q:'Change owner AND group in one command',a:['sudo chown bob:staff data','chown bob:staff data']},
+{q:'Recursively change group ownership of "project/"',a:['sudo chgrp -R devs project','chgrp -R devs project']},
+{q:'Execute a single command as superuser',a:['sudo command','sudo']},
+{q:'Start an interactive root shell',a:['sudo -i','su -','sudo su']},
+{q:'Change your own password',a:['passwd']},
+]},
+
+'procs':{id:'procs',p:1,t:'Processes (Ch 10)',q:[
+{q:'Show your current terminal\'s processes',a:['ps']},
+{q:'Show ALL processes for ALL users (BSD style)',a:['ps aux']},
+{q:'Show ALL processes (standard Unix style)',a:['ps -ef']},
+{q:'Dynamic real-time process monitor',a:['top']},
+{q:'Send TERM signal (polite kill) to PID 1234',a:['kill 1234']},
+{q:'Force kill PID 1234 (KILL signal, signal 9)',a:['kill -9 1234','kill -KILL 1234']},
+{q:'Send HUP signal to PID 1234 (hangup / reload config)',a:['kill -HUP 1234','kill -1 1234']},
+{q:'Kill ALL processes named "firefox"',a:['killall firefox']},
+{q:'Resume a stopped job in the background',a:['bg']},
+{q:'Bring a background job to the foreground',a:['fg']},
+{q:'List current shell\'s background jobs',a:['jobs']},
+{q:'Shut down the system immediately',a:['sudo shutdown -h now','shutdown -h now']},
+{q:'Reboot the system',a:['sudo reboot','reboot']},
+]},
+
+// ──── PART 2: CONFIGURATION ────
+'env':{id:'env',p:2,t:'The Environment (Ch 11, 13)',q:[
+{q:'Display all environment variables',a:['printenv','env']},
+{q:'Display the value of HOME variable',a:['echo $HOME','printenv HOME']},
+{q:'Display the value of PATH',a:['echo $PATH','printenv PATH']},
+{q:'Set a shell variable: myvar="hello"',a:['myvar="hello"','myvar=hello']},
+{q:'Export a variable so child processes can see it',a:['export myvar','export myvar="hello"']},
+{q:'Add ~/bin to the front of your PATH',a:['export PATH=~/bin:"$PATH"','export PATH="$HOME/bin:$PATH"']},
+{q:'Reload your .bashrc without logging out',a:['source .bashrc','source ~/.bashrc','. ~/.bashrc']},
+{q:'Show ALL shell variables (not just exported)',a:['set']},
+{q:'Show your current PS1 prompt string',a:['echo $PS1']},
+]},
+
+'vi':{id:'vi',p:2,t:'vi/vim Essentials (Ch 12)',q:[
+{q:'Open file "notes.txt" in vi/vim',a:['vi notes.txt','vim notes.txt']},
+{q:'vi: enter Insert mode (type before cursor)',a:['i']},
+{q:'vi: insert at END of current line',a:['A']},
+{q:'vi: open a new line BELOW and enter insert mode',a:['o']},
+{q:'vi: open a new line ABOVE and enter insert mode',a:['O']},
+{q:'vi: save and quit',a:[':wq','ZZ']},
+{q:'vi: quit WITHOUT saving',a:[':q!']},
+{q:'vi: save (write) without quitting',a:[':w']},
+{q:'vi: delete entire current line',a:['dd']},
+{q:'vi: delete 5 lines',a:['5dd']},
+{q:'vi: undo last change',a:['u']},
+{q:'vi: yank (copy) current line',a:['yy']},
+{q:'vi: paste below cursor',a:['p']},
+{q:'vi: search forward for "error"',a:['/error']},
+{q:'vi: global search-and-replace "old" with "new"',a:[':%s/old/new/g']},
+{q:'vi: go to line 42',a:[':42','42G']},
+{q:'vi: go to end of file',a:['G']},
+{q:'vi: go to beginning of file',a:['gg','1G']},
+{q:'vi: join current line with next',a:['J']},
+]},
+
+// ──── PART 3: COMMON TASKS ────
+'pkg':{id:'pkg',p:3,t:'Package Management (Ch 14)',q:[
+{q:'Update package list (Debian/Ubuntu)',a:['sudo apt-get update','apt-get update','sudo apt update']},
+{q:'Upgrade all installed packages (Debian)',a:['sudo apt-get upgrade','sudo apt upgrade']},
+{q:'Install package "nginx" (Debian)',a:['sudo apt-get install nginx','sudo apt install nginx']},
+{q:'Remove package "nginx" (Debian)',a:['sudo apt-get remove nginx','sudo apt remove nginx']},
+{q:'Search for packages related to "editor" (Debian)',a:['apt-cache search editor','apt search editor']},
+{q:'Show info about an installed package',a:['apt-cache show nginx','dpkg -l nginx','apt show nginx']},
+{q:'Which package installed /usr/bin/vim?',a:['dpkg -S /usr/bin/vim','dpkg --search /usr/bin/vim']},
+{q:'Install with yum (RHEL/CentOS)',a:['sudo yum install nginx','yum install nginx','sudo dnf install nginx']},
+{q:'Update all packages (RHEL)',a:['sudo yum update','yum update','sudo dnf update']},
+]},
+
+'storage':{id:'storage',p:3,t:'Storage Media (Ch 15)',q:[
+{q:'Show currently mounted filesystems',a:['mount']},
+{q:'Show block devices (disks/partitions)',a:['lsblk']},
+{q:'Mount USB at /dev/sdb1 to /mnt/usb',a:['sudo mount /dev/sdb1 /mnt/usb','mount /dev/sdb1 /mnt/usb']},
+{q:'Unmount /mnt/usb',a:['sudo umount /mnt/usb','umount /mnt/usb']},
+{q:'Show disk usage with human-readable sizes',a:['df -h']},
+{q:'Partition a disk interactively',a:['sudo fdisk /dev/sdb','fdisk /dev/sdb']},
+{q:'Create ext4 filesystem on a partition',a:['sudo mkfs -t ext4 /dev/sdb1','sudo mkfs.ext4 /dev/sdb1']},
+{q:'Check and repair a filesystem',a:['sudo fsck /dev/sdb1','fsck /dev/sdb1']},
+{q:'Copy raw data between devices (disk image)',a:['dd if=/dev/sda of=/dev/sdb','sudo dd if=/dev/sda of=backup.img']},
+]},
+
+'net':{id:'net',p:3,t:'Networking (Ch 16)',q:[
+{q:'Test if a host is reachable',a:['ping google.com']},
+{q:'Trace the network route to a host',a:['traceroute google.com','tracepath google.com']},
+{q:'Show all network interfaces and IPs (modern)',a:['ip addr','ip a']},
+{q:'Show the routing table',a:['ip route show','ip route','route -n']},
+{q:'Show active network connections and listening ports',a:['netstat -tuln','ss -tuln']},
+{q:'Connect to a remote host via SSH as "bob"',a:['ssh bob@server','ssh bob@remotehost']},
+{q:'Copy local file to remote server with SCP',a:['scp file.txt bob@server:/path/']},
+{q:'Copy remote file to local machine',a:['scp bob@server:/path/file.txt .','scp bob@server:/path/file.txt ./']},
+{q:'Download a file from the web (command line)',a:['wget http://example.com/file','wget url','curl -O http://example.com/file']},
+{q:'Generate an SSH key pair',a:['ssh-keygen','ssh-keygen -t rsa -b 4096']},
+]},
+
+'find':{id:'find',p:3,t:'Searching for Files (Ch 17)',q:[
+{q:'Find files by name quickly using cached database',a:['locate filename','locate']},
+{q:'Update the locate file database',a:['sudo updatedb','updatedb']},
+{q:'Find everything under your home directory',a:['find ~','find ~ -print']},
+{q:'Find only directories under home',a:['find ~ -type d']},
+{q:'Find only regular files under home',a:['find ~ -type f']},
+{q:'Find .jpg files larger than 1MB',a:['find ~ -type f -name "*.jpg" -size +1M','find ~ -name "*.jpg" -size +1M']},
+{q:'Find files modified in the last 24 hours',a:['find ~ -mtime -1','find . -mtime -1']},
+{q:'Find and delete all .bak files',a:['find ~ -type f -name "*.bak" -delete','find . -name "*.bak" -delete']},
+{q:'Find files and run ls -l on each result',a:['find . -type f -exec ls -l {} ;','find ~ -exec ls -l \\{\\} \\;']},
+{q:'Count all regular files under home',a:['find ~ -type f | wc -l']},
+{q:'Find files by permission (not 0600 for files)',a:['find ~ -type f -not -perm 0600']},
+]},
+
+'archive':{id:'archive',p:3,t:'Archiving & Backup (Ch 18)',q:[
+{q:'Compress a file with gzip',a:['gzip file.txt','gzip file']},
+{q:'Decompress a .gz file',a:['gunzip file.txt.gz','gzip -d file.txt.gz']},
+{q:'Compress with bzip2 (better ratio)',a:['bzip2 file.txt','bzip2 file']},
+{q:'Create a tar archive of "mydir"',a:['tar -cf archive.tar mydir','tar cf archive.tar mydir']},
+{q:'Create a gzip-compressed tar archive',a:['tar -czf archive.tar.gz mydir','tar czf archive.tar.gz mydir']},
+{q:'Create a bzip2-compressed tar archive',a:['tar -cjf archive.tar.bz2 mydir','tar cjf archive.tar.bz2 mydir']},
+{q:'Extract a tar archive',a:['tar -xf archive.tar','tar xf archive.tar']},
+{q:'Extract tar.gz to a specific directory',a:['tar -xzf archive.tar.gz -C /dest','tar xzf archive.tar.gz -C /dest']},
+{q:'List contents of archive without extracting',a:['tar -tf archive.tar','tar tf archive.tar']},
+{q:'Create a zip archive of a directory',a:['zip -r archive.zip mydir']},
+{q:'Extract a zip archive',a:['unzip archive.zip']},
+{q:'Synchronize directories locally with rsync',a:['rsync -av source/ dest/','rsync -a source/ dest/']},
+{q:'Rsync over SSH to a remote server',a:['rsync -av dir/ user@host:/dest/','rsync -avz dir/ user@host:/dest']},
+]},
+
+'regex':{id:'regex',p:3,t:'Regular Expressions & grep (Ch 19)',q:[
+{q:'Find lines containing "error" in log.txt',a:['grep error log.txt','grep "error" log.txt']},
+{q:'Case-insensitive search for "error"',a:['grep -i error log.txt','grep -i "error" log.txt']},
+{q:'Recursive search for "TODO" in all files',a:['grep -r TODO .','grep -R TODO .','grep -rn TODO .']},
+{q:'Show line numbers with matches',a:['grep -n error log.txt']},
+{q:'Invert: show lines NOT matching "error"',a:['grep -v error log.txt','grep -v "error" log.txt']},
+{q:'Count matching lines only',a:['grep -c error log.txt']},
+{q:'List only filenames that contain matches',a:['grep -l error *.txt','grep -rl error .']},
+{q:'Extended regex: match "cat" OR "dog"',a:['grep -E "cat|dog" file','egrep "cat|dog" file']},
+{q:'Match lines STARTING with "From:"',a:['grep "^From:" file','grep ^From: file']},
+{q:'Match lines ENDING with ".com"',a:['grep ".com$" file','grep \\.com$ file']},
+{q:'Match any single character with dot: "b.g"',a:['grep "b.g" file']},
+{q:'Match zero or more: "A*" after "file"',a:['grep "fileA*" file']},
+]},
+
+'text':{id:'text',p:3,t:'Text Processing (Ch 20)',q:[
+{q:'Sort a file numerically',a:['sort -n file.txt','sort -n file']},
+{q:'Sort in reverse order',a:['sort -r file.txt','sort -r file']},
+{q:'Sort by the 5th column/field',a:['sort -k 5 file.txt','sort -k5 file']},
+{q:'Sort and remove duplicates in one command',a:['sort -u file.txt']},
+{q:'Show only duplicate lines (from sorted input)',a:['uniq -d','sort file | uniq -d']},
+{q:'Count occurrences of each line',a:['uniq -c','sort file | uniq -c']},
+{q:'Cut fields 1 and 3 (tab-delimited)',a:['cut -f 1,3 file.txt','cut -f1,3 file.txt']},
+{q:'Cut characters 1 through 10 from each line',a:['cut -c 1-10 file.txt','cut -c1-10 file.txt']},
+{q:'Merge two files side by side',a:['paste file1.txt file2.txt']},
+{q:'Translate lowercase to uppercase',a:['tr a-z A-Z','tr \'[:lower:]\' \'[:upper:]\'']},
+{q:'Delete all digits from input',a:['tr -d \'0-9\'','tr -d 0-9','tr -d \'[:digit:]\'']},
+{q:'Squeeze repeated spaces into single space',a:['tr -s \' \'','tr -s " "']},
+{q:'Convert DOS line endings to Unix',a:['tr -d \'\\r\' < dos.txt > unix.txt']},
+{q:'ROT13 encode text',a:['echo "text" | tr a-zA-Z n-za-mN-ZA-M','tr a-zA-Z n-za-mN-ZA-M']},
+{q:'sed: replace first "old" with "new" per line',a:['sed \'s/old/new/\' file','sed s/old/new/ file']},
+{q:'sed: replace ALL "old" with "new" globally',a:['sed \'s/old/new/g\' file','sed s/old/new/g file']},
+{q:'sed: delete lines containing "junk"',a:['sed \'/junk/d\' file']},
+{q:'Compare two files and show differences',a:['diff file1 file2','diff file1.txt file2.txt']},
+{q:'Create a patch file from diff output',a:['diff -Naur old new > patch.txt']},
+{q:'Apply a patch',a:['patch < patch.txt']},
+]},
+
+// ──── PART 4: SHELL SCRIPTS ────
+'script':{id:'script',p:4,t:'Shell Scripting Basics (Ch 24-25)',q:[
+{q:'The shebang line for a bash script',a:['#!/bin/bash']},
+{q:'Make your script executable',a:['chmod 755 myscript','chmod +x myscript']},
+{q:'Run a script in the current directory',a:['./myscript']},
+{q:'Assign a variable (no spaces around =)',a:['title="My Page"','title=\'My Page\'']},
+{q:'Reference a variable with $',a:['echo $title','echo "$title"']},
+{q:'Declare a read-only constant',a:['declare -r TITLE="Page"','readonly TITLE="Page"']},
+{q:'Start a here document',a:['cat << EOF','cat <<EOF','cat << _EOF_']},
+{q:'Add a comment in a script',a:['# comment','# this is a comment']},
+{q:'Print output from a script',a:['echo "Hello World"','echo \'Hello World\'']},
+]},
+
+'flow':{id:'flow',p:4,t:'if / test / Flow Control (Ch 27)',q:[
+{q:'Check exit status of the last command',a:['echo $?']},
+{q:'Test if file "f" exists',a:['[ -e f ]','[[ -e f ]]','test -e f']},
+{q:'Test if "f" is a regular file (not directory)',a:['[ -f f ]','[[ -f f ]]','test -f f']},
+{q:'Test if "d" is a directory',a:['[ -d d ]','[[ -d d ]]','test -d d']},
+{q:'Test if a file is readable',a:['[ -r file ]','[[ -r file ]]']},
+{q:'Test if a string variable is empty',a:['[ -z "$str" ]','[[ -z "$str" ]]']},
+{q:'Test if a string is NOT empty',a:['[ -n "$str" ]','[[ -n "$str" ]]']},
+{q:'Test if two strings are equal',a:['[ "$a" = "$b" ]','[[ "$a" == "$b" ]]']},
+{q:'Test if integer a is greater than b',a:['[ "$a" -gt "$b" ]','(( a > b ))']},
+{q:'Test if integer a equals b',a:['[ "$a" -eq "$b" ]','(( a == b ))']},
+{q:'Logical AND: both conditions must be true',a:['[ cond1 ] && [ cond2 ]','[[ cond1 && cond2 ]]']},
+{q:'Logical OR: either condition true',a:['[ cond1 ] || [ cond2 ]','[[ cond1 || cond2 ]]']},
+]},
+
+'loops':{id:'loops',p:4,t:'Loops: while, for, case (Ch 29, 31, 33)',q:[
+{q:'while loop (first line syntax)',a:['while [ condition ]; do','while [[ condition ]]; do']},
+{q:'until loop (first line syntax)',a:['until [ condition ]; do']},
+{q:'for loop over a word list',a:['for i in word1 word2 word3; do','for i in list; do']},
+{q:'for loop over all .txt files',a:['for f in *.txt; do','for file in *.txt; do']},
+{q:'C-style for loop: 0 to 9',a:['for ((i=0; i<10; i++)); do','for (( i=0; i<10; i++ )); do']},
+{q:'Break out of a loop early',a:['break']},
+{q:'Skip to the next iteration of a loop',a:['continue']},
+{q:'case statement (first line)',a:['case $var in','case "$var" in']},
+{q:'Read a line from user into variable "name"',a:['read name','read -p "Name: " name']},
+{q:'Read with a custom prompt displayed',a:['read -p "Enter value: " val']},
+]},
+
+'adv':{id:'adv',p:4,t:'Strings, Arrays, Functions (Ch 26, 34-36)',q:[
+{q:'Get the length of a string variable',a:['${#string}','echo ${#string}']},
+{q:'Extract substring: first 5 characters',a:['${string:0:5}','echo ${string:0:5}']},
+{q:'Define a shell function (two syntaxes accepted)',a:['function fname { commands; }','fname() { commands; }']},
+{q:'Declare a local variable inside a function',a:['local var=value','local myvar']},
+{q:'Create an indexed array',a:['arr=(one two three)','declare -a arr']},
+{q:'Access the first element of array',a:['${arr[0]}','echo ${arr[0]}']},
+{q:'Get number of elements in array',a:['${#arr[@]}','echo ${#arr[@]}']},
+{q:'Append an element to array',a:['arr+=(four)','arr+=("four")']},
+{q:'Number of positional parameters ($#)',a:['$#','echo $#']},
+{q:'All positional parameters as separate words',a:['$@','echo "$@"']},
+{q:'Set a trap to clean up on script exit',a:['trap "rm -f /tmp/$$" EXIT','trap cleanup EXIT']},
+{q:'Create a named pipe (FIFO)',a:['mkfifo mypipe']},
+]},
+
+'sysadmin':{id:'sysadmin',p:3,t:'System Admin Essentials',q:[
+{q:'Show disk space in human-readable format',a:['df -h']},
+{q:'Summarize disk usage per item in current dir',a:['du -sh *','du -sh .']},
+{q:'Show system uptime and load',a:['uptime']},
+{q:'Show kernel version',a:['uname -r']},
+{q:'Show full system identification',a:['uname -a']},
+{q:'Show OS release information',a:['cat /etc/os-release','lsb_release -a']},
+{q:'Show currently logged-in users',a:['who','w']},
+{q:'Show command history',a:['history']},
+{q:'View system journal / logs',a:['sudo journalctl','journalctl']},
+{q:'Add a new user "alice"',a:['sudo useradd alice','sudo adduser alice']},
+{q:'Remove user "bob" and their home directory',a:['sudo userdel -r bob','userdel -r bob']},
+{q:'List groups you belong to',a:['groups','id']},
+{q:'Show all running services (systemd)',a:['systemctl','systemctl list-units --type=service']},
+{q:'Start a service',a:['sudo systemctl start nginx','systemctl start nginx']},
+{q:'Enable a service on boot',a:['sudo systemctl enable nginx','systemctl enable nginx']},
+{q:'Check service status',a:['systemctl status nginx']},
+]},
+};
+
+/* ── STATE ── */
+let S={mod:null,qi:0,sc:0,comp:{},miss:{},best:{}};
+function load(){try{const d=JSON.parse(localStorage.getItem(LS));if(d){S.comp=d.c||{};S.miss=d.m||{};S.best=d.b||{};}}catch(e){}}
+function save(){localStorage.setItem(LS,JSON.stringify({c:S.comp,m:S.miss,b:S.best}));}
+
+/* ── IO ── */
+function pr(t,c){const d=document.createElement('div');if(c)d.className=c;d.textContent=t;T.appendChild(d);T.scrollTop=T.scrollHeight;}
+function prM(s){s.split('\n').forEach(l=>pr(l));}
+function ty(t){I.value+=t;I.focus();}
+function go(){run(I.value);I.value='';I.focus();}
+I.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault();go();}
+  if(e.key==='ArrowUp'){e.preventDefault();if(hist.length){hIdx=Math.min(hIdx+1,hist.length-1);I.value=hist[hIdx];}}
+  if(e.key==='ArrowDown'){e.preventDefault();hIdx>0?(hIdx--,I.value=hist[hIdx]):(hIdx=-1,I.value='');}
+});
+
+/* ── MAIN ROUTER ── */
+function run(raw){
+  let cmd=raw.trim().replace(/\s+/g,' ');
+  if(!cmd)return;
+  pr(`user@linux:~$ ${raw}`,'echo');
+  hist.unshift(raw);hIdx=-1;if(hist.length>100)hist.length=100;
+
+  // Clear always works
+  if(cmd==='clear'){T.innerHTML='';return;}
+
+  // Review mode
+  if(S.mod==='__review'){reviewAns(cmd);return;}
+
+  // Quiz mode
+  if(S.mod){
+    if(cmd==='exit'||cmd==='quit'){pr('Exited module.','y');S.mod=null;return;}
+    if(cmd==='hint'){doHint();return;}
+    if(cmd==='skip'){doSkip();return;}
+    checkAns(cmd);return;
+  }
+
+  // Trainer meta-commands
+  if(cmd==='help'||cmd==='h'){showHelp();return;}
+  if(cmd==='status'||cmd==='progress'){showStatus();return;}
+  if(cmd==='review'){startReview();return;}
+  if(cmd==='toc'||cmd==='chapters'){showTOC();return;}
+  if(cmd==='reset'){localStorage.removeItem(LS);S={mod:null,qi:0,sc:0,comp:{},miss:{},best:{}};pr('Progress reset.','r');return;}
+  if(cmd.startsWith('start ')){
+    const t=cmd.split(' ')[1];let fid=null;
+    if(M[t])fid=t;else{const k=Object.keys(M),n=parseInt(t);if(n>0&&n<=k.length)fid=k[n-1];}
+    if(fid)startMod(fid);else pr(`Module "${t}" not found.`,'r');
+    return;
+  }
+
+  // ── LIVE SHELL ──
+  const r=simShell(cmd);
+  if(r===null)return;
+  if(r!==undefined){if(r)prM(r);return;}
+
+  // Unknown
+  pr(`bash: ${cmd.split(' ')[0]}: command not found`,'r');
+}
+
+/* ── HELP ── */
+function showHelp(){
+  const keys=Object.keys(M),tQ=keys.reduce((s,k)=>s+M[k].q.length,0);
+  pr('');
+  pr('═══════════════════════════════════════════════════','b');
+  pr('  Linux Pocket Trainer                             ','b');
+  pr('  Source: "The Linux Command Line" (555 pages)     ','b');
+  pr(`  ${keys.length} modules · ${tQ} questions · Live shell simulation  `,'b');
+  pr('═══════════════════════════════════════════════════','b');
+  pr('');
+  pr('  help          This menu','w');
+  pr('  toc           Book chapter map','w');
+  pr('  start <id|#>  Start a quiz module','w');
+  pr('  status        Progress dashboard','w');
+  pr('  review        Replay missed questions only','w');
+  pr('  hint / skip   During quizzes','w');
+  pr('  exit          Leave current module','w');
+  pr('  clear         Clear screen','w');
+  pr('  reset         Wipe all progress','w');
+  pr('');
+  [{n:'Part 1: Learning the Shell',p:1},{n:'Part 2: Configuration',p:2},{n:'Part 3: Common Tasks',p:3},{n:'Part 4: Shell Scripts',p:4}].forEach(part=>{
+    pr(`── ${part.n} ──`,'b');
+    keys.forEach((k,i)=>{
+      if(M[k].p!==part.p)return;
+      const m=M[k],done=S.comp[k],b=S.best[k];
+      pr(`  ${(i+1+'').padStart(2)}. start ${k.padEnd(8)} ${done?'✔':'○'} ${m.t} [${m.q.length}q]${b!==undefined?' best:'+b+'/'+m.q.length:''}`);
+    });
+  });
+  pr('');
+  pr('💡 Real commands work too: pwd, ls -la, df -h, ps aux, etc.','d');
+}
+
+function showTOC(){
+  pr('');pr('"The Linux Command Line" — Chapter Map','b');pr('─'.repeat(44),'b');
+  [['Part 1: Learning the Shell','nav explore files wild cmds redir expn keys perms procs'],
+   ['Part 2: Configuration','env vi'],
+   ['Part 3: Common Tasks','pkg storage net find archive regex text sysadmin'],
+   ['Part 4: Shell Scripts','script flow loops adv']
+  ].forEach(([nm,ids])=>{
+    const ms=ids.split(' '),dn=ms.filter(id=>S.comp[id]).length;
+    pr(`\n  ${nm} (${dn}/${ms.length})`,'b');
+    ms.forEach(id=>{if(M[id])pr(`    ${S.comp[id]?'✔':'○'} ${M[id].t} [${M[id].q.length}]`);});
+  });
+}
+
+function showStatus(){
+  const keys=Object.keys(M),total=keys.length,done=Object.keys(S.comp).length;
+  const tQ=keys.reduce((s,k)=>s+M[k].q.length,0);
+  const missQ=Object.keys(S.miss).reduce((s,k)=>s+(S.miss[k]||[]).length,0);
+  const pct=Math.round(done/total*100),bL=30,f=Math.round(pct/100*bL);
+  pr('');pr(`═══ ${done}/${total} modules mastered ═══`,'b');
+  pr(`[${'█'.repeat(f)}${'░'.repeat(bL-f)}] ${pct}%`,'g');
+  pr(`${tQ} total questions`,'d');
+  if(missQ)pr(`📝 ${missQ} missed — type "review"`,'y');
+  pr('');
+  keys.forEach(k=>{
+    const m=M[k],c=S.comp[k],b=S.best[k];
+    pr(`  ${c?'✔':'○'} ${m.t}${b!==undefined?' — best:'+b+'/'+m.q.length:''} `,c?'g':'d');
+  });
+}
+
+/* ── QUIZ ── */
+function startMod(id){
+  S.mod=id;S.qi=0;S.sc=0;
+  const m=M[id];
+  pr(`\n┌── ${m.t} ──┐`,'b');
+  pr(`│ ${m.q.length} questions · hint · skip · exit │`,'d');
+  askQ();
+}
+function askQ(){
+  const m=M[S.mod];
+  if(S.qi>=m.q.length){finishMod();return;}
+  pr(`\n[${S.qi+1}/${m.q.length}] ${m.q[S.qi].q}`,'y');
+}
+function doHint(){
+  const a=M[S.mod].q[S.qi].a[0],show=a.substring(0,Math.ceil(a.length*0.4));
+  pr(`  💡 "${show}…"`,'d');
+}
+function doSkip(){
+  const q=M[S.mod].q[S.qi];
+  pr(`  ⏭ ${q.a[0]}`,'d');
+  trackMiss(S.mod,S.qi);S.qi++;askQ();
+}
+function checkAns(cmd){
+  const q=M[S.mod].q[S.qi];
+  if(q.a.some(a=>a===cmd)){pr('  ✔ Correct!','g bld');S.sc++;}
+  else{
+    if(q.a.some(a=>a.toLowerCase()===cmd.toLowerCase()))pr(`  ✘ Case matters! Expected: ${q.a[0]}`,'r');
+    else pr(`  ✘ Expected: ${q.a[0]}`,'r');
+    if(q.a.length>1)pr(`    Also: ${q.a.slice(1).join(', ')}`,'dd');
+    trackMiss(S.mod,S.qi);
+  }
+  S.qi++;askQ();
+}
+function trackMiss(mid,qi){if(!S.miss[mid])S.miss[mid]=[];if(!S.miss[mid].includes(qi))S.miss[mid].push(qi);save();}
+function finishMod(){
+  const m=M[S.mod],t=m.q.length,p=Math.round(S.sc/t*100);
+  pr(`\n  Score: ${S.sc}/${t} (${p}%)`,'b bld');
+  if(!S.best[S.mod]||S.sc>S.best[S.mod])S.best[S.mod]=S.sc;
+  if(S.sc===t){pr('  ★ MASTERED ★','g bld');S.comp[S.mod]=true;delete S.miss[S.mod];}
+  else if(p>=80)pr('  Good! 100% to master.','y');
+  else pr('  Keep going. Try "review".','d');
+  save();S.mod=null;
+}
+
+/* ── REVIEW ── */
+let _rP=[],_ri=0,_rc=0;
+function startReview(){
+  _rP=[];
+  Object.keys(S.miss).forEach(mid=>{(S.miss[mid]||[]).forEach(qi=>{if(M[mid]&&M[mid].q[qi])_rP.push({mid,qi,q:M[mid].q[qi]});});});
+  if(!_rP.length){pr('No missed questions! 🎉','g');return;}
+  for(let i=_rP.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[_rP[i],_rP[j]]=[_rP[j],_rP[i]];}
+  _ri=0;_rc=0;S.mod='__review';
+  pr(`\n═══ Review: ${_rP.length} missed ═══`,'p');
+  pr(`[1/${_rP.length}] ${_rP[0].q.q}`,'p');
+}
+function reviewAns(cmd){
+  if(cmd==='exit'||cmd==='quit'){pr(`Review: ${_rc}/${_rP.length} fixed.`,'p');S.mod=null;return;}
+  if(cmd==='hint'){const a=_rP[_ri].q.a[0];pr(`  💡 "${a.substring(0,Math.ceil(a.length*0.4))}…"`,'d');return;}
+  if(cmd==='skip'){pr(`  ⏭ ${_rP[_ri].q.a[0]}`,'d');_ri++;if(_ri>=_rP.length){pr(`Done. ${_rc}/${_rP.length}`,'p');S.mod=null;return;}pr(`\n[${_ri+1}/${_rP.length}] ${_rP[_ri].q.q}`,'p');return;}
+  const q=_rP[_ri].q;
+  if(q.a.some(a=>a===cmd)){
+    pr('  ✔ Fixed!','g bld');_rc++;
+    const ma=S.miss[_rP[_ri].mid];if(ma){const x=ma.indexOf(_rP[_ri].qi);if(x>-1)ma.splice(x,1);if(!ma.length)delete S.miss[_rP[_ri].mid];}save();
+  }else pr(`  ✘ Expected: ${q.a[0]}`,'r');
+  _ri++;
+  if(_ri>=_rP.length){pr(`\nReview done. ${_rc}/${_rP.length} fixed.`,'p');S.mod=null;save();return;}
+  pr(`\n[${_ri+1}/${_rP.length}] ${_rP[_ri].q.q}`,'p');
+}
+
+/* ── WELCOME ── */
+load();
+const _k=Object.keys(M),_tQ=_k.reduce((s,k)=>s+M[k].q.length,0),_dn=Object.keys(S.comp).length;
+pr('═══════════════════════════════════════════════════','b');
+pr('       Linux Pocket Trainer                        ','b');
+pr('  "The Linux Command Line" — 555 pages distilled   ','b');
+pr(`  ${_k.length} modules · ${_tQ} questions · Live shell simulation   `,'b');
+pr('═══════════════════════════════════════════════════','b');
+pr('');
+if(_dn)pr(`Welcome back. ${_dn}/${_k.length} mastered.`,'g');
+pr('Type "help" for modules. Real commands work: try pwd, ls, df -h','y');
+window.onload=()=>I.focus();
+document.addEventListener('click',()=>{if(!window.getSelection().toString())I.focus();});
+</script>
+  <script src="../shared/help-content.js"></script>
+  <script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Image Rater Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1116;
+    --bg2: #111723;
+    --panel: #172135;
+    --line: #2a3f63;
+    --text: #eaf2ff;
+    --muted: #9fb3cf;
+    --brand: #2dd4bf;
+    --accent: #f59e0b;
+    --good: #34d399;
+    --warn: #fbbf24;
+    --danger: #f87171;
+    --mono: 'Space Mono', ui-monospace, monospace;
+    --sans: 'Sora', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    color: var(--text);
+    font-family: var(--sans);
+    background:
+      radial-gradient(900px 420px at 0% -20%, rgba(45, 212, 191, .15) 0%, transparent 60%),
+      radial-gradient(900px 420px at 100% -25%, rgba(245, 158, 11, .16) 0%, transparent 60%),
+      linear-gradient(160deg, var(--bg), var(--bg2));
+  }
+
+  .top {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    border-bottom: 1px solid #22314a;
+    background: rgba(10, 14, 20, .88);
+    backdrop-filter: blur(6px);
+  }
+  .top a {
+    color: #b7c7dd;
+    text-decoration: none;
+    font: 600 12px/1 var(--mono);
+  }
+  .top a:hover { color: #f5fbff; }
+  .top span {
+    color: #a6bbd7;
+    font: 700 12px/1 var(--mono);
+  }
+
+  .wrap {
+    max-width: 1280px;
+    margin: 16px auto 34px;
+    padding: 0 14px;
+    display: grid;
+    gap: 12px;
+  }
+
+  .hero {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: linear-gradient(170deg, rgba(17, 27, 42, .95), rgba(13, 21, 32, .95));
+    padding: 14px;
+  }
+  .hero h1 {
+    font-size: clamp(1.2rem, 2.8vw, 1.8rem);
+    letter-spacing: .2px;
+  }
+  .hero p {
+    margin-top: 8px;
+    color: var(--muted);
+    line-height: 1.45;
+    max-width: 1100px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 12px;
+  }
+
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: linear-gradient(170deg, rgba(16, 27, 42, .95), rgba(12, 21, 34, .95));
+    padding: 12px;
+  }
+  .card h2 {
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+
+  .line {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 6px;
+    color: #a9bdd6;
+    font: 600 12px/1 var(--mono);
+  }
+  input[type='text'], textarea {
+    width: 100%;
+    border: 1px solid #395175;
+    border-radius: 10px;
+    background: #0f2135;
+    color: var(--text);
+    padding: 9px 10px;
+    font: 500 14px/1.35 var(--sans);
+  }
+  textarea { min-height: 110px; resize: vertical; }
+
+  .btn-row {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .btn {
+    border: 1px solid #3a5375;
+    border-radius: 10px;
+    background: #173250;
+    color: #e9f3ff;
+    padding: 8px 12px;
+    cursor: pointer;
+    font: 700 13px/1 var(--sans);
+  }
+  .btn:hover { background: #21486f; }
+  .btn.good { border-color: #2f8b72; background: linear-gradient(180deg, #2a826a, #1f6552); }
+  .btn.warn { border-color: #9b7638; background: linear-gradient(180deg, #8a6829, #6a4f20); }
+  .btn.danger { border-color: #925050; background: linear-gradient(180deg, #814141, #673333); }
+
+  .status {
+    margin-top: 8px;
+    border: 1px solid #385171;
+    border-radius: 10px;
+    background: #102338;
+    padding: 8px 10px;
+    color: #d9e9fc;
+    font: 600 12px/1.35 var(--mono);
+  }
+  .status.ok { border-color: #2f7e65; color: #b2f1d9; }
+  .status.warn { border-color: #8b6830; color: #ffd7aa; }
+  .status.err { border-color: #944d4d; color: #ffb5b5; }
+
+  .metrics {
+    margin-top: 8px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .metric {
+    border: 1px solid #334f6b;
+    border-radius: 10px;
+    background: #11253a;
+    padding: 8px;
+  }
+  .metric .k { color: #a4bad2; font: 600 11px/1 var(--mono); }
+  .metric .v { margin-top: 6px; font: 800 1.03rem/1 var(--sans); }
+
+  .viewer {
+    margin-top: 8px;
+    border: 1px solid #365473;
+    border-radius: 12px;
+    background: #0d1a28;
+    min-height: 280px;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    touch-action: pan-y;
+  }
+  .viewer img {
+    max-width: 100%;
+    max-height: 430px;
+    display: block;
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+  .viewer .placeholder {
+    color: #9cb1cb;
+    text-align: center;
+    padding: 16px;
+    line-height: 1.45;
+  }
+
+  .tags {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .tag {
+    border: 1px solid #355373;
+    border-radius: 999px;
+    background: #112b42;
+    color: #d6e9ff;
+    padding: 4px 8px;
+    font: 600 11px/1 var(--mono);
+  }
+
+  .rate-row {
+    margin-top: 8px;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+  }
+  .rate-btn {
+    border: 1px solid #3a5374;
+    border-radius: 10px;
+    min-height: 42px;
+    background: #152f48;
+    color: #ebf4ff;
+    cursor: pointer;
+    font: 700 13px/1 var(--mono);
+  }
+  .rate-btn:hover { background: #204668; }
+  .rate-btn[data-rate='5'] { border-color: #3c8a65; }
+  .rate-btn[data-rate='1'] { border-color: #8a5858; }
+
+  .profile-list, .history {
+    margin-top: 8px;
+    max-height: 300px;
+    overflow: auto;
+    border: 1px solid #355171;
+    border-radius: 10px;
+    background: #102338;
+    padding: 8px;
+    display: grid;
+    gap: 7px;
+  }
+  .row {
+    border: 1px solid #355171;
+    border-radius: 8px;
+    background: #122a41;
+    padding: 7px 8px;
+    font: 600 12px/1.35 var(--mono);
+  }
+  .bar {
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #1e4060, #2dd4bf);
+    margin-top: 6px;
+  }
+
+  .sub {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  @media (max-width: 1080px) {
+    .grid { grid-template-columns: 1fr; }
+    .line { grid-template-columns: 1fr; }
+    .metrics { grid-template-columns: 1fr 1fr; }
+    .rate-row { grid-template-columns: repeat(4, 1fr); }
+  }
+</style>
+</head>
+<body>
+  <nav class="top">
+    <a href="../index.html">&larr; Back to Suite</a>
+    <span>Image Rater Lab</span>
+  </nav>
+
+  <main class="wrap">
+    <header class="hero">
+      <h1>Image Rater Lab: Earn Ratings, Learn Preferences</h1>
+      <p>
+        Feed image decks, rate what you like, and build preference intelligence locally. Works offline with uploaded images and demo decks.
+        When online, you can load remote URLs for product/outfit research and recommendation tuning.
+      </p>
+    </header>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Deck Source</h2>
+        <div class="line">
+          <div>
+            <label for="imageFiles">Upload images (offline)</label>
+            <input id="imageFiles" type="file" accept="image/*" multiple />
+          </div>
+          <div>
+            <label for="defaultTags">Default tags for new URL items</label>
+            <input id="defaultTags" type="text" placeholder="fashion, streetwear, product" />
+          </div>
+        </div>
+        <div style="margin-top:8px;">
+          <label for="urlInput">URL list (one per line): <code>url|title|tag1,tag2</code></label>
+          <textarea id="urlInput" placeholder="https://example.com/look1.jpg|Blue Jacket|fashion,blue,jacket"></textarea>
+        </div>
+        <div class="btn-row">
+          <button id="addUrlsBtn" class="btn good" type="button">Add URL Items</button>
+          <button id="loadDemoBtn" class="btn" type="button">Load Offline Demo Deck</button>
+          <button id="clearDeckBtn" class="btn danger" type="button">Clear Deck</button>
+          <button id="importBtn" class="btn" type="button">Import JSON</button>
+          <button id="exportBtn" class="btn warn" type="button">Export Session</button>
+          <input id="importFile" type="file" accept="application/json" style="display:none;" />
+        </div>
+        <h2 style="margin-top:12px;">Online Caption Auto-Tag</h2>
+        <p class="sub">Optional. Uses an OpenAI-compatible endpoint to caption images and suggest tags when online.</p>
+        <div class="line" style="margin-top:8px;">
+          <div>
+            <label for="captionBaseUrl">Base URL</label>
+            <input id="captionBaseUrl" type="text" value="https://api.openai.com/v1" />
+          </div>
+          <div>
+            <label for="captionModel">Model</label>
+            <input id="captionModel" type="text" value="gpt-4o-mini" />
+          </div>
+        </div>
+        <div class="line" style="margin-top:8px;">
+          <div>
+            <label for="captionApiKey">API Key</label>
+            <input id="captionApiKey" type="text" placeholder="sk-..." />
+          </div>
+          <div>
+            <label for="captionBatchCount">Batch size (unrated)</label>
+            <input id="captionBatchCount" type="text" value="5" />
+          </div>
+        </div>
+        <div class="btn-row">
+          <button id="captionSaveBtn" class="btn" type="button">Save Caption Settings</button>
+          <button id="captionTagCurrentBtn" class="btn good" type="button">Auto-Tag Current</button>
+          <button id="captionTagBatchBtn" class="btn warn" type="button">Auto-Tag Unrated Batch</button>
+        </div>
+        <div id="captionStatus" class="status warn">Caption auto-tag idle.</div>
+        <div id="sourceStatus" class="status warn">No deck loaded.</div>
+        <p class="sub" style="margin-top:8px;">
+          Tip: ratings are stored locally in your browser. Use export to move decks/scores between devices.
+        </p>
+      </article>
+
+      <article class="card">
+        <h2>Rater</h2>
+        <div class="metrics">
+          <div class="metric"><div class="k">Deck Size</div><div id="deckSizeVal" class="v">0</div></div>
+          <div class="metric"><div class="k">Position</div><div id="positionVal" class="v">0 / 0</div></div>
+          <div class="metric"><div class="k">Rated</div><div id="ratedVal" class="v">0</div></div>
+          <div class="metric"><div class="k">Credits</div><div id="creditsVal" class="v">0</div></div>
+        </div>
+        <div id="viewer" class="viewer">
+          <div class="placeholder">Load images to start rating.</div>
+        </div>
+        <div class="line" style="margin-top:8px;">
+          <div>
+            <label>Current Item</label>
+            <div id="itemTitle" class="status warn">--</div>
+          </div>
+          <div>
+            <label>Your Current Rating</label>
+            <div id="itemRating" class="status warn">--</div>
+          </div>
+        </div>
+        <div>
+          <label style="margin-top:8px;">Caption</label>
+          <div id="itemCaption" class="status warn">--</div>
+        </div>
+        <div id="itemTags" class="tags"></div>
+        <div class="rate-row" id="rateRow">
+          <button class="rate-btn" data-rate="1">1</button>
+          <button class="rate-btn" data-rate="2">2</button>
+          <button class="rate-btn" data-rate="3">3</button>
+          <button class="rate-btn" data-rate="4">4</button>
+          <button class="rate-btn" data-rate="5">5</button>
+          <button id="skipBtn" class="rate-btn" type="button">Skip</button>
+          <button id="nextBtn" class="rate-btn" type="button">Next</button>
+        </div>
+        <div class="btn-row">
+          <button id="prevBtn" class="btn" type="button">Previous</button>
+          <button id="rewindUnratedBtn" class="btn" type="button">Jump To Unrated</button>
+        </div>
+        <div id="raterStatus" class="status warn">Ready.</div>
+        <p class="sub" style="margin-top:8px;">Keys: <code>1-5</code> rate, <code>Right</code> next, <code>Left</code> previous, <code>S</code> skip. Touch: swipe left/right on image to navigate.</p>
+      </article>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Preference Profile</h2>
+        <p class="sub">Tag-level averages based on your ratings. Useful for recommendation targeting and product positioning.</p>
+        <div id="profileSummary" class="status warn">No profile yet. Rate a few tagged images.</div>
+        <div id="profileList" class="profile-list"></div>
+      </article>
+
+      <article class="card">
+        <h2>Rating Log</h2>
+        <p class="sub">Recent rating actions (latest first). Click export to save full deck + ratings + profile signal.</p>
+        <div id="history" class="history"></div>
+      </article>
+    </section>
+  </main>
+
+<script>
+(() => {
+  const LS_KEY = 'imageRater.session.v1';
+  const CAPTION_KEY = 'imageRater.caption.v1';
+  const CREDIT_RATE = 10;
+
+  const el = {
+    imageFiles: document.getElementById('imageFiles'),
+    defaultTags: document.getElementById('defaultTags'),
+    urlInput: document.getElementById('urlInput'),
+    addUrlsBtn: document.getElementById('addUrlsBtn'),
+    loadDemoBtn: document.getElementById('loadDemoBtn'),
+    clearDeckBtn: document.getElementById('clearDeckBtn'),
+    importBtn: document.getElementById('importBtn'),
+    exportBtn: document.getElementById('exportBtn'),
+    importFile: document.getElementById('importFile'),
+    captionBaseUrl: document.getElementById('captionBaseUrl'),
+    captionModel: document.getElementById('captionModel'),
+    captionApiKey: document.getElementById('captionApiKey'),
+    captionBatchCount: document.getElementById('captionBatchCount'),
+    captionSaveBtn: document.getElementById('captionSaveBtn'),
+    captionTagCurrentBtn: document.getElementById('captionTagCurrentBtn'),
+    captionTagBatchBtn: document.getElementById('captionTagBatchBtn'),
+    captionStatus: document.getElementById('captionStatus'),
+    sourceStatus: document.getElementById('sourceStatus'),
+
+    deckSizeVal: document.getElementById('deckSizeVal'),
+    positionVal: document.getElementById('positionVal'),
+    ratedVal: document.getElementById('ratedVal'),
+    creditsVal: document.getElementById('creditsVal'),
+    viewer: document.getElementById('viewer'),
+    itemTitle: document.getElementById('itemTitle'),
+    itemRating: document.getElementById('itemRating'),
+    itemCaption: document.getElementById('itemCaption'),
+    itemTags: document.getElementById('itemTags'),
+    rateRow: document.getElementById('rateRow'),
+    skipBtn: document.getElementById('skipBtn'),
+    nextBtn: document.getElementById('nextBtn'),
+    prevBtn: document.getElementById('prevBtn'),
+    rewindUnratedBtn: document.getElementById('rewindUnratedBtn'),
+    raterStatus: document.getElementById('raterStatus'),
+
+    profileSummary: document.getElementById('profileSummary'),
+    profileList: document.getElementById('profileList'),
+    history: document.getElementById('history')
+  };
+
+  const state = {
+    deck: [],
+    index: 0,
+    ratings: {},
+    history: [],
+    transientBlobUrls: [],
+    swipeStart: null,
+    captionBusy: false
+  };
+
+  function setStatus(node, msg, kind) {
+    node.textContent = msg;
+    node.className = 'status';
+    if (kind) node.classList.add(kind);
+  }
+
+  function uid(prefix) {
+    return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  function splitTags(text) {
+    return String(text || '')
+      .split(',')
+      .map(s => s.trim().toLowerCase())
+      .filter(Boolean)
+      .slice(0, 12);
+  }
+
+  function guessTagsFromTitle(title) {
+    return String(title || '')
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter(Boolean)
+      .slice(0, 6);
+  }
+
+  function parseUrlLine(line, fallbackTags) {
+    const raw = line.trim();
+    if (!raw) return null;
+    const [urlPart, titlePart, tagPart] = raw.split('|');
+    const url = String(urlPart || '').trim();
+    if (!/^https?:\/\//i.test(url) && !/^data:image\//i.test(url)) return null;
+    const title = String(titlePart || '').trim() || `URL Item ${state.deck.length + 1}`;
+    const tags = splitTags(tagPart || '').length ? splitTags(tagPart) : fallbackTags;
+    return {
+      id: uid('url'),
+      url,
+      title,
+      tags,
+      caption: String(title || ''),
+      src: 'url'
+    };
+  }
+
+  function makeDemoSvg(title, subtitle, bg) {
+    const safeTitle = title.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const safeSub = subtitle.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const svg = [
+      `<svg xmlns='http://www.w3.org/2000/svg' width='960' height='640' viewBox='0 0 960 640'>`,
+      `<defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='${bg[0]}'/><stop offset='100%' stop-color='${bg[1]}'/></linearGradient></defs>`,
+      `<rect width='960' height='640' fill='url(#g)'/>`,
+      `<circle cx='760' cy='120' r='140' fill='rgba(255,255,255,.16)'/>`,
+      `<circle cx='120' cy='520' r='180' fill='rgba(0,0,0,.18)'/>`,
+      `<text x='64' y='286' fill='white' font-family='Sora,Arial' font-size='56' font-weight='700'>${safeTitle}</text>`,
+      `<text x='64' y='340' fill='rgba(255,255,255,.9)' font-family='Sora,Arial' font-size='30'>${safeSub}</text>`,
+      `</svg>`
+    ].join('');
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  }
+
+  function buildDemoDeck() {
+    const rows = [
+      ['Street Jacket', 'urban look', ['fashion', 'jacket', 'streetwear', 'male'], ['#0f766e', '#1d4ed8']],
+      ['Minimal Dress', 'clean silhouette', ['fashion', 'dress', 'minimal', 'female'], ['#6d28d9', '#be185d']],
+      ['Trail Boots', 'outdoor product', ['product', 'boots', 'outdoor', 'gear'], ['#92400e', '#065f46']],
+      ['Sports Watch', 'performance style', ['product', 'watch', 'sport', 'tech'], ['#1f2937', '#0f766e']],
+      ['Classic Suit', 'formal clothing', ['fashion', 'formal', 'suit', 'business'], ['#1e3a8a', '#334155']],
+      ['Running Outfit', 'activewear', ['fashion', 'activewear', 'fitness', 'colorful'], ['#ea580c', '#0284c7']],
+      ['Travel Backpack', 'carry system', ['product', 'backpack', 'travel', 'utility'], ['#4d7c0f', '#334155']],
+      ['Casual Sneakers', 'daily comfort', ['fashion', 'shoes', 'casual', 'streetwear'], ['#7c3aed', '#2563eb']],
+      ['Kitchen Knife', 'commercial product', ['product', 'kitchen', 'tools', 'home'], ['#b91c1c', '#1f2937']],
+      ['Desk Lamp', 'workspace design', ['product', 'home', 'design', 'lighting'], ['#0369a1', '#15803d']]
+    ];
+
+    return rows.map((row, idx) => ({
+      id: `demo-${idx + 1}`,
+      url: makeDemoSvg(row[0], row[1], row[3]),
+      title: row[0],
+      tags: row[2],
+      caption: row[1],
+      src: 'demo'
+    }));
+  }
+
+  function normalizeItem(item, idx) {
+    if (!item || typeof item !== 'object') return null;
+    const url = String(item.url || '').trim();
+    if (!url) return null;
+    return {
+      id: String(item.id || uid(`item${idx}`)),
+      url,
+      title: String(item.title || `Item ${idx + 1}`),
+      tags: Array.isArray(item.tags) ? splitTags(item.tags.join(',')) : splitTags(item.tags || ''),
+      caption: String(item.caption || ''),
+      src: String(item.src || 'import')
+    };
+  }
+
+  function releaseTransientUrls() {
+    state.transientBlobUrls.forEach((u) => {
+      try { URL.revokeObjectURL(u); } catch (_) {}
+    });
+    state.transientBlobUrls = [];
+  }
+
+  function normalizeCaptionSettings(raw) {
+    return {
+      baseUrl: String(raw.baseUrl || 'https://api.openai.com/v1').trim() || 'https://api.openai.com/v1',
+      model: String(raw.model || 'gpt-4o-mini').trim() || 'gpt-4o-mini',
+      apiKey: String(raw.apiKey || '').trim()
+    };
+  }
+
+  function getCaptionSettings() {
+    return normalizeCaptionSettings({
+      baseUrl: el.captionBaseUrl.value,
+      model: el.captionModel.value,
+      apiKey: el.captionApiKey.value
+    });
+  }
+
+  function saveCaptionSettings() {
+    const cfg = getCaptionSettings();
+    localStorage.setItem(CAPTION_KEY, JSON.stringify(cfg));
+    setStatus(el.captionStatus, 'Caption settings saved locally.', 'ok');
+  }
+
+  function loadCaptionSettings() {
+    try {
+      const raw = localStorage.getItem(CAPTION_KEY);
+      if (!raw) return;
+      const cfg = normalizeCaptionSettings(JSON.parse(raw));
+      el.captionBaseUrl.value = cfg.baseUrl;
+      el.captionModel.value = cfg.model;
+      el.captionApiKey.value = cfg.apiKey;
+    } catch (_) {}
+  }
+
+  function mergeTags(currentTags, nextTags) {
+    const seen = new Set();
+    const out = [];
+    [...(currentTags || []), ...(nextTags || [])].forEach((tag) => {
+      const clean = String(tag || '').trim().toLowerCase();
+      if (!clean || seen.has(clean)) return;
+      seen.add(clean);
+      out.push(clean);
+    });
+    return out.slice(0, 12);
+  }
+
+  function extractCaptionJson(raw) {
+    let text = String(raw || '').trim();
+    if (!text) throw new Error('Empty caption response.');
+    text = text.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim();
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end <= start) throw new Error('Caption API did not return JSON.');
+    const obj = JSON.parse(text.slice(start, end + 1));
+    const caption = String(obj.caption || '').trim();
+    const tags = Array.isArray(obj.tags) ? obj.tags.map((t) => String(t || '').trim().toLowerCase()).filter(Boolean) : [];
+    return { caption, tags: mergeTags([], tags) };
+  }
+
+  function blobToDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(new Error('Failed to read image for captioning.'));
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  async function captionImageUrlForItem(item) {
+    if (!item || !item.url) throw new Error('No image selected.');
+    if (item.url.startsWith('data:image/')) return item.url;
+    if (item.url.startsWith('blob:')) {
+      const res = await fetch(item.url);
+      const blob = await res.blob();
+      return blobToDataUrl(blob);
+    }
+    return item.url;
+  }
+
+  async function requestCaptionFromApi(item) {
+    const cfg = getCaptionSettings();
+    if (!navigator.onLine) throw new Error('Device is offline.');
+    if (!cfg.apiKey) throw new Error('API key required for caption auto-tag.');
+    if (!cfg.model) throw new Error('Model is required.');
+
+    const imageUrl = await captionImageUrlForItem(item);
+    const endpoint = `${cfg.baseUrl.replace(/\/$/, '')}/chat/completions`;
+    const promptText = [
+      'Analyze the image and provide short commerce-friendly metadata.',
+      'Return strict JSON only with this shape:',
+      '{"caption":"short caption","tags":["tag1","tag2","tag3"]}',
+      'Rules: 3-8 tags, lowercase, no hashtags, no extra text.'
+    ].join('\n');
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${cfg.apiKey}`
+      },
+      body: JSON.stringify({
+        model: cfg.model,
+        temperature: 0.2,
+        messages: [
+          { role: 'system', content: 'You output concise JSON metadata for product and fashion images.' },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: `${promptText}\nItem title hint: ${item.title}` },
+              { type: 'image_url', image_url: { url: imageUrl } }
+            ]
+          }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Caption API ${response.status}: ${errText.slice(0, 180)}`);
+    }
+
+    const data = await response.json();
+    let content = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+    if (Array.isArray(content)) {
+      content = content.map((part) => (typeof part === 'string' ? part : String(part.text || ''))).join('\n');
+    }
+    return extractCaptionJson(content);
+  }
+
+  function setCaptionBusy(on, msg, kind) {
+    state.captionBusy = !!on;
+    el.captionTagCurrentBtn.disabled = on;
+    el.captionTagBatchBtn.disabled = on;
+    if (msg) setStatus(el.captionStatus, msg, kind || 'warn');
+  }
+
+  async function captionCurrentItem() {
+    const item = currentItem();
+    if (!item) {
+      setStatus(el.captionStatus, 'No current item to caption.', 'warn');
+      return;
+    }
+    if (state.captionBusy) return;
+    setCaptionBusy(true, `Captioning "${item.title}"...`, 'warn');
+    try {
+      const result = await requestCaptionFromApi(item);
+      item.caption = result.caption || item.caption || '';
+      item.tags = mergeTags(item.tags, result.tags);
+      saveSession();
+      renderAll();
+      setCaptionBusy(false, `Auto-tagged "${item.title}".`, 'ok');
+    } catch (error) {
+      setCaptionBusy(false, `Caption failed: ${error.message}`, 'err');
+    }
+  }
+
+  function getUnratedIndices(limit) {
+    const max = Math.max(1, limit);
+    const out = [];
+    if (!state.deck.length) return out;
+    for (let step = 0; step < state.deck.length && out.length < max; step += 1) {
+      const idx = (state.index + step) % state.deck.length;
+      const item = state.deck[idx];
+      if (!state.ratings[item.id]) out.push(idx);
+    }
+    return out;
+  }
+
+  async function captionUnratedBatch() {
+    if (state.captionBusy) return;
+    if (!state.deck.length) {
+      setStatus(el.captionStatus, 'No deck loaded.', 'warn');
+      return;
+    }
+
+    const batchSize = Math.max(1, Math.min(50, Number(el.captionBatchCount.value) || 5));
+    const indices = getUnratedIndices(batchSize);
+    if (!indices.length) {
+      setStatus(el.captionStatus, 'No unrated items found for batch captioning.', 'warn');
+      return;
+    }
+
+    setCaptionBusy(true, `Batch captioning ${indices.length} item(s)...`, 'warn');
+    let completed = 0;
+    for (let i = 0; i < indices.length; i += 1) {
+      const idx = indices[i];
+      state.index = idx;
+      renderAll();
+      const item = state.deck[idx];
+      try {
+        const result = await requestCaptionFromApi(item);
+        item.caption = result.caption || item.caption || '';
+        item.tags = mergeTags(item.tags, result.tags);
+        completed += 1;
+        setStatus(el.captionStatus, `Batch caption progress: ${i + 1}/${indices.length}`, 'warn');
+      } catch (error) {
+        setStatus(el.captionStatus, `Batch paused on "${item.title}": ${error.message}`, 'err');
+        break;
+      }
+    }
+
+    saveSession();
+    renderAll();
+    if (completed === indices.length) {
+      setCaptionBusy(false, `Batch auto-tag complete: ${completed} item(s).`, 'ok');
+    } else {
+      setCaptionBusy(false);
+    }
+  }
+
+  function onViewerPointerDown(event) {
+    if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
+    if (!currentItem()) return;
+    state.swipeStart = { x: event.clientX, y: event.clientY, t: Date.now() };
+  }
+
+  function onViewerPointerUp(event) {
+    if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
+    if (!state.swipeStart) return;
+    const start = state.swipeStart;
+    state.swipeStart = null;
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
+    const dt = Date.now() - start.t;
+    if (dt > 1000) return;
+    if (Math.abs(dx) < 44 || Math.abs(dx) <= Math.abs(dy)) return;
+
+    if (dx < 0) {
+      nextItem();
+      setStatus(el.raterStatus, 'Swipe left: next item.', 'ok');
+    } else {
+      prevItem();
+      setStatus(el.raterStatus, 'Swipe right: previous item.', 'ok');
+      return;
+    }
+    renderAll();
+  }
+
+  function saveSession() {
+    const persistentDeck = state.deck.filter((item) => !item.url.startsWith('blob:'));
+    const payload = {
+      deck: persistentDeck,
+      index: state.index,
+      ratings: state.ratings,
+      history: state.history.slice(0, 300)
+    };
+    localStorage.setItem(LS_KEY, JSON.stringify(payload));
+  }
+
+  function loadSession() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      const deckRaw = Array.isArray(data.deck) ? data.deck : [];
+      state.deck = deckRaw.map(normalizeItem).filter(Boolean);
+      state.index = Number.isFinite(data.index) ? Math.max(0, Math.min(data.index, Math.max(0, state.deck.length - 1))) : 0;
+      state.ratings = data.ratings && typeof data.ratings === 'object' ? data.ratings : {};
+      state.history = Array.isArray(data.history) ? data.history.slice(0, 300) : [];
+      if (state.deck.length) {
+        setStatus(el.sourceStatus, `Restored ${state.deck.length} item(s) from local session.`, 'ok');
+      }
+    } catch (_) {
+      state.deck = [];
+      state.index = 0;
+      state.ratings = {};
+      state.history = [];
+    }
+  }
+
+  function currentItem() {
+    if (!state.deck.length) return null;
+    return state.deck[state.index] || null;
+  }
+
+  function addItems(items, msg) {
+    const valid = items.map(normalizeItem).filter(Boolean);
+    if (!valid.length) {
+      setStatus(el.sourceStatus, 'No valid image items found.', 'err');
+      return;
+    }
+    state.deck.push(...valid);
+    if (state.deck.length === valid.length) state.index = 0;
+    setStatus(el.sourceStatus, `${msg} Added ${valid.length} item(s). Deck now ${state.deck.length}.`, 'ok');
+    saveSession();
+    renderAll();
+  }
+
+  function setViewerImage(item) {
+    el.viewer.innerHTML = '';
+    if (!item) {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'placeholder';
+      placeholder.textContent = 'Load images to start rating.';
+      el.viewer.appendChild(placeholder);
+      return;
+    }
+    const img = document.createElement('img');
+    img.src = item.url;
+    img.alt = item.title;
+    img.loading = 'lazy';
+    img.addEventListener('error', () => {
+      setStatus(el.raterStatus, `Image failed to load: ${item.title}`, 'err');
+    });
+    el.viewer.appendChild(img);
+  }
+
+  function ratedCount() {
+    return Object.keys(state.ratings).length;
+  }
+
+  function creditsCount() {
+    return Math.floor(ratedCount() / CREDIT_RATE);
+  }
+
+  function setRating(value) {
+    const item = currentItem();
+    if (!item) return;
+    const rating = Math.max(1, Math.min(5, Number(value) || 0));
+    if (!rating) return;
+
+    state.ratings[item.id] = {
+      rating,
+      ts: Date.now(),
+      title: item.title,
+      tags: item.tags
+    };
+    state.history.unshift({
+      id: item.id,
+      title: item.title,
+      rating,
+      tags: item.tags,
+      ts: Date.now()
+    });
+    state.history = state.history.slice(0, 300);
+
+    setStatus(el.raterStatus, `Rated "${item.title}" as ${rating}/5.`, 'ok');
+    saveSession();
+    nextItem();
+    renderAll();
+  }
+
+  function nextItem() {
+    if (!state.deck.length) return;
+    state.index = (state.index + 1) % state.deck.length;
+  }
+
+  function prevItem() {
+    if (!state.deck.length) return;
+    state.index = (state.index - 1 + state.deck.length) % state.deck.length;
+    renderAll();
+  }
+
+  function skipItem() {
+    if (!state.deck.length) return;
+    setStatus(el.raterStatus, 'Skipped current item.', 'warn');
+    nextItem();
+    renderAll();
+  }
+
+  function jumpToUnrated() {
+    if (!state.deck.length) return;
+    const start = state.index;
+    for (let i = 0; i < state.deck.length; i += 1) {
+      const idx = (start + i) % state.deck.length;
+      const item = state.deck[idx];
+      if (!state.ratings[item.id]) {
+        state.index = idx;
+        setStatus(el.raterStatus, 'Jumped to next unrated item.', 'ok');
+        renderAll();
+        return;
+      }
+    }
+    setStatus(el.raterStatus, 'All items are rated.', 'warn');
+  }
+
+  function renderTags(tags) {
+    el.itemTags.innerHTML = '';
+    (tags && tags.length ? tags : ['untagged']).forEach((tag) => {
+      const chip = document.createElement('span');
+      chip.className = 'tag';
+      chip.textContent = tag;
+      el.itemTags.appendChild(chip);
+    });
+  }
+
+  function computeTagProfile() {
+    const stat = {};
+    state.deck.forEach((item) => {
+      const r = state.ratings[item.id];
+      if (!r) return;
+      const tags = item.tags && item.tags.length ? item.tags : ['untagged'];
+      tags.forEach((tag) => {
+        if (!stat[tag]) stat[tag] = { sum: 0, count: 0 };
+        stat[tag].sum += r.rating;
+        stat[tag].count += 1;
+      });
+    });
+
+    const rows = Object.entries(stat).map(([tag, v]) => ({
+      tag,
+      avg: v.sum / v.count,
+      count: v.count
+    }));
+    rows.sort((a, b) => (b.avg - a.avg) || (b.count - a.count));
+    return rows;
+  }
+
+  function renderProfile() {
+    const profile = computeTagProfile();
+    el.profileList.innerHTML = '';
+
+    if (!profile.length) {
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.textContent = 'No tagged ratings yet.';
+      el.profileList.appendChild(row);
+      setStatus(el.profileSummary, 'No profile yet. Rate a few tagged images.', 'warn');
+      return;
+    }
+
+    const top = profile.slice(0, 3).map(r => `${r.tag} (${r.avg.toFixed(2)})`).join(', ');
+    const bottom = [...profile].sort((a, b) => a.avg - b.avg).slice(0, 3).map(r => `${r.tag} (${r.avg.toFixed(2)})`).join(', ');
+    setStatus(el.profileSummary, `Top preferences: ${top}. Lower interest: ${bottom}.`, 'ok');
+
+    profile.slice(0, 20).forEach((rowData) => {
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = `${rowData.tag} · avg ${rowData.avg.toFixed(2)} · n=${rowData.count}`;
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      bar.style.width = `${Math.max(6, Math.min(100, rowData.avg * 20))}%`;
+      row.appendChild(bar);
+      el.profileList.appendChild(row);
+    });
+  }
+
+  function renderHistory() {
+    el.history.innerHTML = '';
+    if (!state.history.length) {
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.textContent = 'No rating actions yet.';
+      el.history.appendChild(row);
+      return;
+    }
+
+    state.history.slice(0, 80).forEach((item) => {
+      const row = document.createElement('div');
+      row.className = 'row';
+      const t = new Date(item.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      row.textContent = `${t} · ${item.title} · ${item.rating}/5`;
+      el.history.appendChild(row);
+    });
+  }
+
+  function renderRater() {
+    const item = currentItem();
+    el.deckSizeVal.textContent = String(state.deck.length);
+    el.positionVal.textContent = state.deck.length ? `${state.index + 1} / ${state.deck.length}` : '0 / 0';
+    el.ratedVal.textContent = String(ratedCount());
+    el.creditsVal.textContent = String(creditsCount());
+
+    setViewerImage(item);
+    if (!item) {
+      setStatus(el.itemTitle, '--', 'warn');
+      setStatus(el.itemRating, '--', 'warn');
+      setStatus(el.itemCaption, '--', 'warn');
+      el.itemTags.innerHTML = '';
+      return;
+    }
+
+    setStatus(el.itemTitle, item.title, 'ok');
+    const r = state.ratings[item.id];
+    setStatus(el.itemRating, r ? `${r.rating}/5` : 'not rated', r ? 'ok' : 'warn');
+    setStatus(el.itemCaption, item.caption || '(no caption yet)', item.caption ? 'ok' : 'warn');
+    renderTags(item.tags);
+  }
+
+  function renderAll() {
+    renderRater();
+    renderProfile();
+    renderHistory();
+  }
+
+  function clearDeck() {
+    releaseTransientUrls();
+    state.deck = [];
+    state.index = 0;
+    state.ratings = {};
+    state.history = [];
+    saveSession();
+    setStatus(el.sourceStatus, 'Deck and ratings cleared.', 'warn');
+    renderAll();
+  }
+
+  function addUrlItems() {
+    const fallbackTags = splitTags(el.defaultTags.value);
+    const rows = String(el.urlInput.value || '')
+      .split('\n')
+      .map((line) => parseUrlLine(line, fallbackTags))
+      .filter(Boolean);
+
+    if (!rows.length) {
+      setStatus(el.sourceStatus, 'No valid URL rows found. Use: url|title|tag1,tag2', 'err');
+      return;
+    }
+
+    addItems(rows, 'URL deck loaded.');
+    el.urlInput.value = '';
+  }
+
+  async function addUploadedFiles(fileList) {
+    const files = Array.from(fileList || []);
+    if (!files.length) return;
+    const rows = files.map((file, idx) => {
+      const objectUrl = URL.createObjectURL(file);
+      state.transientBlobUrls.push(objectUrl);
+      return {
+        id: uid(`file${idx}`),
+        url: objectUrl,
+        title: file.name,
+        tags: guessTagsFromTitle(file.name),
+        caption: '',
+        src: 'upload'
+      };
+    });
+
+    addItems(rows, 'Uploaded images loaded.');
+    el.imageFiles.value = '';
+  }
+
+  function exportSession() {
+    const profile = computeTagProfile();
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      deck: state.deck,
+      ratings: state.ratings,
+      history: state.history,
+      profile,
+      scoredItems: ratedCount(),
+      credits: creditsCount(),
+      note: 'Ratings are local preference signals. Use responsibly and with consent for commercial use.'
+    };
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `image-rater-export-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setStatus(el.sourceStatus, 'Session exported to JSON.', 'ok');
+  }
+
+  function importJsonText(text) {
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (_) {
+      setStatus(el.sourceStatus, 'Invalid JSON file.', 'err');
+      return;
+    }
+
+    const deckRaw = Array.isArray(parsed) ? parsed : (parsed.deck || parsed.items || []);
+    const deck = Array.isArray(deckRaw) ? deckRaw.map(normalizeItem).filter(Boolean) : [];
+    if (!deck.length) {
+      setStatus(el.sourceStatus, 'No valid deck items found in JSON.', 'err');
+      return;
+    }
+
+    releaseTransientUrls();
+    state.deck = deck;
+    state.index = 0;
+    state.ratings = parsed.ratings && typeof parsed.ratings === 'object' ? parsed.ratings : {};
+    state.history = Array.isArray(parsed.history) ? parsed.history.slice(0, 300) : [];
+    saveSession();
+    setStatus(el.sourceStatus, `Imported ${deck.length} item(s) from JSON.`, 'ok');
+    renderAll();
+  }
+
+  function bind() {
+    el.addUrlsBtn.addEventListener('click', addUrlItems);
+    el.loadDemoBtn.addEventListener('click', () => addItems(buildDemoDeck(), 'Offline demo ready.'));
+    el.clearDeckBtn.addEventListener('click', clearDeck);
+    el.exportBtn.addEventListener('click', exportSession);
+    el.captionSaveBtn.addEventListener('click', saveCaptionSettings);
+    el.captionTagCurrentBtn.addEventListener('click', captionCurrentItem);
+    el.captionTagBatchBtn.addEventListener('click', captionUnratedBatch);
+
+    el.imageFiles.addEventListener('change', () => addUploadedFiles(el.imageFiles.files));
+
+    el.importBtn.addEventListener('click', () => el.importFile.click());
+    el.importFile.addEventListener('change', async () => {
+      const file = el.importFile.files && el.importFile.files[0];
+      if (!file) return;
+      const text = await file.text();
+      importJsonText(text);
+      el.importFile.value = '';
+    });
+
+    el.rateRow.addEventListener('click', (event) => {
+      const btn = event.target.closest('button[data-rate]');
+      if (!btn) return;
+      setRating(Number(btn.dataset.rate));
+    });
+
+    el.nextBtn.addEventListener('click', () => {
+      nextItem();
+      renderAll();
+    });
+    el.prevBtn.addEventListener('click', prevItem);
+    el.skipBtn.addEventListener('click', skipItem);
+    el.rewindUnratedBtn.addEventListener('click', jumpToUnrated);
+    el.viewer.addEventListener('pointerdown', onViewerPointerDown);
+    el.viewer.addEventListener('pointerup', onViewerPointerUp);
+    el.viewer.addEventListener('pointercancel', () => { state.swipeStart = null; });
+
+    document.addEventListener('keydown', (event) => {
+      const target = event.target;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
+
+      if (event.key >= '1' && event.key <= '5') {
+        event.preventDefault();
+        setRating(Number(event.key));
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        nextItem();
+        renderAll();
+      } else if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        prevItem();
+      } else if (event.key.toLowerCase() === 's') {
+        event.preventDefault();
+        skipItem();
+      }
+    });
+
+    window.addEventListener('beforeunload', () => {
+      saveSession();
+      releaseTransientUrls();
+    });
+    window.addEventListener('online', () => {
+      if (!state.captionBusy) setStatus(el.captionStatus, 'Online: caption auto-tag available.', 'ok');
+    });
+    window.addEventListener('offline', () => {
+      if (!state.captionBusy) setStatus(el.captionStatus, 'Offline: caption auto-tag unavailable.', 'err');
+    });
+  }
+
+  function init() {
+    loadCaptionSettings();
+    loadSession();
+    bind();
+    renderAll();
+    if (!state.deck.length) {
+      setStatus(el.sourceStatus, 'No deck loaded.', 'warn');
+    }
+    setStatus(el.captionStatus, navigator.onLine ? 'Caption auto-tag idle.' : 'Offline: caption auto-tag unavailable until online.', navigator.onLine ? 'warn' : 'err');
+    setStatus(el.raterStatus, 'Ready.', 'warn');
+  }
+
+  init();
+})();
+</script>
+  <script src="../shared/help-content.js"></script>
+  <script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

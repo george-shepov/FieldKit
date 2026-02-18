@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Generalized Tic-Tac-Toe — Enhanced</title>
+  <style>
+    :root{
+      --bg:#0f172a; --fg:#e5e7eb; --primary:#38bdf8; --danger:#f87171; --grid:#1f2937; --card:#0b1220;
+      --last-move-bg:#0b2a3a; --last-move-scale:1.18;
+      --win-bg:#0b3a1a; --win-border:#34d399;
+      --overlay-bg: rgba(3,7,18,.72);
+      --control-bg:#0d1528; --control-fg:#e5e7eb; --control-border:#475569;
+      --secondary-bg:#64748b; --secondary-fg:#0c1117;
+      --panel-border:#334155;
+    }
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f5f5f5; --fg:#111827; --grid:#d1d5db; --card:#ffffff;
+        --last-move-bg:#e3f2fd; --win-bg:#ecfff5; --win-border:#10b981;
+        --control-bg:#ffffff; --control-fg:#111827; --control-border:#cbd5e1;
+        --secondary-bg:#e5e7eb; --secondary-fg:#111827; --panel-border:#cbd5e1;
+      }
+    }
+    @media (prefers-reduced-motion: reduce){ *{ transition:none!important; animation:none!important; } }
+
+    *{ box-sizing:border-box; margin:0; padding:0; }
+    body{ font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background:var(--bg); color:var(--fg); display:flex; flex-direction:column; align-items:center; gap:10px; padding:12px; }
+
+    /* Controls */
+    #controls{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; align-items:center; width:min(96vw,640px); background:var(--card); border:1px solid var(--panel-border); border-radius:10px; padding:10px 12px; box-shadow:0 1px 6px rgba(0,0,0,.25); }
+    #controls label{ font-size:.95rem; display:flex; align-items:center; gap:6px; }
+    #controls input, #controls select{ padding:6px 8px; font-size:.95rem; text-align:center; border:1px solid var(--control-border); border-radius:8px; background:var(--control-bg); color:var(--control-fg); }
+    #controls input[type="number"]{ width:72px; }
+    #controls button{ padding:8px 14px; font-size:.98rem; cursor:pointer; border:none; border-radius:8px; background:var(--primary); color:#06131a; font-weight:700; }
+    #controls button.secondary{ background:var(--secondary-bg); color:var(--secondary-fg); }
+
+    /* Presets */
+    #presets{ display:flex; flex-wrap:wrap; gap:6px; }
+    .preset-btn{ padding:6px 10px; font-size:.9rem; border:1px solid var(--panel-border); border-radius:8px; background:var(--control-bg); color:var(--control-fg); cursor:pointer; }
+    .preset-btn:hover{ outline:2px solid #22d3ee44; }
+
+    /* Status */
+    #message{ margin:6px 0 2px; font-size:1.05rem; min-height:1.4em; opacity:.9; }
+    #turnbar{ font-size:.95rem; opacity:.85; }
+
+    /* Board */
+    #board{ display:grid; gap:2px; width:min(96vw,640px); border-radius:12px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,.35); background:var(--grid); }
+    .cell{ background:var(--control-bg); display:flex; align-items:center; justify-content:center; font-weight:800; cursor:pointer; -webkit-user-select:none; user-select:none; aspect-ratio:1; position:relative; color:var(--primary); font-size:clamp(.85rem, 1.8vw, 2.2rem); transition:background .15s ease, transform .15s ease; }
+    .cell.O{ color:var(--danger); }
+    .cell.disabled{ cursor:default; opacity:.95; }
+    .cell:not(.disabled):hover{ background:#0f1b2f; }
+
+    .cell.last-move{ background:var(--last-move-bg)!important; transform:scale(var(--last-move-scale)); z-index:2; }
+
+    .cell.ghost::before{ content:attr(data-ghost); opacity:.35; }
+
+    .cell.win{ background:var(--win-bg); }
+    .cell.win::after{ content:""; position:absolute; inset:0; border:3px solid var(--win-border); border-radius:10px; pointer-events:none; box-shadow:0 0 14px 2px var(--win-border); animation:winPulse .9s ease-in-out 4 alternate; }
+    @keyframes winPulse{ from{ box-shadow:0 0 0 0 var(--win-border); } to{ box-shadow:0 0 26px 4px var(--win-border); } }
+
+    /* Scoreboard */
+    #scoreboard{ width:min(96vw,460px); background:var(--card); border:1px solid var(--panel-border); border-radius:12px; box-shadow:0 1px 6px rgba(0,0,0,.25); padding:12px; }
+    #scoreboard h3{ margin-bottom:6px; font-size:1.1rem; text-align:center; opacity:.9; }
+    .score-row{ display:flex; justify-content:space-between; margin:4px 0; font-size:1rem; }
+    .score-row span{ font-weight:800; }
+    .score-actions{ margin-top:8px; display:flex; gap:8px; }
+    #scoreboard button{ flex:1; padding:8px; font-size:.95rem; border:none; border-radius:8px; background:var(--primary); color:#06131a; font-weight:800; min-height:40px; }
+
+    /* Overlay */
+    #overlay{ position:fixed; inset:0; display:none; place-items:center; background:var(--overlay-bg); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
+    .modal{ background:var(--card); border:1px solid #334155; border-radius:14px; padding:18px; width:min(92vw, 520px); box-shadow:0 10px 30px rgba(0,0,0,.4); }
+    .modal h2{ font-size:1.4rem; margin-bottom:6px; }
+    .modal p{ opacity:.9; margin-bottom:12px; }
+    .modal .row{ display:flex; gap:8px; flex-wrap:wrap; }
+    .modal button{ flex:1; padding:10px 12px; border:none; border-radius:10px; font-weight:800; cursor:pointer; }
+    .btn-primary{ background:var(--primary); color:#06131a; }
+    .btn-ghost{ background:var(--control-bg); color:var(--control-fg); border:1px solid var(--panel-border); }
+
+    /* Tier pill */
+    #tierPill{ padding:6px 10px; border-radius:999px; background:var(--control-bg); border:1px solid var(--panel-border); font-weight:700; color:var(--control-fg); }
+
+    @media (max-width: 680px){
+      :root{ --last-move-scale:1; }
+      body{ padding:8px; }
+      #controls label{ width:100%; justify-content:space-between; }
+      #controls button{ min-height:42px; }
+      .preset-btn{ min-height:38px; }
+    }
+  
+/* Suite nav */
+.suite-nav{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:hsl(222,30%,10%);border-bottom:1px solid hsl(222,15%,20%);font-size:12px;font-family:'DM Sans',system-ui,sans-serif}
+.suite-nav a{color:hsl(215,15%,55%);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .15s}
+.suite-nav a:hover{color:hsl(160,60%,45%)}
+.suite-nav .suite-name{color:hsl(215,10%,40%);font-family:'DM Mono',monospace;font-size:11px}
+</style>
+</head>
+<body>
+<nav class="suite-nav">
+  <a href="../index.html">← Back to Suite</a>
+  <span class="suite-name">ProSe Pilot</span>
+</nav>
+
+  <h1 style="font-size:1.2rem;font-weight:800">Generalized Tic-Tac-Toe</h1>
+
+  <div id="controls">
+    <label>Board <input id="boardSize" type="number" min="3" max="50" value="10"/></label>
+    <label>Win <input id="winLength" type="number" min="3" max="50" value="5"/></label>
+    <label>Tier
+      <input id="tier" type="range" min="1" max="10" value="5" step="1"/>
+      <span id="tierPill">5 - Analyst</span>
+    </label>
+    <button id="startBtn" type="button">Start / Restart</button>
+    <button id="undoBtn" type="button" class="secondary">Undo</button>
+  </div>
+
+  <div id="presets">
+    <button class="preset-btn" data-size="3" data-win="3" type="button">3x3 (3)</button>
+    <button class="preset-btn" data-size="5" data-win="4" type="button">5x5 (4)</button>
+    <button class="preset-btn" data-size="10" data-win="5" type="button">10x10 (5)</button>
+  </div>
+
+  <div id="message" role="status" aria-live="polite"></div>
+  <div id="turnbar" aria-hidden="true">Turn: <span id="turnWho">X</span></div>
+
+  <div id="board" role="grid" aria-label="Tic Tac Toe Board"></div>
+
+  <div id="scoreboard">
+    <h3>Scoreboard</h3>
+    <div class="score-row"><div>Player (X)</div><div><span id="scoreX">0</span></div></div>
+    <div class="score-row"><div>Computer (O)</div><div><span id="scoreO">0</span></div></div>
+    <div class="score-row"><div>Draws</div><div><span id="scoreDraw">0</span></div></div>
+    <div class="score-actions">
+      <button id="downloadScoreBtn" type="button">Download</button>
+      <button id="uploadScoreBtn" type="button">Upload</button>
+      <input id="uploadScoreInput" type="file" accept=".json" hidden>
+    </div>
+  </div>
+
+  <!-- Overlay Modal -->
+  <div id="overlay" role="dialog" aria-modal="true">
+    <div class="modal">
+      <h2 id="overlayTitle">You Win!</h2>
+      <p id="overlaySub">Ascend to next tier?</p>
+      <div class="row">
+        <button id="btnReplay" class="btn-primary">Play Again</button>
+        <button id="btnTierUp" class="btn-ghost">Level Up</button>
+        <button id="btnTierDown" class="btn-ghost">Level Down</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    /** Elements **/
+    const boardEl = document.getElementById('board');
+    const messageEl = document.getElementById('message');
+    const startBtn = document.getElementById('startBtn');
+    const undoBtn = document.getElementById('undoBtn');
+    const sizeInput = document.getElementById('boardSize');
+    const winInput = document.getElementById('winLength');
+    const presetButtons = document.querySelectorAll('.preset-btn');
+    const scoreXEl = document.getElementById('scoreX');
+    const scoreOEl = document.getElementById('scoreO');
+    const scoreDrawEl = document.getElementById('scoreDraw');
+    const downloadScoreBtn = document.getElementById('downloadScoreBtn');
+    const uploadScoreBtn = document.getElementById('uploadScoreBtn');
+    const uploadScoreInput = document.getElementById('uploadScoreInput');
+    const turnWhoEl = document.getElementById('turnWho');
+
+    const overlay = document.getElementById('overlay');
+    const overlayTitle = document.getElementById('overlayTitle');
+    const overlaySub = document.getElementById('overlaySub');
+    const btnReplay = document.getElementById('btnReplay');
+    const btnTierUp = document.getElementById('btnTierUp');
+    const btnTierDown = document.getElementById('btnTierDown');
+
+    const tierInput = document.getElementById('tier');
+    const tierPill = document.getElementById('tierPill');
+
+    /** State **/
+    let boardSize = 10;
+    let winLength = 5;
+    let tier = 5;
+    let boardState = [];
+    let cellEls = [];
+    let currentPlayer = 'X';
+    let gameOver = false;
+    let moveHistory = [];
+
+    let scoreboard = { xWins: 0, oWins: 0, draws: 0 };
+
+    const STORE_KEY = 'gttt_state_v2';
+
+    const TIERS = [
+      'Seed','Sprout','Trailblazer','Strategist','Analyst',
+      'Visionary','Tactician','Architect','Oracle','Zenith'
+    ];
+
+    function tierLabel(v){ return TIERS[(v-1)|0] || '—'; }
+
+    function getTierParams(v){
+      // Scales: depth (lookahead), nearRadius (candidate neighborhood), weights
+      const clamp = (n,min,max)=>Math.max(min,Math.min(max,n|0));
+      v = clamp(v,1,10);
+      const params = [
+        { oW:1.0, xW:0.6, winB:5e4, blockB:1e4, depth:0, near:1, rand:0.4 }, //1 Seed
+        { oW:1.2, xW:0.8, winB:8e4, blockB:2e4, depth:0, near:1, rand:0.35 },
+        { oW:1.4, xW:1.0, winB:1e5, blockB:5e4, depth:0, near:2, rand:0.3 },
+        { oW:1.8, xW:1.2, winB:2e5, blockB:7e4, depth:0, near:2, rand:0.25 },
+        { oW:2.0, xW:1.5, winB:9e5, blockB:9e5, depth:(boardSize<=5?1:0), near:2, rand:0.2 }, //5 Analyst
+        { oW:2.2, xW:1.7, winB:1.1e6, blockB:1e6, depth:(boardSize<=6?1:0), near:2, rand:0.15 },
+        { oW:2.4, xW:1.8, winB:1.2e6, blockB:1.1e6, depth:(boardSize<=6?2:1), near:2, rand:0.12 },
+        { oW:2.6, xW:2.0, winB:1.3e6, blockB:1.2e6, depth:(boardSize<=6?2:1), near:3, rand:0.1 },
+        { oW:2.8, xW:2.2, winB:1.4e6, blockB:1.3e6, depth:(boardSize<=6?3:1), near:3, rand:0.08 },
+        { oW:3.0, xW:2.4, winB:1.5e6, blockB:1.4e6, depth:(boardSize<=5?4:2), near:3, rand:0.05 }, //10 Zenith
+      ];
+      return params[v-1];
+    }
+
+    /** Storage **/
+    function loadState(){
+      try{
+        const raw = localStorage.getItem(STORE_KEY); if(!raw) return;
+        const s = JSON.parse(raw);
+        if (s.scoreboard) scoreboard = s.scoreboard;
+        if (s.boardSize) { boardSize = clampInt(s.boardSize,3,50); sizeInput.value = boardSize; }
+        if (s.winLength){ winLength = clampInt(s.winLength,3,50); winInput.value = winLength; }
+        if (s.tier){ tier = clampInt(s.tier,1,10); tierInput.value = tier; updateTierPill(); }
+      }catch{}
+    }
+    function saveState(){
+      localStorage.setItem(STORE_KEY, JSON.stringify({ scoreboard, boardSize, winLength, tier }));
+    }
+
+    /** Utils **/
+    function clampInt(n,min,max){ n = parseInt(n,10); if(isNaN(n)) n=min; return Math.max(min, Math.min(max, n)); }
+
+    /** Init **/
+    sizeInput.addEventListener('change', ()=>{ sizeInput.value = clampInt(sizeInput.value,3,50); });
+    winInput.addEventListener('change', ()=>{ winInput.value = clampInt(winInput.value,3,50); if(+winInput.value>+sizeInput.value) winInput.value=sizeInput.value; });
+    tierInput.addEventListener('input', ()=>{ tier = clampInt(tierInput.value,1,10); updateTierPill(); saveState(); sendMeta(); });
+
+    startBtn.addEventListener('click', ()=>{
+      const s = clampInt(sizeInput.value,3,50); const w = clampInt(winInput.value,3,50);
+      if (w > s){ alert('Win length cannot exceed board size.'); return; }
+      boardSize = s; winLength = w; resetGame(); saveState(); sendMeta();
+    });
+
+    presetButtons.forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const s = clampInt(btn.dataset.size,3,50); const w = clampInt(btn.dataset.win,3,50);
+        sizeInput.value = s; winInput.value = Math.min(w,s);
+        boardSize = s; winLength = Math.min(w,s); resetGame(); saveState(); sendMeta();
+      });
+    });
+
+    downloadScoreBtn.addEventListener('click', ()=>{
+      const data = JSON.stringify(scoreboard,null,2);
+      const blob = new Blob([data],{type:'application/json'});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='scoreboard.json'; a.click();
+    });
+    uploadScoreBtn.addEventListener('click',()=>uploadScoreInput.click());
+    uploadScoreInput.addEventListener('change',e=>{
+      const file=e.target.files[0]; if(!file) return; const r=new FileReader();
+      r.onload=ev=>{ try{ scoreboard=JSON.parse(ev.target.result); updateScores(); alert('Loaded.'); saveState(); }
+        catch{ alert('Invalid JSON'); } };
+      r.readAsText(file);
+    });
+
+    undoBtn.addEventListener('click', undoTurn);
+
+    /** Core **/
+    function resetGame(){
+      boardState = Array.from({length:boardSize}, ()=>Array(boardSize).fill(null));
+      cellEls = Array.from({length:boardSize}, ()=>Array(boardSize).fill(null));
+      currentPlayer = 'X'; gameOver = false; moveHistory = [];
+      messageEl.textContent = 'Your turn (X).'; turnWhoEl.textContent = 'X';
+      renderBoard();
+    }
+
+    function renderBoard(){
+      boardEl.innerHTML = ''; boardEl.style.gridTemplateColumns = `repeat(${boardSize},1fr)`;
+      const frag = document.createDocumentFragment();
+      for (let r=0;r<boardSize;r++){
+        for (let c=0;c<boardSize;c++){
+          const cell = document.createElement('div');
+          cell.className='cell'; cell.dataset.row=r; cell.dataset.col=c;
+          cell.setAttribute('role','gridcell'); cell.setAttribute('tabindex','0');
+          cell.setAttribute('aria-label',`Row ${r+1}, Column ${c+1}, empty`);
+          cell.addEventListener('click', onCellClick, {passive:true});
+          attachGhostHandlers(cell,r,c);
+          frag.appendChild(cell); cellEls[r][c]=cell;
+        }
+      }
+      boardEl.appendChild(frag);
+      sendMeta();
+    }
+
+    function attachGhostHandlers(cell,r,c){
+      function showGhost(){ if(!boardState[r][c] && !gameOver){ cell.setAttribute('data-ghost', currentPlayer); cell.classList.add('ghost'); } }
+      function hideGhost(){ cell.classList.remove('ghost'); cell.removeAttribute('data-ghost'); }
+      cell.addEventListener('mouseenter', showGhost);
+      cell.addEventListener('mouseleave', hideGhost);
+      cell.addEventListener('focus', showGhost);
+      cell.addEventListener('blur', hideGhost);
+    }
+
+    function onCellClick(e){ if(gameOver) return; const cell=e.currentTarget; const r=+cell.dataset.row, c=+cell.dataset.col; if(boardState[r][c]) return; makeMove(r,c,'X'); if(!gameOver) setTimeout(aiMove, 140); }
+
+    function makeMove(r,c,sym){
+      boardState[r][c]=sym; moveHistory.push({r,c,sym}); const cell=cellEls[r][c];
+      clearLastMove();
+      cell.textContent=sym; cell.classList.add('disabled',sym,'last-move');
+      cell.setAttribute('aria-label',`Row ${r+1}, Column ${c+1}, ${sym}`);
+
+      clearWinHighlights();
+      const line = getWinLine(r,c);
+      if(line){ gameOver=true; line.forEach(({r,c})=>cellEls[r][c].classList.add('win'));
+        if(sym==='X'){ scoreboard.xWins++; messageEl.textContent='You win!'; showOverlay('win'); }
+        else { scoreboard.oWins++; messageEl.textContent='Computer wins!'; showOverlay('loss'); }
+        updateScores(); disableAll(); saveState(); sendGameOver(sym==='X'?'win':'loss'); return; }
+
+      if(isFull()){ gameOver=true; scoreboard.draws++; messageEl.textContent='Draw.'; updateScores(); saveState(); showOverlay('draw'); sendGameOver('draw'); return; }
+
+      currentPlayer = (sym==='X') ? 'O' : 'X';
+      messageEl.textContent = currentPlayer==='X' ? 'Your turn (X).' : 'Computer\'s turn (O).';
+      turnWhoEl.textContent = currentPlayer;
+      sendScore();
+    }
+
+    function clearLastMove(){ document.querySelectorAll('.last-move').forEach(el=>{ el.classList.remove('last-move'); }); }
+    function clearWinHighlights(){ document.querySelectorAll('.cell.win').forEach(el=>el.classList.remove('win')); }
+
+    function disableAll(){ document.querySelectorAll('.cell').forEach(c=>c.classList.add('disabled')); }
+    function isFull(){ for(let r=0;r<boardSize;r++) for(let c=0;c<boardSize;c++) if(!boardState[r][c]) return false; return true; }
+
+    function getWinLine(r,c){
+      const sym = boardState[r][c]; const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+      for(const [dr,dc] of dirs){ const line=[{r,c}]; let nr=r+dr,nc=c+dc; while(valid(nr,nc)&&boardState[nr][nc]===sym){ line.push({r:nr,c:nc}); nr+=dr; nc+=dc; }
+        nr=r-dr; nc=c-dc; while(valid(nr,nc)&&boardState[nr][nc]===sym){ line.unshift({r:nr,c:nc}); nr-=dr; nc-=dc; }
+        if(line.length>=winLength) return line.slice(0, winLength); }
+      return null;
+    }
+    function valid(r,c){ return r>=0&&r<boardSize&&c>=0&&c<boardSize; }
+
+    /** AI **/
+    function aiMove(){ if(gameOver) return; const P = getTierParams(tier);
+      // 1) win now
+      for(let r=0;r<boardSize;r++) for(let c=0;c<boardSize;c++) if(!boardState[r][c]){ boardState[r][c]='O'; if(getWinLine(r,c)){ boardState[r][c]=null; makeMove(r,c,'O'); return; } boardState[r][c]=null; }
+      // 2) block
+      for(let r=0;r<boardSize;r++) for(let c=0;c<boardSize;c++) if(!boardState[r][c]){ boardState[r][c]='X'; if(getWinLine(r,c)){ boardState[r][c]=null; makeMove(r,c,'O'); return; } boardState[r][c]=null; }
+      // 3) heuristic near
+      const cand = getCandidateCells(P.near);
+      let best = null, bestScore = -Infinity; for(const {r,c} of cand){ const sc = scoreCell(r,c,P); if(sc>bestScore){ bestScore=sc; best={r,c}; } }
+      // 4) optional shallow lookahead (tiers >=5 on small boards)
+      if(best && P.depth>0 && boardSize<=6){ const improved = lookaheadBest(cand,P); if(improved) best = improved; }
+      // 5) small randomness so it isn't deterministic for low tiers
+      if(Math.random() < P.rand){ const rnd = cand[Math.floor(Math.random()*cand.length)]; if(rnd) best=rnd; }
+      if(!best){ const center=Math.floor(boardSize/2); if(!boardState[center]?.[center]) best={r:center,c:center}; }
+      if(!best){ outer: for(let r=0;r<boardSize;r++) for(let c=0;c<boardSize;c++) if(!boardState[r][c]){ best={r,c}; break outer; } }
+      if(best) makeMove(best.r,best.c,'O');
+    }
+
+    function getCandidateCells(radius){
+      const occ=[]; for(let r=0;r<boardSize;r++) for(let c=0;c<boardSize;c++) if(boardState[r][c]) occ.push({r,c});
+      if(occ.length===0) return [{ r:Math.floor(boardSize/2), c:Math.floor(boardSize/2) }];
+      const S=new Set(), key=(r,c)=>r+'#'+c; for(const {r,c} of occ){ for(let dr=-radius; dr<=radius; dr++){ for(let dc=-radius; dc<=radius; dc++){
+        const nr=r+dr, nc=c+dc; if(valid(nr,nc) && !boardState[nr][nc]) S.add(key(nr,nc));
+      }}}
+      return Array.from(S).map(s=>{const [r,c]=s.split('#').map(Number); return {r,c};});
+    }
+
+    function scoreCell(r,c,P){
+      const dirs=[[0,1],[1,0],[1,1],[1,-1]]; let total=0;
+      for(const [dr,dc] of dirs){ const oCount = countDir(r,c,dr,dc,'O') + countDir(r,c,-dr,-dc,'O'); const xCount = countDir(r,c,dr,dc,'X') + countDir(r,c,-dr,-dc,'X');
+        if(oCount+1>=winLength) return P.winB; if(xCount+1>=winLength) return P.blockB; total += (oCount*oCount)*P.oW + (xCount*xCount)*P.xW; }
+      return total;
+    }
+    function countDir(r,c,dr,dc,sym){ let nr=r+dr,nc=c+dc,cnt=0; while(valid(nr,nc)&&boardState[nr][nc]===sym){ cnt++; nr+=dr; nc+=dc; } return cnt; }
+
+    function lookaheadBest(cand,P){
+      // 1-ply: choose move that minimizes opponent immediate win chance
+      let best=null, bestScore=-Infinity; for(const {r,c} of cand){
+        // Try O here
+        boardState[r][c]='O';
+        if(getWinLine(r,c)){ boardState[r][c]=null; return {r,c}; }
+        // How many immediate X wins remain?
+        let oppWins=0; for(let rr=0;rr<boardSize;rr++) for(let cc=0;cc<boardSize;cc++) if(!boardState[rr][cc]){ boardState[rr][cc]='X'; if(getWinLine(rr,cc)) oppWins++; boardState[rr][cc]=null; }
+        boardState[r][c]=null;
+        const heuristic = scoreCell(r,c,P) - oppWins*1e6; // prioritize safety strongly
+        if(heuristic>bestScore){ bestScore=heuristic; best={r,c}; }
+      }
+      return best;
+    }
+
+    /** Undo **/
+    function undoTurn(){ if(gameOver||moveHistory.length===0) return; const last=moveHistory.pop(); boardState[last.r][last.c]=null; const cell=cellEls[last.r][last.c]; cell.textContent=''; cell.className='cell'; currentPlayer='X'; messageEl.textContent='Your turn (X).'; turnWhoEl.textContent='X'; clearWinHighlights(); }
+
+    /** Keyboard nav **/
+    boardEl.addEventListener('keydown', (e)=>{ const a=document.activeElement; if(!a.classList||!a.classList.contains('cell')) return; const r=+a.dataset.row, c=+a.dataset.col; let nr=r, nc=c; if(e.key==='ArrowRight') nc=Math.min(boardSize-1,c+1); else if(e.key==='ArrowLeft') nc=Math.max(0,c-1); else if(e.key==='ArrowDown') nr=Math.min(boardSize-1,r+1); else if(e.key==='ArrowUp') nr=Math.max(0,r-1); else if(e.key==='Enter'||e.key===' ') { a.click(); e.preventDefault(); return; } else return; cellEls[nr][nc].focus(); e.preventDefault(); });
+
+    /** Scores/hud **/
+    function updateScores(){ scoreXEl.textContent=scoreboard.xWins; scoreOEl.textContent=scoreboard.oWins; scoreDrawEl.textContent=scoreboard.draws; saveState(); sendScore(); }
+
+    function updateTierPill(){ tierPill.textContent = `${tier} - ${tierLabel(tier)}`; }
+
+    /** Overlay **/
+    function showOverlay(result){ overlay.style.display='grid'; let nextUp = Math.min(10, tier+1), nextDown = Math.max(1, tier-1);
+      if(result==='win'){ overlayTitle.textContent='You Win!'; overlaySub.textContent=`Ascend to ${nextUp} - ${tierLabel(nextUp)}?`; btnTierUp.style.display='inline-block'; btnTierDown.style.display='none'; }
+      else if(result==='loss'){ overlayTitle.textContent='Game Over'; overlaySub.textContent=`Try ${nextDown} - ${tierLabel(nextDown)} for a different challenge?`; btnTierUp.style.display='none'; btnTierDown.style.display='inline-block'; }
+      else { overlayTitle.textContent='Draw'; overlaySub.textContent='Replay or adjust tier?'; btnTierUp.style.display='inline-block'; btnTierDown.style.display='inline-block'; }
+      btnReplay.onclick = ()=>{ overlay.style.display='none'; resetGame(); };
+      btnTierUp.onclick = ()=>{ tier = Math.min(10, tier+1); tierInput.value=tier; updateTierPill(); overlay.style.display='none'; resetGame(); saveState(); };
+      btnTierDown.onclick = ()=>{ tier = Math.max(1, tier-1); tierInput.value=tier; updateTierPill(); overlay.style.display='none'; resetGame(); saveState(); };
+    }
+
+    /** postMessage to launcher **/
+    function sendMeta(){ try{ window.parent?.postMessage({ type:'game_meta', title:'Generalized Tic-Tac-Toe', tier }, '*'); }catch{} }
+    function sendScore(){ try{ window.parent?.postMessage({ type:'score_update', score: scoreboard.xWins }, '*'); }catch{} }
+    function sendGameOver(result){ const tierNext = result==='win'?Math.min(10,tier+1):result==='loss'?Math.max(1,tier-1):tier; try{ window.parent?.postMessage({ type:'game_over', result, tierNext }, '*'); }catch{} }
+
+    /** Boot **/
+    function boot(){ loadState(); updateTierPill(); resetGame(); updateScores(); sendMeta(); }
+    boot();
+  })();
+  </script>
+  <script src="../shared/help-content.js"></script>
+  <script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

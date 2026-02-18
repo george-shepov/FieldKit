@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Company Acronym List</title>
+  <style>
+    :root{
+      --bg:#f5f7fa; --panel:#ffffff; --panel-2:#f0f3f9; --text:#1a1d21; --muted:#555d66; --brand:#2b7de9;
+      --ok:#1a9d58; --warn:#e3a008; --err:#d64545; --chip:#e6ebf5; --border:#c8d1dc; --radius:12px; --shadow:0 2px 6px rgba(0,0,0,.08);
+    }
+    body{margin:0;background:var(--bg);color:var(--text);font:500 16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Noto Sans",sans-serif}
+    .app{max-width:1100px;margin:0 auto;padding:20px}
+    header{position:sticky;top:0;z-index:3;background:var(--panel);border-bottom:1px solid var(--border);box-shadow:var(--shadow)}
+    .topbar{display:grid;gap:12px;grid-template-columns:1fr auto;align-items:center;padding:18px 0}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.3px}
+    .logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#4da3ff,#2b7de9);box-shadow:var(--shadow)}
+    .search{position:relative;flex:1}
+    .search input{width:100%;padding:10px 40px;border-radius:999px;border:1px solid var(--border);background:#fff;color:var(--text)}
+    .search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);opacity:.5}
+    .btn{padding:8px 14px;border:1px solid var(--border);background:#fff;border-radius:8px;color:var(--text);cursor:pointer;box-shadow:var(--shadow)}
+    .btn.primary{background:linear-gradient(180deg,#4da3ff,#2b7de9);border-color:#2e71d0;color:#fff;font-weight:600}
+    .muted{color:var(--muted)}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{padding:6px 12px;border-radius:999px;background:var(--chip);border:1px solid var(--border);color:var(--text);cursor:pointer}
+    .chip[data-active="true"]{background:#d7e9ff;border-color:#2b7de9;color:#2b7de9}
+    .tabs{display:flex;gap:8px;align-items:center;border-top:1px solid var(--border);padding:12px 0}
+    .panel{background:var(--panel-2);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .thead{display:none}
+    .list{padding:0;margin:0;list-style:none}
+    .row{display:grid;grid-template-columns:140px 1fr auto;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);align-items:center}
+    .acronym{font-weight:700;}
+    .def{color:var(--text)}
+    .tags{display:flex;gap:6px;flex-wrap:wrap}
+    .tag{font-size:12px;padding:2px 8px;border-radius:999px;background:#e9edf5;border:1px solid var(--border);color:var(--muted)}
+    .empty{padding:28px;text-align:center;color:var(--muted)}
+    .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}
+    .pill{border-radius:999px;padding:4px 10px;background:#f0f3f9;border:1px solid var(--border)}
+    .quiz{display:grid;gap:14px}
+    .quiz-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+    .q-title{font-size:14px;color:var(--muted);margin:0 0 6px}
+    .q-body{font-size:22px;font-weight:700;margin:0}
+    .choices{display:grid;gap:10px}
+    .choices .choice{padding:10px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;text-align:left}
+    .choices .choice.correct{border-color:var(--ok);background:#eafaf1}
+    .choices .choice.wrong{border-color:var(--err);background:#fdeaea}
+    .hidden{display:none}
+    @media (min-width:800px){
+      .thead{display:grid;grid-template-columns:140px 1fr auto;gap:12px;padding:10px 16px;color:var(--muted);background:#f9fbfd;border-bottom:1px solid var(--border);}
+    }
+    /* Light theme */
+    [data-theme="light"]{ --bg:#f7f9fc; --panel:#ffffff; --panel-2:#f4f6fb; --text:#0b0c0f; --muted:#5a6575; --brand:#0b6bcb; --chip:#eef2f7; --border:#d9e0ea; }
+    [data-theme="light"] body{ background:linear-gradient(180deg,#f7f9fc,#eef3fb 60%); }
+    [data-theme="light"] .logo{ box-shadow:inset 0 0 0 2px rgba(0,0,0,.06), var(--shadow); }
+    [data-theme="light"] .search input{ background:var(--panel); color:var(--text); }
+    [data-theme="light"] .panel{ background:var(--panel-2); }
+    [data-theme="light"] .tag{ background:#ffffff; border-color:var(--border); color:#344054 }
+    /* Choice buttons: higher contrast and visible states */
+    .choices .choice{ background:#1a1f2a; border:1px solid var(--border); color:var(--text); outline:none }
+    .choices .choice:focus-visible{ box-shadow:0 0 0 3px rgba(77,163,255,.45) }
+    .choices .choice:hover{ filter:brightness(1.05) }
+    [data-theme="light"] .choices .choice{ background:#ffffff; border-color:#cfd8e3; }
+    .choices .choice.correct{ border-color:rgba(61,220,151,.8); background:rgba(61,220,151,.14) }
+    .choices .choice.wrong{ border-color:rgba(255,107,107,.8); background:rgba(255,107,107,.14) }
+  
+/* Suite nav */
+.suite-nav{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:hsl(222,30%,10%);border-bottom:1px solid hsl(222,15%,20%);font-size:12px;font-family:"DM Sans",system-ui,sans-serif}
+.suite-nav a{color:hsl(215,15%,55%);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .15s}
+.suite-nav a:hover{color:hsl(160,60%,45%)}
+.suite-nav .suite-name{color:hsl(215,10%,40%);font-family:"DM Mono",monospace;font-size:11px}
+</style>
+</head>
+<body>
+<nav class="suite-nav">
+  <a href="../index.html">← Back to Suite</a>
+  <span class="suite-name">ProSe Pilot</span>
+</nav>
+
+  <header>
+    <div class="app">
+      <div class="topbar">
+        <div class="brand"><div class="logo" aria-hidden></div>
+          <div>
+            <div style="font-size:14px;color:var(--muted);margin-bottom:2px">Learning Hub</div>
+            <div style="font-size:20px;font-weight:900">Company Acronym List</div>
+          </div>
+        </div>
+        <div class="search">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path d="M21 21l-4.2-4.2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/></svg>
+          <input id="search" placeholder="Search acronyms, definitions, or tags—¦" />
+        </div>
+      </div>
+      <div class="tabs" style="display:flex;gap:8px;align-items:center">
+        <button class="btn primary" id="tabList" aria-pressed="true">List</button>
+        <button class="btn" id="tabQuiz">Quiz</button>
+        <span class="muted">(Quiz uses the current search & tag filters)</span>
+        <span style="flex:1"></span>
+        <button class="btn" id="themeToggle" title="Toggle light/dark theme">Light theme</button>
+      </div>
+    </div>
+  </header>
+  <main class="app" id="sectionList">
+    <div class="controls">
+      <span class="muted">Filter by category:</span>
+      <div id="chips" class="chips"></div>
+      <span style="flex:1"></span>
+      <button class="btn" id="btnImport">Import</button>
+      <button class="btn" id="btnExport">Export</button>
+      <button class="btn" id="btnReset">Reset Samples</button>
+    </div>
+    <div id="emptyDataset" class="empty hidden">No acronyms loaded. <button class="btn" id="btnLoadSamples">Load Samples</button></div>
+    <div class="panel">
+      <div class="thead"><div>Acronym</div><div>Definition</div><div>Tags</div></div>
+      <ul id="list" class="list"></ul>
+      <div id="noResults" class="empty hidden">No matching results.</div>
+    </div>
+  </main>
+  <section class="app hidden" id="sectionQuiz">
+    <div class="controls">
+      <label class="pill"><input type="checkbox" id="flip"/> Flip</label>
+      <button class="btn primary" id="start">Start</button>
+      <button class="btn" id="next" disabled>Next</button>
+      <button class="btn hidden" id="restart">Restart</button>
+      <span class="pill" id="progress">0 / 0</span>
+      <span class="pill" id="scoreboard">Score: 0  Streak: 0</span>
+    </div>
+    <div class="quiz">
+      <div class="quiz-card">
+        <p class="q-title" id="qTitle">What does this acronym stand for?</p>
+        <h2 class="q-body" id="question">—</h2>
+      </div>
+      <div class="choices" id="choices"></div>
+    </div>
+  </section>
+<script>
+// ===== Data & Storage =====
+const DEFAULT_DATA = [
+  { a:"OKR", d:"Objectives and Key Results (goal-setting framework)", t:["process","planning"] },
+  { a:"KPI", d:"Key Performance Indicator used to measure success", t:["metrics","planning"] },
+  { a:"SLA", d:"Service Level Agreement defining service standards", t:["operations","support"] },
+  { a:"SOP", d:"Standard Operating Procedure documented steps", t:["process","operations"] },
+  { a:"CI/CD", d:"Continuous Integration / Continuous Delivery pipeline", t:["engineering","devops"] },
+  { a:"PRD", d:"Product Requirements Document outlining scope", t:["product","docs"] },
+  { a:"RFC", d:"Request For Comments proposal seeking feedback", t:["engineering","product"] },
+  { a:"ETA", d:"Estimated Time of Arrival for delivery", t:["planning","ops"] },
+  { a:"EOD", d:"End Of Day deadline", t:["planning"] },
+  { a:"EOW", d:"End Of Week checkpoint", t:["planning"] },
+  { a:"TTR", d:"Time To Restore after incident", t:["support","devops"] },
+  { a:"MTTR", d:"Mean Time To Recovery metric", t:["metrics","devops"] },
+  { a:"MTBF", d:"Mean Time Between Failures", t:["metrics","devops"] },
+  { a:"QA", d:"Quality Assurance testing activities", t:["engineering","quality"] },
+  { a:"UAT", d:"User Acceptance Testing by end users", t:["quality","product"] },
+  { a:"PII", d:"Personally Identifiable Information", t:["security","compliance"] },
+  { a:"GDPR", d:"General Data Protection Regulation (EU)", t:["compliance","legal"] },
+  { a:"DPO", d:"Data Protection Officer role", t:["compliance","legal"] },
+  { a:"SRE", d:"Site Reliability Engineering discipline", t:["engineering","devops"] },
+  { a:"RACI", d:"Responsible, Accountable, Consulted, Informed matrix", t:["process","planning"] },
+];
+const KEYS = { data:'acronym-data-v3', filters:'acronym-filters-v3', theme:'acronym-theme' };
+
+function loadData(){ try{ return JSON.parse(localStorage.getItem(KEYS.data)) || []; }catch{ return []; } }
+function saveData(d){ localStorage.setItem(KEYS.data, JSON.stringify(d)); }
+function loadFilters(){ try{ return JSON.parse(localStorage.getItem(KEYS.filters)) || {tags:[], q:""}; }catch{ return {tags:[], q:""}; } }
+function saveFilters(f){ localStorage.setItem(KEYS.filters, JSON.stringify(f)); }
+
+let DATA = loadData();
+let FILTERS = loadFilters();
+
+// ===== Elements =====
+const search = document.getElementById('search');
+const chips  = document.getElementById('chips');
+const list   = document.getElementById('list');
+const noResults = document.getElementById('noResults');
+const emptyDataset = document.getElementById('emptyDataset');
+const btnLoadSamples = document.getElementById('btnLoadSamples');
+const btnImport = document.getElementById('btnImport');
+const btnExport = document.getElementById('btnExport');
+const btnReset  = document.getElementById('btnReset');
+
+const tabList = document.getElementById('tabList');
+const tabQuiz = document.getElementById('tabQuiz');
+const sectionList = document.getElementById('sectionList');
+const sectionQuiz = document.getElementById('sectionQuiz');
+
+// Quiz elements
+const flip = document.getElementById('flip');
+const startBtn = document.getElementById('start');
+const nextBtn  = document.getElementById('next');
+const restartBtn = document.getElementById('restart');
+const progressEl = document.getElementById('progress');
+const scoreboardEl = document.getElementById('scoreboard');
+const qTitle = document.getElementById('qTitle');
+const questionEl = document.getElementById('question');
+const choicesEl  = document.getElementById('choices');
+
+// Theme toggle
+const themeToggle = document.getElementById('themeToggle');
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  if(themeToggle) themeToggle.textContent = t==='light' ? 'Dark theme' : 'Light theme';
+}
+let savedTheme = localStorage.getItem(KEYS.theme) || 'light'; // default LIGHT
+applyTheme(savedTheme);
+if(themeToggle){
+  themeToggle.onclick = ()=>{
+    savedTheme = (savedTheme==='light' ? 'dark' : 'light');
+    localStorage.setItem(KEYS.theme, savedTheme);
+    applyTheme(savedTheme);
+  };
+}
+
+// ===== Utilities =====
+const uniq = arr => Array.from(new Set(arr));
+const by = k => (a,b)=> (a[k]||'').localeCompare(b[k]||'');
+const norm = s => (s||'').toLowerCase();
+const shuffle = arr => arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+
+function computeTags(){ return uniq(DATA.flatMap(x=>x.t||[])).sort(); }
+
+function applyFilters(){
+  const q = norm(FILTERS.q);
+  return DATA.filter(item=>{
+    const inTags = FILTERS.tags.length ? (item.t||[]).some(t=>FILTERS.tags.includes(t)) : true;
+    const inText = !q || norm(item.a).includes(q) || norm(item.d).includes(q) || (item.t||[]).some(t=>norm(t).includes(q));
+    return inTags && inText;
+  }).sort(by('a'));
+}
+
+function renderChips(){
+  chips.innerHTML = '';
+  const tags = computeTags();
+  if(!tags.length){ const m=document.createElement('span'); m.className='muted'; m.textContent='(No tags yet)'; chips.appendChild(m); return; }
+  for(const tag of tags){
+    const b = document.createElement('button');
+    b.className = 'chip'; b.textContent = tag; b.dataset.active = FILTERS.tags.includes(tag);
+    b.onclick = ()=>{ toggleTag(tag); };
+    chips.appendChild(b);
+  }
+  if(FILTERS.tags.length){
+    const c = document.createElement('button'); c.className='chip'; c.textContent='Clear tags';
+    c.onclick = ()=>{ FILTERS.tags=[]; saveFilters(FILTERS); renderChips(); renderList(); };
+    chips.appendChild(c);
+  }
+}
+
+function toggleTag(tag){
+  const i = FILTERS.tags.indexOf(tag);
+  if(i>=0) FILTERS.tags.splice(i,1); else FILTERS.tags.push(tag);
+  saveFilters(FILTERS); renderChips(); renderList();
+}
+
+function renderList(){
+  const rows = applyFilters();
+  list.innerHTML = '';
+  emptyDataset.classList.toggle('hidden', DATA.length>0);
+  noResults.classList.toggle('hidden', rows.length>0 || DATA.length===0);
+  for(const r of rows){
+    const li = document.createElement('li'); li.className='row';
+    li.innerHTML = `<div class="acronym">${r.a}</div><div class="def">${r.d}</div><div class="tags">${(r.t||[]).map(t=>`<span class='tag'>${t}</span>`).join('')}</div>`;
+    list.appendChild(li);
+  }
+}
+
+// ===== Import/Export/Reset =====
+btnExport.addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(DATA,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='acronyms.json'; a.click(); URL.revokeObjectURL(url);
+});
+
+btnImport.addEventListener('click', ()=>{
+  const inp = document.createElement('input'); inp.type='file'; inp.accept='application/json';
+  inp.onchange = async ()=>{
+    const file = inp.files[0]; if(!file) return; const txt = await file.text();
+    try{
+      const arr = JSON.parse(txt);
+      if(!Array.isArray(arr)) throw new Error('Expected an array');
+      DATA = arr.map(x=>({ a:String(x.a||x.A||'').trim(), d:String(x.d||x.definition||'').trim(), t:Array.isArray(x.t)?x.t.map(String):[] })).filter(x=>x.a && x.d);
+      saveData(DATA); FILTERS.tags=[]; saveFilters(FILTERS);
+      renderChips(); renderList(); alert('Imported '+DATA.length+' acronyms.');
+    }catch(e){ alert('Import failed: '+e.message); }
+  };
+  inp.click();
+});
+
+btnReset.addEventListener('click', ()=>{
+  if(confirm('Reset dataset to built—‘in samples?')){
+    DATA = DEFAULT_DATA.slice(); saveData(DATA);
+    FILTERS = { tags:[], q:'' }; saveFilters(FILTERS);
+    search.value=''; renderChips(); renderList();
+  }
+});
+
+if(btnLoadSamples){ btnLoadSamples.addEventListener('click', ()=>{ DATA = DEFAULT_DATA.slice(); saveData(DATA); renderChips(); renderList(); }); }
+
+// ===== Tabs (true mode switch) =====
+function showSection(which){
+  if(which==='list'){
+    sectionList.classList.remove('hidden');
+    sectionQuiz.classList.add('hidden');
+    tabList.classList.add('primary');
+    tabQuiz.classList.remove('primary');
+  } else {
+    sectionList.classList.add('hidden');
+    sectionQuiz.classList.remove('hidden');
+    tabQuiz.classList.add('primary');
+    tabList.classList.remove('primary');
+  }
+}
+
+tabList.onclick = ()=> showSection('list');
+tabQuiz.onclick = ()=> showSection('quiz');
+
+// ===== Search handling =====
+if(FILTERS.q){ search.value = FILTERS.q; }
+search.addEventListener('input', ()=>{ FILTERS.q = search.value.trim(); saveFilters(FILTERS); renderList(); });
+window.addEventListener('keydown', (e)=>{
+  if(e.key==='/' && document.activeElement!==search){ e.preventDefault(); search.focus(); }
+  if(e.key==='Escape'){ search.value=''; FILTERS.q=''; saveFilters(FILTERS); renderList(); }
+});
+
+// ===== Quiz (no repeats per round) =====
+let pool = []; let quizIndex = -1; let score = 0, streak = 0, asked = 0; let answered=false;
+function updateScore(){ progressEl.textContent = `${Math.min(quizIndex+1,pool.length)} / ${pool.length}`; scoreboardEl.textContent = `Score: ${score}  Streak: ${streak}`; }
+function startQuiz(){
+  pool = shuffle(applyFilters());
+  if(!pool.length){ alert('No items match your filters. Load samples or clear filters.'); return; }
+  quizIndex = 0; score=0; streak=0; asked=0; answered=false; nextBtn.disabled=false; restartBtn.classList.add('hidden'); startBtn.disabled=true; showQuestion(); updateScore();
+}
+function showQuestion(){
+  if(quizIndex>=pool.length){ questionEl.textContent=`Round complete. You answered ${score} / ${asked} correctly.`; choicesEl.innerHTML=''; nextBtn.disabled=true; restartBtn.classList.remove('hidden'); startBtn.disabled=false; updateScore(); return; }
+  const current = pool[quizIndex]; asked++; updateScore();
+  const isFlip = !!flip.checked; qTitle.textContent = isFlip ? 'Which acronym matches this definition?' : 'What does this acronym stand for?'; questionEl.textContent = isFlip ? current.d : current.a;
+  const wrong = shuffle(DATA.filter(x=>x.a!==current.a)).slice(0,Math.min(3,Math.max(0,DATA.length-1)));
+  const options = shuffle([current,...wrong]); choicesEl.innerHTML=''; answered=false;
+  options.forEach(opt=>{ const btn=document.createElement('button'); btn.className='choice'; btn.textContent = isFlip ? opt.a : opt.d; btn.onclick=()=>{ if(answered) return; answered=true; if(opt.a===current.a){ btn.classList.add('correct'); score++; streak++; } else { btn.classList.add('wrong'); streak=0; } Array.from(choicesEl.children).forEach(b=>b.disabled=true); updateScore(); }; choicesEl.appendChild(btn); });
+}
+startBtn.onclick = startQuiz; restartBtn.onclick = startQuiz; nextBtn.onclick = ()=>{ if(quizIndex<pool.length){ quizIndex++; showQuestion(); } };
+
+// ===== Init =====
+if(DATA.length===0){ emptyDataset.classList.remove('hidden'); }
+renderChips();
+renderList();
+showSection('list');
+</script>
+  <script src="../shared/help-content.js"></script>
+  <script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f172a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/shared/icons/suite-icon.svg">
+<title>ProSe Pilot Help</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a1220;
+    --panel: #111f31;
+    --line: #2d4a67;
+    --text: #eaf4ff;
+    --muted: #9db6cb;
+    --accent: #38bdf8;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --sans: 'Manrope', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    color: var(--text);
+    font-family: var(--sans);
+    background:
+      radial-gradient(1000px 500px at 10% -20%, #1c4f78 0%, transparent 62%),
+      radial-gradient(1000px 500px at 90% -20%, #0f5360 0%, transparent 62%),
+      linear-gradient(165deg, #07111c, var(--bg));
+  }
+  .top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(8, 14, 24, 0.9);
+    border-bottom: 1px solid #22384f;
+    backdrop-filter: blur(8px);
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .top a {
+    color: var(--muted);
+    text-decoration: none;
+    font: 500 12px/1 var(--mono);
+  }
+  .top a:hover { color: #d7edff; }
+  .top span { color: #8fb2cc; font: 500 12px/1 var(--mono); }
+
+  .wrap {
+    max-width: 980px;
+    margin: 18px auto;
+    padding: 0 14px 28px;
+    display: grid;
+    gap: 12px;
+  }
+  .hero, .panel {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: linear-gradient(165deg, rgba(15, 30, 47, .95), rgba(10, 20, 32, .95));
+    padding: 14px;
+  }
+  .hero h1 { font-size: clamp(1.2rem, 3vw, 1.7rem); }
+  .hero p { color: var(--muted); margin-top: 8px; line-height: 1.45; }
+
+  label {
+    display: block;
+    color: #9db6ca;
+    margin-bottom: 6px;
+    font: 500 12px/1 var(--mono);
+  }
+  select {
+    width: 100%;
+    border: 1px solid #2f5272;
+    border-radius: 10px;
+    background: #102235;
+    color: var(--text);
+    padding: 10px 11px;
+    font: 600 14px/1.2 var(--sans);
+  }
+
+  .doc h2 { font-size: 1.25rem; margin-bottom: 6px; }
+  .about { color: #d6e8f8; line-height: 1.45; }
+  .section {
+    margin-top: 12px;
+    border: 1px solid #26425d;
+    border-radius: 10px;
+    background: rgba(14, 27, 43, .75);
+    overflow: hidden;
+  }
+  .section h3 {
+    padding: 9px 10px;
+    font: 700 13px/1 var(--mono);
+    letter-spacing: .2px;
+    border-bottom: 1px solid #26425d;
+    color: #d6ebff;
+    background: #122c43;
+  }
+  .section ul { padding: 10px 14px; }
+  .section li {
+    margin-left: 14px;
+    color: #d6e8f8;
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+  .section li:last-child { margin-bottom: 0; }
+
+  .app-list {
+    columns: 2;
+    column-gap: 16px;
+  }
+  .app-list a {
+    display: block;
+    color: #cbe4f8;
+    text-decoration: none;
+    margin-bottom: 7px;
+    font-size: 14px;
+  }
+  .app-list a:hover { color: #ffffff; }
+
+  @media (max-width: 760px) {
+    .app-list { columns: 1; }
+  }
+</style>
+</head>
+<body>
+  <nav class="top">
+    <a href="../index.html">&larr; Back to Suite</a>
+    <span>Help Center</span>
+  </nav>
+
+  <main class="wrap">
+    <section class="hero">
+      <h1>ProSe Pilot Help</h1>
+      <p>Each app includes: About, Basic operations, Keys, Commands, and Scenarios.</p>
+    </section>
+
+    <section class="panel">
+      <label for="appSelect">Choose app help page</label>
+      <select id="appSelect"></select>
+    </section>
+
+    <section class="panel doc" id="docView"></section>
+
+    <section class="panel" id="allAppsPanel">
+      <h2 style="font-size:1rem; margin-bottom:8px;">All Help Pages</h2>
+      <div id="appList" class="app-list"></div>
+    </section>
+  </main>
+
+  <script src="../shared/help-content.js"></script>
+  <script src="../shared/privacy-mode.js"></script>
+  <script src="../shared/pwa-init.js"></script>
+  <script>
+    (function () {
+      const data = (window.SUITE_HELP_CONTENT && window.SUITE_HELP_CONTENT.apps) || {};
+      const appKeys = Object.keys(data).sort();
+
+      const select = document.getElementById('appSelect');
+      const docView = document.getElementById('docView');
+      const appList = document.getElementById('appList');
+
+      function esc(text) {
+        return String(text)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;');
+      }
+
+      function listHtml(items) {
+        const rows = (items && items.length ? items : ['No details yet.'])
+          .map(item => `<li>${esc(item)}</li>`)
+          .join('');
+        return `<ul>${rows}</ul>`;
+      }
+
+      function render(appKey) {
+        const item = data[appKey];
+        if (!item) {
+          docView.innerHTML = '<h2>Help not found</h2><p class="about">Choose a valid app from the dropdown.</p>';
+          return;
+        }
+
+        docView.innerHTML = [
+          `<h2>${esc(item.title || appKey)}</h2>`,
+          `<p class="about">${esc(item.about || 'No about text yet.')}</p>`,
+          `<section class="section"><h3>Basic Operations</h3>${listHtml(item.operations)}</section>`,
+          `<section class="section"><h3>Keys</h3>${listHtml(item.keys)}</section>`,
+          `<section class="section"><h3>Commands</h3>${listHtml(item.commands)}</section>`,
+          `<section class="section"><h3>Scenarios</h3>${listHtml(item.scenarios)}</section>`
+        ].join('');
+      }
+
+      function setQuery(appKey) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('app', appKey);
+        history.replaceState(null, '', url.toString());
+      }
+
+      select.innerHTML = appKeys
+        .map(k => `<option value="${k}">${esc(data[k].title || k)}</option>`)
+        .join('');
+
+      appList.innerHTML = appKeys
+        .map(k => `<a href="?app=${k}">${esc(data[k].title || k)}</a>`)
+        .join('');
+
+      const params = new URLSearchParams(window.location.search);
+      const initial = params.get('app') && data[params.get('app')] ? params.get('app') : appKeys[0];
+      if (initial) {
+        select.value = initial;
+        render(initial);
+      }
+
+      select.addEventListener('change', () => {
+        const key = select.value;
+        render(key);
+        setQuery(key);
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legal Library</title>
+<style>
+  :root{
+    --bg:#070b12;--bg2:#0f1623;--line:#2d405c;--text:#e8f2ff;--muted:#9eb4cb;--accent:#59c7ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    min-height:100vh;color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:radial-gradient(900px 420px at 8% -20%, rgba(80,140,220,.2), transparent 62%),linear-gradient(160deg,var(--bg),#090f1a);
+  }
+  .suite-nav{
+    display:flex;align-items:center;justify-content:space-between;padding:8px 16px;
+    background:var(--bg2);border-bottom:1px solid var(--line);font-size:12px
+  }
+  .suite-nav a{color:var(--muted);text-decoration:none}
+  .suite-nav a:hover{color:var(--accent)}
+  .suite-name{color:#7f92a6}
+  .wrap{width:min(1280px,100%);margin:0 auto;padding:16px;display:grid;gap:12px}
+  .panel{
+    background:linear-gradient(165deg,rgba(17,27,43,.95),rgba(12,20,33,.95));
+    border:1px solid var(--line);border-radius:14px;padding:14px;
+  }
+  .panel h1,.panel h2{margin-bottom:8px}
+  .muted{color:var(--muted);font-size:12px;line-height:1.45}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .input{
+    width:100%;border:1px solid #3a5270;background:#0f2238;color:var(--text);
+    border-radius:10px;padding:10px 11px;font-size:14px;
+  }
+  .btn{
+    border:1px solid #395977;background:#173553;color:#eaf4ff;border-radius:12px;
+    padding:10px 12px;min-height:44px;font-weight:760;cursor:pointer;
+  }
+  .btn:hover{background:#1f4469}
+  .btn.bad{background:linear-gradient(180deg,#ff8aa2,#b64965);border-color:#ff8aa2;color:#22040d}
+  .btn.ok{background:linear-gradient(180deg,#3ad18e,#228353);border-color:#3acf8e;color:#03190d}
+  .status{
+    margin-top:8px;border:1px solid #334c6b;background:#11243a;border-radius:10px;padding:9px 10px;
+    font:600 12px/1.35 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  .library-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .library-list{display:grid;gap:8px;max-height:340px;overflow:auto}
+  .library-item{
+    border:1px solid #2d4865;background:#0f2238;border-radius:10px;padding:9px;
+    display:grid;gap:6px;
+  }
+  .library-item h3{font-size:13px}
+  .library-meta{font-size:11px;color:var(--muted)}
+  .library-actions{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{
+    border:1px solid #3d5878;background:#132a44;color:#d8eaff;border-radius:999px;
+    padding:7px 10px;font-size:12px;cursor:pointer;
+  }
+  .chip:hover{background:#1a3657}
+  .search-results{display:grid;gap:8px;max-height:320px;overflow:auto}
+  .search-hit{
+    border:1px solid #2d4865;background:#0f2238;border-radius:10px;padding:9px;
+    display:grid;gap:5px;
+  }
+  .search-snippet{font-size:12px;color:#c0d3e7;line-height:1.35}
+  .preview{
+    margin-top:8px;border:1px solid #365171;background:#0d1d30;border-radius:10px;padding:10px;
+    white-space:pre-wrap;font-size:13px;line-height:1.45;max-height:260px;overflow:auto;
+  }
+  .pin-on{border-color:#d0a43d;background:#3d2d10;color:#ffe7b3}
+  @media(max-width:980px){.library-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav class="suite-nav">
+  <a href="../index.html">&larr; Back to Suite</a>
+  <span class="suite-name">ProSe Pilot</span>
+</nav>
+
+<main class="wrap">
+  <section class="panel">
+    <h1>Legal Library</h1>
+    <p class="muted">Offline-first legal references and imported documents. Supports <code>.pdf</code>, <code>.epub</code>, <code>.md</code>, and <code>.txt</code>.</p>
+    <div class="row" style="margin-top:10px">
+      <a class="btn" href="../authority-assistant/index.html" style="text-decoration:none;display:inline-flex;align-items:center">Open Legal Assistant</a>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Import & Search</h2>
+    <div class="row" style="margin-top:10px">
+      <input id="libraryFiles" class="input" type="file" multiple accept=".pdf,.epub,.md,.txt,application/pdf,application/epub+zip,text/plain,text/markdown">
+      <button id="importLibraryBtn" class="btn ok" type="button">Import to Library</button>
+      <button id="clearLibraryBtn" class="btn bad" type="button">Clear Imported Docs</button>
+    </div>
+    <div class="status" id="libraryStatus" style="margin-top:10px">Library ready.</div>
+    <div class="row" style="margin-top:10px">
+      <input id="librarySearch" class="input" type="text" placeholder="Search built-in refs and imported docs..." />
+      <button id="clearLibrarySearchBtn" class="btn" type="button">Clear Search</button>
+    </div>
+    <div class="library-grid" style="margin-top:10px">
+      <article class="panel" style="margin:0">
+        <h2>Pinned (Stress Mode)</h2>
+        <div id="pinnedList" class="library-list"></div>
+      </article>
+      <article class="panel" style="margin:0">
+        <h2>Recently Opened</h2>
+        <div id="recentList" class="library-list"></div>
+      </article>
+    </div>
+    <article class="panel" style="margin-top:10px">
+      <h2>Search Results</h2>
+      <div id="searchResults" class="search-results"></div>
+    </article>
+    <div class="library-grid" style="margin-top:10px">
+      <article class="panel" style="margin:0">
+        <h2>Built-in Legal References</h2>
+        <div id="builtInRefs" class="library-list"></div>
+      </article>
+      <article class="panel" style="margin:0">
+        <h2>Imported Documents</h2>
+        <div id="userDocs" class="library-list"></div>
+      </article>
+    </div>
+    <div class="preview" id="libraryPreview" style="margin-top:10px">Select a text document to preview it here.</div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const LIBRARY_STATE_KEY = "legal.library.v1";
+  const LEGACY_STATE_KEY = "authority.assistant.v1";
+  const LIBRARY_DB = "authority.assistant.library.v1";
+  const LIBRARY_STORE = "docs";
+  const MAX_RECENT = 12;
+  const MAX_TEXT_STORE = 200000;
+  const nowISO = () => new Date().toISOString();
+  const esc = (s) => String(s).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+
+  const BUILTIN_REFS = [
+    {
+      title: "U.S. Constitution - Fifth Amendment",
+      summary: "Primary source for protection against self-incrimination and due process.",
+      url: "https://constitution.congress.gov/constitution/amendment-5/"
+    },
+    {
+      title: "Berghuis v. Thompkins (2010)",
+      summary: "Supreme Court case on explicit invocation of right to remain silent.",
+      url: "https://supreme.justia.com/cases/federal/us/560/370/"
+    },
+    {
+      title: "Salinas v. Texas (2013)",
+      summary: "Supreme Court case relevant to pre-arrest silence and invocation context.",
+      url: "https://supreme.justia.com/cases/federal/us/570/178/"
+    },
+    {
+      title: "ACLU Know Your Rights - Law Enforcement Encounters",
+      summary: "Practical rights guidance for interactions with law enforcement and military.",
+      url: "https://www.aclu.org/news/national-security/know-your-rights-in-encounters-with-law-enforcement-and-military-troops"
+    },
+    {
+      title: "ACLU NorCal - Immigration Enforcement & Warrants",
+      summary: "Guide on immigration encounters and warrant distinctions.",
+      url: "https://www.aclunorcal.org/know-your-rights/know-your-rights-immigration-enforcement-and-warrants/"
+    },
+    {
+      title: "ABA Model Rule 5.5 (Unauthorized Practice of Law)",
+      summary: "Boundary reference for legal-information tools vs legal representation.",
+      url: "https://www.americanbar.org/groups/professional_responsibility/publications/model_rules_of_professional_conduct/rule_5_5_unauthorized_practice_of_law_multijurisdictional_practice_of_law/"
+    }
+  ];
+
+  const el = {
+    libraryFiles: document.getElementById("libraryFiles"),
+    importLibraryBtn: document.getElementById("importLibraryBtn"),
+    clearLibraryBtn: document.getElementById("clearLibraryBtn"),
+    librarySearch: document.getElementById("librarySearch"),
+    clearLibrarySearchBtn: document.getElementById("clearLibrarySearchBtn"),
+    libraryStatus: document.getElementById("libraryStatus"),
+    pinnedList: document.getElementById("pinnedList"),
+    recentList: document.getElementById("recentList"),
+    searchResults: document.getElementById("searchResults"),
+    builtInRefs: document.getElementById("builtInRefs"),
+    userDocs: document.getElementById("userDocs"),
+    libraryPreview: document.getElementById("libraryPreview")
+  };
+
+  let state = {
+    docs: [],
+    pinned: [],
+    recent: []
+  };
+  let dbPromise = null;
+
+  function setStatus(message) {
+    el.libraryStatus.textContent = message;
+  }
+
+  function formatBytes(bytes) {
+    const n = Number(bytes || 0);
+    if (n < 1024) return `${n} B`;
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+    return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  function fileExt(name) {
+    const idx = String(name || "").lastIndexOf(".");
+    return idx >= 0 ? String(name).slice(idx).toLowerCase() : "";
+  }
+
+  function isAllowedLibraryDoc(name) {
+    const ext = fileExt(name);
+    return ext === ".pdf" || ext === ".epub" || ext === ".md" || ext === ".txt";
+  }
+
+  function isTextLikeDoc(name) {
+    const ext = fileExt(name);
+    return ext === ".md" || ext === ".txt";
+  }
+
+  function openLibraryDb() {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise((resolve, reject) => {
+      if (!("indexedDB" in window)) {
+        reject(new Error("IndexedDB not available"));
+        return;
+      }
+      const req = indexedDB.open(LIBRARY_DB, 1);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(LIBRARY_STORE)) {
+          db.createObjectStore(LIBRARY_STORE, { keyPath: "id" });
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error || new Error("DB open failed"));
+    });
+    return dbPromise;
+  }
+
+  async function dbGetAllDocs() {
+    const db = await openLibraryDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(LIBRARY_STORE, "readonly");
+      const req = tx.objectStore(LIBRARY_STORE).getAll();
+      req.onsuccess = () => resolve((req.result || []).sort((a, b) => (b.addedAt || "").localeCompare(a.addedAt || "")));
+      req.onerror = () => reject(req.error || new Error("DB read failed"));
+    });
+  }
+
+  async function dbGetDoc(id) {
+    const db = await openLibraryDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(LIBRARY_STORE, "readonly");
+      const req = tx.objectStore(LIBRARY_STORE).get(id);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error || new Error("DB read failed"));
+    });
+  }
+
+  async function dbPutDoc(doc) {
+    const db = await openLibraryDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(LIBRARY_STORE, "readwrite");
+      tx.objectStore(LIBRARY_STORE).put(doc);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error("DB write failed"));
+    });
+  }
+
+  async function dbDeleteDoc(id) {
+    const db = await openLibraryDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(LIBRARY_STORE, "readwrite");
+      tx.objectStore(LIBRARY_STORE).delete(id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error("DB delete failed"));
+    });
+  }
+
+  async function dbClearDocs() {
+    const db = await openLibraryDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(LIBRARY_STORE, "readwrite");
+      tx.objectStore(LIBRARY_STORE).clear();
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error("DB clear failed"));
+    });
+  }
+
+  function builtinKey(idx) {
+    return `ref:${idx}`;
+  }
+
+  function docKey(id) {
+    return `doc:${id}`;
+  }
+
+  function resolveEntryByKey(key) {
+    if (!key) return null;
+    if (key.startsWith("ref:")) {
+      const idx = Number(key.slice(4));
+      const ref = BUILTIN_REFS[idx];
+      if (!ref) return null;
+      return {
+        key,
+        type: "ref",
+        index: idx,
+        title: ref.title,
+        subtitle: ref.summary,
+        searchableText: `${ref.title}\n${ref.summary}\n${ref.url}`,
+        hasPreview: false
+      };
+    }
+    if (key.startsWith("doc:")) {
+      const id = key.slice(4);
+      const doc = state.docs.find((d) => d.id === id);
+      if (!doc) return null;
+      return {
+        key,
+        type: "doc",
+        id: doc.id,
+        title: doc.name || "Untitled",
+        subtitle: `${(doc.ext || "").toUpperCase()} | ${formatBytes(doc.size)}`,
+        searchableText: `${doc.name || ""}\n${doc.extractedText || ""}`,
+        hasPreview: Boolean(doc.extractedText)
+      };
+    }
+    return null;
+  }
+
+  function normalizeLibraryState() {
+    state.pinned = Array.from(new Set((state.pinned || []).filter((k) => resolveEntryByKey(k))));
+    state.recent = (state.recent || [])
+      .filter((r) => r && resolveEntryByKey(r.key))
+      .reduce((acc, r) => {
+        if (!acc.some((x) => x.key === r.key)) acc.push(r);
+        return acc;
+      }, [])
+      .slice(0, MAX_RECENT);
+  }
+
+  function isPinned(key) {
+    return (state.pinned || []).includes(key);
+  }
+
+  function togglePinned(key) {
+    if (!key) return;
+    if (isPinned(key)) state.pinned = state.pinned.filter((k) => k !== key);
+    else state.pinned = [...state.pinned, key];
+    saveState();
+    renderAllLibraryViews();
+  }
+
+  function touchRecent(key) {
+    if (!key) return;
+    state.recent = [{ key, openedAt: nowISO() }, ...(state.recent || []).filter((r) => r.key !== key)].slice(0, MAX_RECENT);
+    saveState();
+    renderStressPanels();
+  }
+
+  async function openBuiltinRef(idx) {
+    const ref = BUILTIN_REFS[idx];
+    if (!ref) return;
+    window.open(ref.url, "_blank", "noopener,noreferrer");
+    touchRecent(builtinKey(idx));
+    setStatus(`Opened ${ref.title}.`);
+  }
+
+  async function openImportedDoc(id) {
+    const doc = state.docs.find((d) => d.id === id);
+    if (!doc) return;
+    const full = await dbGetDoc(doc.id).catch(() => null);
+    if (!full || !full.blob) {
+      setStatus("Document payload not found. Re-import it.");
+      return;
+    }
+    const url = URL.createObjectURL(full.blob);
+    const opened = window.open(url, "_blank", "noopener,noreferrer");
+    if (!opened) {
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = full.name || "document";
+      a.click();
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 120000);
+    touchRecent(docKey(id));
+    setStatus(`Opened ${full.name}.`);
+  }
+
+  function previewDocText(id) {
+    const doc = state.docs.find((d) => d.id === id);
+    if (!doc || !doc.extractedText) return;
+    el.libraryPreview.textContent = doc.extractedText;
+    setStatus(`Previewing ${doc.name}.`);
+  }
+
+  function searchEntries(query) {
+    const q = String(query || "").trim().toLowerCase();
+    if (!q) return [];
+    const terms = q.split(/\s+/).filter(Boolean);
+    const refs = BUILTIN_REFS.map((r, idx) => resolveEntryByKey(builtinKey(idx))).filter(Boolean);
+    const docs = state.docs.map((d) => resolveEntryByKey(docKey(d.id))).filter(Boolean);
+    const all = [...refs, ...docs];
+    return all
+      .map((e) => {
+        const hay = String(e.searchableText || "").toLowerCase();
+        const ok = terms.every((t) => hay.includes(t));
+        return ok ? e : null;
+      })
+      .filter(Boolean)
+      .slice(0, 60);
+  }
+
+  function snippetFor(entry, query) {
+    const text = String(entry.searchableText || "").replace(/\s+/g, " ");
+    if (!text) return "";
+    const q = String(query || "").trim().toLowerCase();
+    if (!q) return text.slice(0, 180);
+    const idx = text.toLowerCase().indexOf(q);
+    if (idx < 0) return text.slice(0, 180);
+    const start = Math.max(0, idx - 60);
+    const end = Math.min(text.length, idx + q.length + 100);
+    const prefix = start > 0 ? "..." : "";
+    const suffix = end < text.length ? "..." : "";
+    return `${prefix}${text.slice(start, end)}${suffix}`;
+  }
+
+  function renderSearchResults() {
+    const q = el.librarySearch.value.trim();
+    if (!q) {
+      el.searchResults.innerHTML = `<div class="muted">Type a query to search built-in references and imported documents.</div>`;
+      return;
+    }
+    const hits = searchEntries(q);
+    if (!hits.length) {
+      el.searchResults.innerHTML = `<div class="muted">No matches for "${esc(q)}".</div>`;
+      return;
+    }
+    el.searchResults.innerHTML = hits.map((h) => `
+      <article class="search-hit">
+        <div><strong>${esc(h.title)}</strong> <span class="library-meta">(${h.type === "ref" ? "Built-in" : "Imported"})</span></div>
+        <div class="library-meta">${esc(h.subtitle || "")}</div>
+        <div class="search-snippet">${esc(snippetFor(h, q))}</div>
+        <div class="library-actions">
+          <button class="chip" type="button" data-hit-open="${h.key}">Open</button>
+          ${h.hasPreview && h.type === "doc" ? `<button class="chip" type="button" data-hit-preview="${h.key}">Preview Text</button>` : ""}
+          <button class="chip ${isPinned(h.key) ? "pin-on" : ""}" type="button" data-hit-pin="${h.key}">${isPinned(h.key) ? "Unpin" : "Pin"}</button>
+        </div>
+      </article>
+    `).join("");
+
+    el.searchResults.querySelectorAll("[data-hit-open]").forEach((b) => {
+      b.addEventListener("click", async () => {
+        const e = resolveEntryByKey(b.getAttribute("data-hit-open"));
+        if (!e) return;
+        if (e.type === "ref") await openBuiltinRef(e.index);
+        else await openImportedDoc(e.id);
+      });
+    });
+    el.searchResults.querySelectorAll("[data-hit-preview]").forEach((b) => {
+      b.addEventListener("click", () => {
+        const e = resolveEntryByKey(b.getAttribute("data-hit-preview"));
+        if (!e || e.type !== "doc") return;
+        previewDocText(e.id);
+      });
+    });
+    el.searchResults.querySelectorAll("[data-hit-pin]").forEach((b) => {
+      b.addEventListener("click", () => togglePinned(b.getAttribute("data-hit-pin")));
+    });
+  }
+
+  function renderStressPanels() {
+    const pinnedEntries = (state.pinned || []).map(resolveEntryByKey).filter(Boolean);
+    if (!pinnedEntries.length) {
+      el.pinnedList.innerHTML = `<div class="muted">No pinned items yet.</div>`;
+    } else {
+      el.pinnedList.innerHTML = pinnedEntries.map((e) => `
+        <article class="library-item">
+          <h3>${esc(e.title)}</h3>
+          <div class="library-meta">${esc(e.subtitle || "")}</div>
+          <div class="library-actions">
+            <button class="chip" type="button" data-pin-open="${e.key}">Open</button>
+            ${e.hasPreview && e.type === "doc" ? `<button class="chip" type="button" data-pin-preview="${e.key}">Preview Text</button>` : ""}
+            <button class="chip pin-on" type="button" data-pin-toggle="${e.key}">Unpin</button>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    const recentEntries = (state.recent || []).map((r) => ({ r, e: resolveEntryByKey(r.key) })).filter((x) => x.e);
+    if (!recentEntries.length) {
+      el.recentList.innerHTML = `<div class="muted">No recent opens yet.</div>`;
+    } else {
+      el.recentList.innerHTML = recentEntries.map(({ r, e }) => `
+        <article class="library-item">
+          <h3>${esc(e.title)}</h3>
+          <div class="library-meta">${esc(e.subtitle || "")}</div>
+          <div class="library-meta">Opened: ${esc(r.openedAt || "")}</div>
+          <div class="library-actions">
+            <button class="chip" type="button" data-recent-open="${e.key}">Open</button>
+            ${e.hasPreview && e.type === "doc" ? `<button class="chip" type="button" data-recent-preview="${e.key}">Preview Text</button>` : ""}
+            <button class="chip ${isPinned(e.key) ? "pin-on" : ""}" type="button" data-recent-pin="${e.key}">${isPinned(e.key) ? "Unpin" : "Pin"}</button>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    el.pinnedList.querySelectorAll("[data-pin-open]").forEach((b) => b.addEventListener("click", async () => {
+      const e = resolveEntryByKey(b.getAttribute("data-pin-open"));
+      if (!e) return;
+      if (e.type === "ref") await openBuiltinRef(e.index);
+      else await openImportedDoc(e.id);
+    }));
+    el.pinnedList.querySelectorAll("[data-pin-preview]").forEach((b) => b.addEventListener("click", () => {
+      const e = resolveEntryByKey(b.getAttribute("data-pin-preview"));
+      if (!e || e.type !== "doc") return;
+      previewDocText(e.id);
+    }));
+    el.pinnedList.querySelectorAll("[data-pin-toggle]").forEach((b) => b.addEventListener("click", () => togglePinned(b.getAttribute("data-pin-toggle"))));
+
+    el.recentList.querySelectorAll("[data-recent-open]").forEach((b) => b.addEventListener("click", async () => {
+      const e = resolveEntryByKey(b.getAttribute("data-recent-open"));
+      if (!e) return;
+      if (e.type === "ref") await openBuiltinRef(e.index);
+      else await openImportedDoc(e.id);
+    }));
+    el.recentList.querySelectorAll("[data-recent-preview]").forEach((b) => b.addEventListener("click", () => {
+      const e = resolveEntryByKey(b.getAttribute("data-recent-preview"));
+      if (!e || e.type !== "doc") return;
+      previewDocText(e.id);
+    }));
+    el.recentList.querySelectorAll("[data-recent-pin]").forEach((b) => b.addEventListener("click", () => togglePinned(b.getAttribute("data-recent-pin"))));
+  }
+
+  function renderBuiltInRefs() {
+    el.builtInRefs.innerHTML = BUILTIN_REFS.map((r, idx) => {
+      const key = builtinKey(idx);
+      return `
+      <article class="library-item">
+        <h3>${esc(r.title)}</h3>
+        <div class="library-meta">${esc(r.summary)}</div>
+        <div class="library-actions">
+          <button class="chip" type="button" data-ref-open="${idx}">Open Source</button>
+          <button class="chip" type="button" data-ref-copy="${idx}">Copy Link</button>
+          <button class="chip ${isPinned(key) ? "pin-on" : ""}" type="button" data-ref-pin="${idx}">${isPinned(key) ? "Unpin" : "Pin"}</button>
+        </div>
+      </article>`;
+    }).join("");
+
+    el.builtInRefs.querySelectorAll("[data-ref-open]").forEach((b) => {
+      b.addEventListener("click", () => openBuiltinRef(Number(b.getAttribute("data-ref-open"))));
+    });
+    el.builtInRefs.querySelectorAll("[data-ref-copy]").forEach((b) => {
+      b.addEventListener("click", async () => {
+        const ref = BUILTIN_REFS[Number(b.getAttribute("data-ref-copy"))];
+        if (!ref) return;
+        await navigator.clipboard.writeText(ref.url).catch(() => {});
+        setStatus("Reference link copied.");
+      });
+    });
+    el.builtInRefs.querySelectorAll("[data-ref-pin]").forEach((b) => {
+      b.addEventListener("click", () => togglePinned(builtinKey(Number(b.getAttribute("data-ref-pin")))));
+    });
+  }
+
+  function renderUserDocs() {
+    if (!state.docs.length) {
+      el.userDocs.innerHTML = `<div class="muted">No imported docs yet.</div>`;
+      return;
+    }
+    el.userDocs.innerHTML = state.docs.map((d) => {
+      const key = docKey(d.id);
+      return `
+      <article class="library-item">
+        <h3>${esc(d.name || "Untitled")}</h3>
+        <div class="library-meta">${esc((d.ext || "").toUpperCase())} | ${esc(formatBytes(d.size))} | ${esc(d.addedAt || "")}</div>
+        <div class="library-actions">
+          <button class="chip" type="button" data-doc-open="${d.id}">Open</button>
+          ${d.extractedText ? `<button class="chip" type="button" data-doc-preview="${d.id}">Preview Text</button>` : ""}
+          <button class="chip ${isPinned(key) ? "pin-on" : ""}" type="button" data-doc-pin="${d.id}">${isPinned(key) ? "Unpin" : "Pin"}</button>
+          <button class="chip" type="button" data-doc-delete="${d.id}">Delete</button>
+        </div>
+      </article>`;
+    }).join("");
+
+    el.userDocs.querySelectorAll("[data-doc-open]").forEach((b) => b.addEventListener("click", () => openImportedDoc(b.getAttribute("data-doc-open"))));
+    el.userDocs.querySelectorAll("[data-doc-preview]").forEach((b) => b.addEventListener("click", () => previewDocText(b.getAttribute("data-doc-preview"))));
+    el.userDocs.querySelectorAll("[data-doc-pin]").forEach((b) => b.addEventListener("click", () => togglePinned(docKey(b.getAttribute("data-doc-pin")))));
+    el.userDocs.querySelectorAll("[data-doc-delete]").forEach((b) => b.addEventListener("click", async () => {
+      const id = b.getAttribute("data-doc-delete");
+      await dbDeleteDoc(id).catch(() => {});
+      state.docs = state.docs.filter((d) => d.id !== id);
+      normalizeLibraryState();
+      saveState();
+      renderAllLibraryViews();
+      setStatus("Document deleted.");
+    }));
+  }
+
+  function renderAllLibraryViews() {
+    renderStressPanels();
+    renderBuiltInRefs();
+    renderUserDocs();
+    renderSearchResults();
+  }
+
+  async function refreshDocsFromDb() {
+    try {
+      state.docs = await dbGetAllDocs();
+      normalizeLibraryState();
+      saveState();
+      renderAllLibraryViews();
+    } catch (e) {
+      setStatus(`Library DB unavailable: ${e && e.message ? e.message : e}`);
+    }
+  }
+
+  async function importLibraryDocs(files) {
+    const list = Array.from(files || []);
+    if (!list.length) {
+      setStatus("Select one or more files first.");
+      return;
+    }
+    let imported = 0;
+    let skipped = 0;
+    for (const file of list) {
+      if (!isAllowedLibraryDoc(file.name)) {
+        skipped++;
+        continue;
+      }
+      const id = `doc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const ext = fileExt(file.name);
+      let extractedText = "";
+      if (isTextLikeDoc(file.name)) {
+        const text = await file.text().catch(() => "");
+        extractedText = text.slice(0, MAX_TEXT_STORE);
+      }
+      const payload = {
+        id,
+        name: file.name,
+        ext,
+        size: Number(file.size || 0),
+        type: file.type || "",
+        addedAt: nowISO(),
+        extractedText,
+        blob: file
+      };
+      await dbPutDoc(payload).catch(() => null);
+      imported++;
+    }
+    el.libraryFiles.value = "";
+    await refreshDocsFromDb();
+    setStatus(`Imported ${imported} file(s). Skipped ${skipped}.`);
+  }
+
+  function saveState() {
+    localStorage.setItem(LIBRARY_STATE_KEY, JSON.stringify({
+      pinned: state.pinned,
+      recent: state.recent
+    }));
+  }
+
+  function loadState() {
+    const loadFrom = (key) => {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      try {
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === "object" ? parsed : null;
+      } catch {
+        return null;
+      }
+    };
+    const parsed = loadFrom(LIBRARY_STATE_KEY) || loadFrom(LEGACY_STATE_KEY) || {};
+    state.pinned = Array.isArray(parsed.pinned) ? parsed.pinned.filter((x) => typeof x === "string") : [];
+    state.recent = Array.isArray(parsed.recent)
+      ? parsed.recent
+          .filter((x) => x && typeof x.key === "string")
+          .map((x) => ({ key: x.key, openedAt: x.openedAt || "" }))
+          .slice(0, MAX_RECENT)
+      : [];
+  }
+
+  function bind() {
+    el.importLibraryBtn.addEventListener("click", () => importLibraryDocs(el.libraryFiles.files));
+    el.librarySearch.addEventListener("input", () => renderSearchResults());
+    el.clearLibrarySearchBtn.addEventListener("click", () => {
+      el.librarySearch.value = "";
+      renderSearchResults();
+    });
+    el.clearLibraryBtn.addEventListener("click", async () => {
+      if (!confirm("Delete all imported library documents from this device?")) return;
+      await dbClearDocs().catch(() => {});
+      state.docs = [];
+      normalizeLibraryState();
+      saveState();
+      renderAllLibraryViews();
+      el.libraryPreview.textContent = "Select a text document to preview it here.";
+      setStatus("Imported library documents cleared.");
+    });
+  }
+
+  loadState();
+  bind();
+  renderAllLibraryViews();
+  refreshDocsFromDb();
+})();
+</script>
+<script src="../shared/help-content.js"></script>
+<script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

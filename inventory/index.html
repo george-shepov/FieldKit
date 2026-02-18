@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Inventory Manager</title>
+<style>
+  :root {
+    --bg: #0f1320;
+    --panel: #162138;
+    --line: #344f7a;
+    --ink: #edf4ff;
+    --muted: #9eb5d8;
+    --ok: #1bc488;
+    --warn: #f0b34f;
+    --bad: #ef6b78;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(950px 450px at 85% -10%, rgba(93, 143, 222, .24), transparent 50%),
+      radial-gradient(950px 450px at 10% -10%, rgba(93, 209, 222, .14), transparent 50%),
+      var(--bg);
+  }
+  .suite-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    border-bottom: 1px solid #243857;
+    background: #0c1220;
+    font-size: 12px;
+  }
+  .suite-nav a { color: #8ea8cd; text-decoration: none; }
+  .suite-nav a:hover { color: #c9dbf5; }
+  .wrap {
+    max-width: 1100px;
+    margin: 14px auto;
+    padding: 0 14px 24px;
+    display: grid;
+    gap: 12px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px;
+  }
+  h1 { margin: 0 0 8px; font-size: 1.35rem; }
+  h2 { margin: 0 0 10px; font-size: 1.05rem; }
+  .muted { color: var(--muted); }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+  }
+  label {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  input, select, textarea {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 9px 10px;
+    background: #0d1729;
+    color: var(--ink);
+    font-size: 0.95rem;
+  }
+  textarea { resize: vertical; min-height: 72px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .btn {
+    border: 1px solid #3b669d;
+    border-radius: 10px;
+    background: #275080;
+    color: #fff;
+    font-weight: 700;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  .btn.ok { background: #0f6846; border-color: #1f946c; }
+  .btn.warn { background: #765b22; border-color: #bd9440; }
+  .btn.bad { background: #7b3341; border-color: #b95a67; }
+  .status {
+    margin-top: 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #0a1323;
+    color: var(--muted);
+    padding: 8px 10px;
+  }
+  .status.ok { border-color: #1f7d59; color: #9bf1cc; }
+  .status.warn { border-color: #957137; color: #ffd79e; }
+  .status.bad { border-color: #8f4b56; color: #ffc0c7; }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+  }
+  .stat {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #111c2e;
+    padding: 8px 10px;
+  }
+  .stat b { display: block; font-size: 1.1rem; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th, td {
+    text-align: left;
+    border-bottom: 1px solid #2b4269;
+    padding: 8px 7px;
+    font-size: 0.9rem;
+    vertical-align: top;
+  }
+  th { color: var(--muted); font-size: 0.82rem; }
+  .badge {
+    display: inline-block;
+    border-radius: 999px;
+    border: 1px solid #4d6791;
+    background: #1b2f4f;
+    color: #cfe2ff;
+    padding: 2px 8px;
+    font-size: 0.73rem;
+  }
+  .badge.ok { border-color: #2b8f69; background: #113527; color: #b1f5d8; }
+  .badge.warn { border-color: #9a7c3f; background: #3a2c13; color: #ffe1a8; }
+  .badge.bad { border-color: #a45862; background: #3d161b; color: #ffc9d0; }
+  .table-wrap { overflow-x: auto; }
+</style>
+</head>
+<body>
+<nav class="suite-nav">
+  <a href="../index.html">&lt;- Back to Suite</a>
+  <span>Inventory Manager</span>
+</nav>
+
+<div class="wrap">
+  <div class="card">
+    <h1>Inventory Manager</h1>
+    <div class="muted">Track SKU, quantity, price, and stock status locally. Export/import JSON for backup.</div>
+  </div>
+
+  <div class="card">
+    <h2>Add / Edit Item</h2>
+    <div class="grid">
+      <div>
+        <label for="sku">SKU</label>
+        <input id="sku" type="text" placeholder="SKU-001" />
+      </div>
+      <div>
+        <label for="name">Name</label>
+        <input id="name" type="text" placeholder="Item name" />
+      </div>
+      <div>
+        <label for="category">Category</label>
+        <input id="category" type="text" placeholder="Tools / Apparel / etc." />
+      </div>
+      <div>
+        <label for="qty">Quantity</label>
+        <input id="qty" type="number" min="0" step="1" value="0" />
+      </div>
+      <div>
+        <label for="price">Unit Price</label>
+        <input id="price" type="number" min="0" step="0.01" value="0" />
+      </div>
+      <div>
+        <label for="lowAt">Low Stock Threshold</label>
+        <input id="lowAt" type="number" min="0" step="1" value="3" />
+      </div>
+    </div>
+    <div style="margin-top:10px;">
+      <label for="notes">Notes</label>
+      <textarea id="notes" placeholder="Supplier, shelf location, listing URL, etc."></textarea>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button id="saveBtn" class="btn ok" type="button">Save Item</button>
+      <button id="clearFormBtn" class="btn warn" type="button">Clear Form</button>
+      <button id="clearAllBtn" class="btn bad" type="button">Clear All Items</button>
+    </div>
+    <div id="status" class="status">Ready.</div>
+  </div>
+
+  <div class="card">
+    <h2>Search / Backup</h2>
+    <div class="row">
+      <input id="search" type="text" placeholder="Search SKU, name, category, notes..." style="flex:1;min-width:240px;" />
+      <button id="exportBtn" class="btn" type="button">Export JSON</button>
+      <button id="importBtn" class="btn" type="button">Import JSON</button>
+      <input id="importFile" type="file" accept="application/json" style="display:none;" />
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Summary</h2>
+    <div id="stats" class="stats"></div>
+  </div>
+
+  <div class="card">
+    <h2>Items</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Qty</th>
+            <th>Price</th>
+            <th>Value</th>
+            <th>Status</th>
+            <th>Updated</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const KEY = 'inventory.manager.v1';
+  const state = {
+    items: [],
+    editId: ''
+  };
+  const el = {
+    sku: document.getElementById('sku'),
+    name: document.getElementById('name'),
+    category: document.getElementById('category'),
+    qty: document.getElementById('qty'),
+    price: document.getElementById('price'),
+    lowAt: document.getElementById('lowAt'),
+    notes: document.getElementById('notes'),
+    saveBtn: document.getElementById('saveBtn'),
+    clearFormBtn: document.getElementById('clearFormBtn'),
+    clearAllBtn: document.getElementById('clearAllBtn'),
+    status: document.getElementById('status'),
+    search: document.getElementById('search'),
+    exportBtn: document.getElementById('exportBtn'),
+    importBtn: document.getElementById('importBtn'),
+    importFile: document.getElementById('importFile'),
+    rows: document.getElementById('rows'),
+    stats: document.getElementById('stats')
+  };
+
+  function setStatus(msg, kind) {
+    el.status.textContent = msg;
+    el.status.className = 'status';
+    if (kind) el.status.classList.add(kind);
+  }
+
+  function currency(v) {
+    return `$${Number(v || 0).toFixed(2)}`;
+  }
+
+  function nowIso() {
+    return new Date().toISOString();
+  }
+
+  function statusFor(item) {
+    const q = Number(item.qty || 0);
+    const low = Number(item.lowAt || 0);
+    if (q <= 0) return { key: 'out', label: 'Out', className: 'bad' };
+    if (q <= low) return { key: 'low', label: 'Low', className: 'warn' };
+    return { key: 'in', label: 'In Stock', className: 'ok' };
+  }
+
+  function save() {
+    localStorage.setItem(KEY, JSON.stringify(state.items));
+  }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      state.items = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(state.items)) state.items = [];
+    } catch (_) {
+      state.items = [];
+    }
+  }
+
+  function clearForm() {
+    state.editId = '';
+    el.sku.value = '';
+    el.name.value = '';
+    el.category.value = '';
+    el.qty.value = '0';
+    el.price.value = '0';
+    el.lowAt.value = '3';
+    el.notes.value = '';
+    el.saveBtn.textContent = 'Save Item';
+  }
+
+  function upsertItem() {
+    const item = {
+      id: state.editId || `inv-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      sku: String(el.sku.value || '').trim(),
+      name: String(el.name.value || '').trim(),
+      category: String(el.category.value || '').trim(),
+      qty: Math.max(0, Number(el.qty.value || 0)),
+      price: Math.max(0, Number(el.price.value || 0)),
+      lowAt: Math.max(0, Number(el.lowAt.value || 0)),
+      notes: String(el.notes.value || '').trim(),
+      updatedAt: nowIso()
+    };
+
+    if (!item.sku || !item.name) {
+      setStatus('SKU and Name are required.', 'bad');
+      return;
+    }
+
+    const existing = state.items.findIndex((x) => x.id === item.id);
+    if (existing >= 0) state.items[existing] = item;
+    else state.items.unshift(item);
+    save();
+    render();
+    setStatus(existing >= 0 ? 'Item updated.' : 'Item added.', 'ok');
+    clearForm();
+  }
+
+  function removeItem(id) {
+    state.items = state.items.filter((x) => x.id !== id);
+    save();
+    render();
+    setStatus('Item deleted.', 'warn');
+  }
+
+  function editItem(id) {
+    const it = state.items.find((x) => x.id === id);
+    if (!it) return;
+    state.editId = it.id;
+    el.sku.value = it.sku || '';
+    el.name.value = it.name || '';
+    el.category.value = it.category || '';
+    el.qty.value = String(it.qty || 0);
+    el.price.value = String(it.price || 0);
+    el.lowAt.value = String(it.lowAt || 0);
+    el.notes.value = it.notes || '';
+    el.saveBtn.textContent = 'Update Item';
+    setStatus(`Editing ${it.sku}.`, 'warn');
+  }
+
+  function filteredItems() {
+    const q = String(el.search.value || '').trim().toLowerCase();
+    if (!q) return state.items.slice();
+    return state.items.filter((it) => {
+      const blob = `${it.sku} ${it.name} ${it.category} ${it.notes}`.toLowerCase();
+      return blob.includes(q);
+    });
+  }
+
+  function exportJson() {
+    const payload = {
+      exportedAt: nowIso(),
+      app: 'inventory-manager',
+      items: state.items
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `inventory-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    setStatus('Export created.', 'ok');
+  }
+
+  async function importJson(file) {
+    try {
+      const txt = await file.text();
+      const parsed = JSON.parse(txt);
+      const incoming = Array.isArray(parsed) ? parsed : parsed.items;
+      if (!Array.isArray(incoming)) throw new Error('Expected array/items');
+      state.items = incoming
+        .filter((x) => x && typeof x === 'object')
+        .map((x) => ({
+          id: String(x.id || `inv-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`),
+          sku: String(x.sku || '').trim(),
+          name: String(x.name || '').trim(),
+          category: String(x.category || '').trim(),
+          qty: Math.max(0, Number(x.qty || 0)),
+          price: Math.max(0, Number(x.price || 0)),
+          lowAt: Math.max(0, Number(x.lowAt || 0)),
+          notes: String(x.notes || '').trim(),
+          updatedAt: String(x.updatedAt || nowIso())
+        }))
+        .filter((x) => x.sku && x.name);
+      save();
+      render();
+      setStatus(`Imported ${state.items.length} item(s).`, 'ok');
+    } catch (e) {
+      setStatus(`Import failed: ${e.message}`, 'bad');
+    }
+  }
+
+  function clearAll() {
+    if (!confirm('Delete all inventory items?')) return;
+    state.items = [];
+    save();
+    render();
+    clearForm();
+    setStatus('All items removed.', 'warn');
+  }
+
+  function renderStats(items) {
+    const totalItems = items.length;
+    const totalQty = items.reduce((s, it) => s + Number(it.qty || 0), 0);
+    const totalValue = items.reduce((s, it) => s + (Number(it.qty || 0) * Number(it.price || 0)), 0);
+    const lowCount = items.filter((it) => statusFor(it).key === 'low').length;
+    const outCount = items.filter((it) => statusFor(it).key === 'out').length;
+    el.stats.innerHTML = [
+      `<div class="stat"><span class="muted">Items</span><b>${totalItems}</b></div>`,
+      `<div class="stat"><span class="muted">Units</span><b>${totalQty}</b></div>`,
+      `<div class="stat"><span class="muted">Inventory Value</span><b>${currency(totalValue)}</b></div>`,
+      `<div class="stat"><span class="muted">Low Stock</span><b>${lowCount}</b></div>`,
+      `<div class="stat"><span class="muted">Out of Stock</span><b>${outCount}</b></div>`
+    ].join('');
+  }
+
+  function escapeHtml(s) {
+    return String(s || '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;');
+  }
+
+  function renderRows(items) {
+    if (!items.length) {
+      el.rows.innerHTML = '<tr><td colspan="9" class="muted">No items found.</td></tr>';
+      return;
+    }
+    el.rows.innerHTML = items.map((it) => {
+      const s = statusFor(it);
+      const value = Number(it.qty || 0) * Number(it.price || 0);
+      return `
+        <tr>
+          <td>${escapeHtml(it.sku)}</td>
+          <td>${escapeHtml(it.name)}</td>
+          <td>${escapeHtml(it.category || '-')}</td>
+          <td>${Number(it.qty || 0)}</td>
+          <td>${currency(it.price)}</td>
+          <td>${currency(value)}</td>
+          <td><span class="badge ${s.className}">${s.label}</span></td>
+          <td>${escapeHtml((it.updatedAt || '').replace('T', ' ').slice(0, 16))}</td>
+          <td>
+            <div class="row">
+              <button class="btn" data-edit="${it.id}" type="button">Edit</button>
+              <button class="btn bad" data-del="${it.id}" type="button">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    el.rows.querySelectorAll('[data-edit]').forEach((b) => {
+      b.addEventListener('click', () => editItem(b.getAttribute('data-edit')));
+    });
+    el.rows.querySelectorAll('[data-del]').forEach((b) => {
+      b.addEventListener('click', () => removeItem(b.getAttribute('data-del')));
+    });
+  }
+
+  function render() {
+    const items = filteredItems();
+    renderStats(items);
+    renderRows(items);
+  }
+
+  function bind() {
+    el.saveBtn.addEventListener('click', upsertItem);
+    el.clearFormBtn.addEventListener('click', clearForm);
+    el.clearAllBtn.addEventListener('click', clearAll);
+    el.search.addEventListener('input', render);
+    el.exportBtn.addEventListener('click', exportJson);
+    el.importBtn.addEventListener('click', () => el.importFile.click());
+    el.importFile.addEventListener('change', () => {
+      const f = el.importFile.files && el.importFile.files[0];
+      if (f) importJson(f);
+      el.importFile.value = '';
+    });
+  }
+
+  function init() {
+    load();
+    bind();
+    render();
+    setStatus('Inventory ready.', 'ok');
+  }
+
+  init();
+})();
+</script>
+<script src="../shared/help-content.js"></script>
+<script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

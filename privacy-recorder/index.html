@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Privacy Video Recorder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #08121b;
+    --bg2: #0b1724;
+    --panel: #13253a;
+    --line: #2e4a65;
+    --text: #eaf4ff;
+    --muted: #9fb6cc;
+    --ok: #34d399;
+    --warn: #fbbf24;
+    --err: #f87171;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --sans: 'Manrope', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    color: var(--text);
+    font-family: var(--sans);
+    background:
+      radial-gradient(900px 420px at 12% -20%, rgba(14, 95, 129, .24), transparent 62%),
+      radial-gradient(900px 420px at 88% -22%, rgba(25, 125, 164, .2), transparent 62%),
+      linear-gradient(160deg, var(--bg), var(--bg2));
+  }
+  .top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding: 11px 14px;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #233b51;
+    background: rgba(7, 12, 18, .87);
+    backdrop-filter: blur(6px);
+  }
+  .top a { color: #bdd2e8; text-decoration: none; font: 600 12px/1 var(--mono); }
+  .top span { color: #9ebad6; font: 600 12px/1 var(--mono); }
+  .wrap { max-width: 1120px; margin: 16px auto 28px; padding: 0 14px; display: grid; gap: 12px; }
+  .hero,.card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: linear-gradient(170deg, rgba(15, 29, 46, .95), rgba(11, 22, 35, .95));
+    padding: 12px;
+  }
+  .hero p,.sub { margin-top: 8px; color: var(--muted); line-height: 1.45; }
+  .grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 12px; }
+  .viewer {
+    margin-top: 8px;
+    border: 1px solid #355675;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #0a1522;
+    min-height: 300px;
+    display: grid;
+    place-items: center;
+  }
+  video { display: block; max-width: 100%; max-height: 420px; object-fit: contain; }
+  .btn-row { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn {
+    border: 1px solid #355676;
+    border-radius: 10px;
+    background: #15324d;
+    color: #e8f3ff;
+    padding: 8px 12px;
+    cursor: pointer;
+    font: 700 13px/1 var(--sans);
+  }
+  .btn:hover { background: #1c4263; }
+  .btn.ok { border-color: #2f8d71; background: linear-gradient(180deg, #25765f, #1a5e4a); }
+  .btn.warn { border-color: #9a7535; background: linear-gradient(180deg, #896423, #694b19); }
+  .btn.err { border-color: #8f5050; background: linear-gradient(180deg, #7b3e3e, #633131); }
+  input[type='text'], input[type='password'] {
+    width: 100%;
+    border: 1px solid #365574;
+    border-radius: 10px;
+    background: #0f2235;
+    color: var(--text);
+    padding: 8px 10px;
+    font: 500 13px/1.3 var(--sans);
+  }
+  label {
+    display: block;
+    color: #a9c1d8;
+    margin-bottom: 6px;
+    font: 600 12px/1 var(--mono);
+  }
+  .line {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 1fr 1fr;
+  }
+  .status {
+    margin-top: 8px;
+    border: 1px solid #335371;
+    border-radius: 10px;
+    background: #102235;
+    padding: 8px 10px;
+    font: 600 12px/1.35 var(--mono);
+  }
+  .status.ok { border-color: #2d7e64; color: #b1f1d8; }
+  .status.warn { border-color: #8b6830; color: #ffd6a6; }
+  .status.err { border-color: #8b4c4c; color: #ffb5b5; }
+  .clips { margin-top: 8px; display: grid; gap: 8px; }
+  .clip {
+    border: 1px solid #335371;
+    border-radius: 10px;
+    background: #0f2337;
+    padding: 8px;
+    display: grid;
+    gap: 8px;
+  }
+  .clip-head { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+  .clip-meta { color: #a7bfd7; font: 600 12px/1 var(--mono); }
+  .privacy-note {
+    margin-top: 8px;
+    border: 1px dashed #446386;
+    border-radius: 10px;
+    padding: 8px;
+    color: #c6dcf1;
+    background: #0f2235;
+    font: 500 12px/1.45 var(--sans);
+  }
+  .pulse-row {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #d9ebfb;
+    font: 600 12px/1 var(--mono);
+  }
+  .pulse-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #fbbf24;
+    box-shadow: 0 0 0 rgba(251, 191, 36, 0.5);
+  }
+  .pulse-dot.online {
+    background: #34d399;
+    animation: pulse 1.6s infinite;
+  }
+  .pulse-dot.offline {
+    background: #f87171;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55); }
+    70% { box-shadow: 0 0 0 10px rgba(52, 211, 153, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+  }
+  @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<nav class="top">
+  <a href="../index.html">&larr; Back to Suite</a>
+  <span>Privacy Video Recorder</span>
+</nav>
+<main class="wrap">
+  <header class="hero">
+    <h1>Privacy Video Recorder</h1>
+    <p>Record video into memory buffers. No automatic camera-roll save. You choose if and when to download clips.</p>
+  </header>
+
+  <section class="grid">
+    <article class="card">
+      <h2>Live Capture</h2>
+      <div class="viewer">
+        <video id="preview" playsinline autoplay muted></video>
+      </div>
+      <div class="btn-row">
+        <button id="startCamBtn" class="btn ok" type="button">Start Camera</button>
+        <button id="stopCamBtn" class="btn err" type="button">Stop Camera</button>
+        <button id="flipBtn" class="btn" type="button">Flip Front/Rear</button>
+      </div>
+      <div class="btn-row">
+        <button id="recStartBtn" class="btn warn" type="button">Start Recording</button>
+        <button id="recStopBtn" class="btn err" type="button">Stop Recording</button>
+        <button id="toggleMicBtn" class="btn" type="button">Mic: Off</button>
+      </div>
+      <div id="recStatus" class="status warn">Recorder idle.</div>
+      <div class="privacy-note">
+        Privacy model: clips stay in tab memory until you download. Browser/OS may still use temporary internal buffers while camera is active. Pending sync queue is tab-memory only in this version.
+      </div>
+      <h2 style="margin-top:12px;">Connectivity + Sync</h2>
+      <div class="pulse-row">
+        <span id="pulseDot" class="pulse-dot"></span>
+        <span id="pulseText">Checking network...</span>
+      </div>
+      <div class="line" style="margin-top:8px;">
+        <div>
+          <label for="syncEndpoint">Sync Endpoint</label>
+          <input id="syncEndpoint" type="text" placeholder="https://your-vps.example/api/media/upload" />
+        </div>
+        <div>
+          <label for="syncDeviceId">Device ID</label>
+          <input id="syncDeviceId" type="text" placeholder="phone-001" />
+        </div>
+      </div>
+      <div class="line" style="margin-top:8px;">
+        <div>
+          <label for="syncApiKey">API Key (optional)</label>
+          <input id="syncApiKey" type="password" placeholder="token..." />
+        </div>
+        <div>
+          <label for="syncMode">Auto Sync</label>
+          <input id="syncMode" type="text" value="on (when online)" readonly />
+        </div>
+      </div>
+      <div class="btn-row">
+        <button id="syncSaveBtn" class="btn" type="button">Save Sync Settings</button>
+        <button id="syncNowBtn" class="btn ok" type="button">Sync Pending Now</button>
+      </div>
+      <div id="syncStatus" class="status warn">Sync idle.</div>
+    </article>
+
+    <article class="card">
+      <h2>Recorded Clips (Memory)</h2>
+      <div class="btn-row">
+        <button id="clearClipsBtn" class="btn err" type="button">Clear All Clips</button>
+      </div>
+      <div id="clips" class="clips"></div>
+    </article>
+  </section>
+</main>
+
+<script>
+(() => {
+  const SYNC_KEY = 'privacyRecorder.sync.v1';
+
+  const el = {
+    preview: document.getElementById('preview'),
+    startCamBtn: document.getElementById('startCamBtn'),
+    stopCamBtn: document.getElementById('stopCamBtn'),
+    flipBtn: document.getElementById('flipBtn'),
+    recStartBtn: document.getElementById('recStartBtn'),
+    recStopBtn: document.getElementById('recStopBtn'),
+    toggleMicBtn: document.getElementById('toggleMicBtn'),
+    clearClipsBtn: document.getElementById('clearClipsBtn'),
+    recStatus: document.getElementById('recStatus'),
+    clips: document.getElementById('clips'),
+    pulseDot: document.getElementById('pulseDot'),
+    pulseText: document.getElementById('pulseText'),
+    syncEndpoint: document.getElementById('syncEndpoint'),
+    syncDeviceId: document.getElementById('syncDeviceId'),
+    syncApiKey: document.getElementById('syncApiKey'),
+    syncSaveBtn: document.getElementById('syncSaveBtn'),
+    syncNowBtn: document.getElementById('syncNowBtn'),
+    syncStatus: document.getElementById('syncStatus')
+  };
+
+  const state = {
+    stream: null,
+    recorder: null,
+    facing: 'environment',
+    micOn: false,
+    chunks: [],
+    clips: [],
+    recStartedAt: 0,
+    isOnline: false,
+    syncBusy: false,
+    pulseTimer: 0
+  };
+
+  function status(msg, kind) {
+    el.recStatus.textContent = msg;
+    el.recStatus.className = 'status';
+    if (kind) el.recStatus.classList.add(kind);
+  }
+
+  function syncStatus(msg, kind) {
+    el.syncStatus.textContent = msg;
+    el.syncStatus.className = 'status';
+    if (kind) el.syncStatus.classList.add(kind);
+  }
+
+  function loadSyncConfig() {
+    const fallbackDeviceId = getOrCreateDeviceId();
+    const fallbackEndpoint = defaultSyncEndpoint();
+    try {
+      const raw = localStorage.getItem(SYNC_KEY);
+      if (!raw) {
+        el.syncDeviceId.value = fallbackDeviceId;
+        if (fallbackEndpoint) el.syncEndpoint.value = fallbackEndpoint;
+        return;
+      }
+      const cfg = JSON.parse(raw);
+      el.syncEndpoint.value = cfg.endpoint || fallbackEndpoint;
+      el.syncDeviceId.value = cfg.deviceId || fallbackDeviceId;
+      if (cfg.apiKey) el.syncApiKey.value = cfg.apiKey;
+    } catch (_) {
+      el.syncDeviceId.value = fallbackDeviceId;
+      if (fallbackEndpoint) el.syncEndpoint.value = fallbackEndpoint;
+    }
+  }
+
+  function saveSyncConfig() {
+    const cfg = {
+      endpoint: String(el.syncEndpoint.value || '').trim() || defaultSyncEndpoint(),
+      deviceId: String(el.syncDeviceId.value || '').trim() || getOrCreateDeviceId(),
+      apiKey: String(el.syncApiKey.value || '').trim()
+    };
+    el.syncEndpoint.value = cfg.endpoint;
+    el.syncDeviceId.value = cfg.deviceId;
+    localStorage.setItem(SYNC_KEY, JSON.stringify(cfg));
+    syncStatus('Sync settings saved.', 'ok');
+  }
+
+  function getSyncConfig() {
+    return {
+      endpoint: String(el.syncEndpoint.value || '').trim() || defaultSyncEndpoint(),
+      deviceId: String(el.syncDeviceId.value || '').trim() || getOrCreateDeviceId(),
+      apiKey: String(el.syncApiKey.value || '').trim()
+    };
+  }
+
+  function defaultSyncEndpoint() {
+    if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+      return `${window.location.origin}/api/media/upload`;
+    }
+    return '';
+  }
+
+  function pulseEndpoint() {
+    const endpoint = String(el.syncEndpoint.value || '').trim() || defaultSyncEndpoint();
+    if (!endpoint) return '';
+    try {
+      const url = new URL(endpoint, window.location.href);
+      return `${url.origin}/api/pulse`;
+    } catch (_) {
+      return '';
+    }
+  }
+
+  function getOrCreateDeviceId() {
+    const key = 'prosepilot.deviceId';
+    const existing = localStorage.getItem(key);
+    if (existing) return existing;
+    const generated = `device-${Math.random().toString(36).slice(2, 10)}`;
+    localStorage.setItem(key, generated);
+    return generated;
+  }
+
+  function pendingCount() {
+    return state.clips.filter((c) => !c.synced).length;
+  }
+
+  function updatePulseUi() {
+    el.pulseDot.className = 'pulse-dot';
+    if (state.isOnline) {
+      el.pulseDot.classList.add('online');
+      el.pulseText.textContent = `Online · pending ${pendingCount()}`;
+    } else {
+      el.pulseDot.classList.add('offline');
+      el.pulseText.textContent = `Offline · pending ${pendingCount()}`;
+    }
+  }
+
+  async function probeOnline() {
+    if (!navigator.onLine) {
+      state.isOnline = false;
+      updatePulseUi();
+      return;
+    }
+    const ctl = new AbortController();
+    const timeout = setTimeout(() => ctl.abort(), 4500);
+    try {
+      const pulse = pulseEndpoint();
+      if (pulse) {
+        const local = await fetch(pulse, {
+          method: 'GET',
+          cache: 'no-store',
+          signal: ctl.signal
+        });
+        if (local.ok) {
+          state.isOnline = true;
+          return;
+        }
+      }
+      await fetch('https://www.gstatic.com/generate_204', {
+        method: 'GET',
+        mode: 'no-cors',
+        cache: 'no-store',
+        signal: ctl.signal
+      });
+      state.isOnline = true;
+    } catch (_) {
+      state.isOnline = false;
+    } finally {
+      clearTimeout(timeout);
+      updatePulseUi();
+    }
+  }
+
+  async function uploadClip(clip) {
+    const cfg = getSyncConfig();
+    if (!cfg.endpoint) throw new Error('Set sync endpoint first.');
+    if (!clip.blob) throw new Error('Clip blob unavailable.');
+
+    const form = new FormData();
+    form.append('file', clip.blob, `privacy-video-${clip.id}.webm`);
+    form.append('appId', 'privacy-recorder');
+    form.append('deviceId', cfg.deviceId);
+    form.append('capturedAt', clip.isoTime || new Date().toISOString());
+    form.append('mediaType', clip.blob.type || 'video/webm');
+    form.append('durationSec', String(clip.duration || 0));
+
+    const headers = {};
+    if (cfg.apiKey) headers.Authorization = `Bearer ${cfg.apiKey}`;
+
+    const res = await fetch(cfg.endpoint, { method: 'POST', headers, body: form });
+    if (!res.ok) {
+      const t = await res.text();
+      throw new Error(`HTTP ${res.status}: ${t.slice(0, 160)}`);
+    }
+  }
+
+  async function syncPending() {
+    if (state.syncBusy) return;
+    if (!pendingCount()) {
+      syncStatus('No pending clips to sync.', 'warn');
+      return;
+    }
+    await probeOnline();
+    if (!state.isOnline) {
+      syncStatus('Offline. Pending clips will sync when online.', 'warn');
+      return;
+    }
+
+    state.syncBusy = true;
+    el.syncNowBtn.disabled = true;
+    const pending = state.clips.filter((c) => !c.synced);
+    let success = 0;
+    for (let i = 0; i < pending.length; i += 1) {
+      const clip = pending[i];
+      try {
+        syncStatus(`Uploading ${i + 1}/${pending.length}...`, 'warn');
+        await uploadClip(clip);
+        clip.synced = true;
+        clip.syncError = '';
+        clip.syncedAt = new Date().toISOString();
+        success += 1;
+      } catch (error) {
+        clip.syncError = error.message;
+      }
+    }
+    renderClips();
+    updatePulseUi();
+    if (success === pending.length) syncStatus(`Sync complete: ${success} clip(s).`, 'ok');
+    else syncStatus(`Partial sync: ${success}/${pending.length}. Check endpoint/CORS.`, 'err');
+    state.syncBusy = false;
+    el.syncNowBtn.disabled = false;
+  }
+
+  function bytesText(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  }
+
+  function stopCamera() {
+    if (state.recorder && state.recorder.state !== 'inactive') {
+      try { state.recorder.stop(); } catch (_) {}
+    }
+    if (state.stream) state.stream.getTracks().forEach((t) => t.stop());
+    state.stream = null;
+    el.preview.srcObject = null;
+    status('Camera stopped.', 'warn');
+  }
+
+  async function startCamera() {
+    try {
+      stopCamera();
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: state.facing } },
+        audio: state.micOn
+      });
+      state.stream = stream;
+      el.preview.srcObject = stream;
+      await el.preview.play();
+      status(`Camera active (${state.facing}).`, 'ok');
+    } catch (error) {
+      status(`Camera error: ${error.message}`, 'err');
+    }
+  }
+
+  function flipCamera() {
+    state.facing = state.facing === 'environment' ? 'user' : 'environment';
+    if (state.stream) startCamera();
+    else status(`Facing mode set to ${state.facing}.`, 'ok');
+  }
+
+  function toggleMic() {
+    state.micOn = !state.micOn;
+    el.toggleMicBtn.textContent = `Mic: ${state.micOn ? 'On' : 'Off'}`;
+    if (state.stream) startCamera();
+  }
+
+  function removeClip(id) {
+    const idx = state.clips.findIndex((c) => c.id === id);
+    if (idx < 0) return;
+    try { URL.revokeObjectURL(state.clips[idx].url); } catch (_) {}
+    state.clips.splice(idx, 1);
+    renderClips();
+    updatePulseUi();
+  }
+
+  function clearClips() {
+    state.clips.forEach((c) => { try { URL.revokeObjectURL(c.url); } catch (_) {} });
+    state.clips = [];
+    renderClips();
+    updatePulseUi();
+    status('All in-memory clips cleared.', 'warn');
+  }
+
+  function renderClips() {
+    el.clips.innerHTML = '';
+    if (!state.clips.length) {
+      const empty = document.createElement('div');
+      empty.className = 'clip';
+      empty.textContent = 'No clips yet.';
+      el.clips.appendChild(empty);
+      return;
+    }
+
+    state.clips.forEach((clip) => {
+      const card = document.createElement('div');
+      card.className = 'clip';
+
+      const head = document.createElement('div');
+      head.className = 'clip-head';
+      const syncState = clip.synced ? 'synced' : (clip.syncError ? 'pending/error' : 'pending');
+      head.innerHTML = `<div class="clip-meta">${clip.time} · ${clip.duration}s · ${bytesText(clip.size)} · ${syncState}</div>`;
+
+      const actions = document.createElement('div');
+      actions.className = 'btn-row';
+      actions.style.marginTop = '0';
+
+      const dl = document.createElement('button');
+      dl.className = 'btn';
+      dl.type = 'button';
+      dl.textContent = 'Download';
+      dl.addEventListener('click', () => {
+        const a = document.createElement('a');
+        a.href = clip.url;
+        a.download = `privacy-video-${clip.id}.webm`;
+        a.click();
+      });
+
+      const del = document.createElement('button');
+      del.className = 'btn err';
+      del.type = 'button';
+      del.textContent = 'Delete';
+      del.addEventListener('click', () => removeClip(clip.id));
+
+      actions.appendChild(dl);
+      actions.appendChild(del);
+      head.appendChild(actions);
+
+      const player = document.createElement('video');
+      player.controls = true;
+      player.src = clip.url;
+
+      card.appendChild(head);
+      card.appendChild(player);
+      if (clip.syncError) {
+        const err = document.createElement('div');
+        err.className = 'status err';
+        err.textContent = `Last sync error: ${clip.syncError}`;
+        card.appendChild(err);
+      }
+      el.clips.appendChild(card);
+    });
+  }
+
+  function mimeTypeForRecorder() {
+    const options = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+    return options.find((m) => MediaRecorder.isTypeSupported(m)) || '';
+  }
+
+  function startRecording() {
+    if (!state.stream) {
+      status('Start camera first.', 'warn');
+      return;
+    }
+    if (!window.MediaRecorder) {
+      status('MediaRecorder is not supported in this browser.', 'err');
+      return;
+    }
+    if (state.recorder && state.recorder.state !== 'inactive') {
+      status('Recording already in progress.', 'warn');
+      return;
+    }
+
+    try {
+      state.chunks = [];
+      const mimeType = mimeTypeForRecorder();
+      state.recorder = new MediaRecorder(state.stream, mimeType ? { mimeType } : undefined);
+      state.recStartedAt = Date.now();
+      state.recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) state.chunks.push(e.data);
+      };
+      state.recorder.onstop = () => {
+        if (!state.chunks.length) {
+          status('Recording stopped but no data captured.', 'warn');
+          return;
+        }
+        const blob = new Blob(state.chunks, { type: state.chunks[0].type || 'video/webm' });
+        const id = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+        const isoTime = new Date().toISOString();
+        state.clips.unshift({
+          id,
+          blob,
+          url: URL.createObjectURL(blob),
+          size: blob.size,
+          duration: Math.max(1, Math.round((Date.now() - state.recStartedAt) / 1000)),
+          isoTime,
+          time: new Date(isoTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+          synced: false,
+          syncError: '',
+          syncedAt: ''
+        });
+        renderClips();
+        updatePulseUi();
+        status('Clip saved in memory (not auto-saved to gallery).', 'ok');
+        if (state.isOnline) syncPending();
+      };
+
+      state.recorder.start(500);
+      status('Recording...', 'ok');
+    } catch (error) {
+      status(`Record start failed: ${error.message}`, 'err');
+    }
+  }
+
+  function stopRecording() {
+    if (!state.recorder || state.recorder.state === 'inactive') {
+      status('Recorder is not running.', 'warn');
+      return;
+    }
+    state.recorder.stop();
+    status('Stopping recording...', 'warn');
+  }
+
+  function bind() {
+    el.startCamBtn.addEventListener('click', startCamera);
+    el.stopCamBtn.addEventListener('click', stopCamera);
+    el.flipBtn.addEventListener('click', flipCamera);
+    el.toggleMicBtn.addEventListener('click', toggleMic);
+    el.recStartBtn.addEventListener('click', startRecording);
+    el.recStopBtn.addEventListener('click', stopRecording);
+    el.clearClipsBtn.addEventListener('click', clearClips);
+    el.syncSaveBtn.addEventListener('click', saveSyncConfig);
+    el.syncNowBtn.addEventListener('click', syncPending);
+
+    window.addEventListener('beforeunload', () => {
+      stopCamera();
+      clearClips();
+      if (state.pulseTimer) clearInterval(state.pulseTimer);
+    });
+    window.addEventListener('online', async () => {
+      await probeOnline();
+      syncStatus('Online detected. Attempting auto-sync...', 'ok');
+      syncPending();
+    });
+    window.addEventListener('offline', () => {
+      state.isOnline = false;
+      updatePulseUi();
+      syncStatus('Offline. New clips will queue.', 'warn');
+    });
+  }
+
+  async function init() {
+    loadSyncConfig();
+    bind();
+    renderClips();
+    await probeOnline();
+    state.pulseTimer = setInterval(() => {
+      probeOnline().then(() => {
+        if (state.isOnline && pendingCount()) syncPending();
+      });
+    }, 15000);
+    syncStatus('Sync idle.', 'warn');
+    status('Recorder idle.', 'warn');
+  }
+
+  init();
+})();
+</script>
+<script src="../shared/help-content.js"></script>
+<script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

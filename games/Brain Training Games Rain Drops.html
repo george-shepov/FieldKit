@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Math Raindrops – Gentle Adaptive Mode</title>
+<style>
+  html,body{margin:0;padding:0;height:100%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);font-family:Arial,sans-serif;color:#fff;}
+  .wrap{max-width:1100px;margin:0 auto;padding:10px}
+  .topbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0}
+  .btn{cursor:pointer;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);color:#fff;border-radius:999px;padding:8px 14px;font-weight:700}
+  .btn[aria-pressed="true"]{background:rgba(255,255,255,.28)}
+  .field{position:relative;border:2px solid rgba(255,255,255,.4);border-radius:14px;overflow:hidden;background:rgba(0,0,0,.08);width:100%;height:100vh;}
+  .raindrop{position:absolute;top:-40px;left:0;font-size:20px;font-weight:bold;padding:10px 14px;border-radius:50% 50% 50% 0;background:linear-gradient(45deg,#4facfe,#00f2fe);transform:rotate(-45deg);color:#fff;text-shadow:1px 1px 2px rgba(0,0,0,.5);animation:fallTop linear forwards;animation-play-state:running}
+  @keyframes fallTop{from{top:-40px} to{top:calc(100% - 40px)}}
+  input.answer{font-size:20px;padding:12px;border-radius:24px;border:none;text-align:center;width:280px;margin:10px auto;display:block}
+  .paused::after{content:"PAUSED";position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.5);font-size:48px;font-weight:bold;}
+  /* Multiple-choice grid */
+  .mc-row{display:none;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:10px 0}
+  .mc-option{cursor:pointer;border:none;border-radius:12px;padding:14px 12px;font-weight:800;color:#fff;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);text-align:center}
+  .mc-option.pulse{animation:pulse 1.2s ease-in-out 1}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.8)}100%{box-shadow:0 0 0 26px rgba(255,255,255,0)}}
+  .hint{opacity:.9;font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 style="text-align:center;margin:8px 0;">Math Raindrops – Gentle Adaptive</h1>
+  <p style="text-align:center;margin:0 0 8px;">Space = Pause/Resume • Type answers or switch to Multiple Choice. Cursor auto-focuses in the answer box.</p>
+  <div class="topbar">
+    <button id="pauseBtn" class="btn" title="Space">⏸️ Pause</button>
+    <button id="modeInputBtn" class="btn" aria-pressed="true">📝 Free Input</button>
+    <button id="modeMCBtn" class="btn" aria-pressed="false">🔢 Multiple Choice</button>
+  </div>
+
+  <div class="field" id="field"></div>
+  <input id="ans" class="answer" placeholder="Type answer & press Enter" />
+  <div id="mcRow" class="mc-row"></div>
+  <div class="hint">MC shows 5 choices: 1 correct, plus near-miss (±1), sign-flip (−x), off-by-ten (±10), and a far miss.</div>
+</div>
+
+<script>
+(() => {
+  const field = document.getElementById('field');
+  const input = document.getElementById('ans');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const modeInputBtn = document.getElementById('modeInputBtn');
+  const modeMCBtn = document.getElementById('modeMCBtn');
+  const mcRow = document.getElementById('mcRow');
+
+  let level=1,score=0,lives=3,active=true,paused=false,drops=[],timer=null;
+  let correct=0,total=0,streak=0,missStreak=0, mode='input', pulseTO=null;
+
+  const rand = (a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+
+  function ensureFocus(){
+    // Focus the input reliably after layout/overlay/pause changes
+    setTimeout(()=>{ input.focus(); input.select?.(); }, 0);
+  }
+
+  function spawn(){
+    if(!active||paused) return;
+    if(drops.length>=maxConcurrent()) return schedule();
+    const p = makeProblem();
+    const el = document.createElement('div');
+    el.className='raindrop';
+    el.textContent=p.txt; el.dataset.a=p.ans;
+    el.style.left=rand(10,80)+'%';
+    const dur = fallSpeed();
+    el.style.animationDuration=dur+'s';
+    if(paused) el.style.animationPlayState='paused';
+    field.appendChild(el);
+    drops.push(el);
+    el._to=setTimeout(()=>{if(el.parentElement){remove(el);lose();}},dur*1000);
+    schedule();
+    if(mode==='mc') buildMC();
+  }
+
+  function schedule(){clearTimeout(timer); timer=setTimeout(spawn,spawnRate());}
+  function remove(e){clearTimeout(e._to); if(e.parentElement) e.remove(); drops=drops.filter(d=>d!==e);}
+
+  function makeProblem(){
+    const ops = level<3?['+','-']:level<5?['+','-','*']:['+','-','*','/'];
+    const op=ops[rand(0,ops.length-1)];
+    let a,b,ans;
+    if(op==='+'){a=rand(1,9*level);b=rand(1,9*level);ans=a+b;}
+    else if(op==='-'){a=rand(5,9*level);b=rand(1,a);ans=a-b;}
+    else if(op==='*'){a=rand(2,3+level);b=rand(2,3+level);ans=a*b;}
+    else{b=rand(2,3+level);ans=rand(2,3+level);a=b*ans;}
+    return{txt:`${a} ${op} ${b}`,ans};
+  }
+
+  function fallSpeed(){
+    const height=window.innerHeight; // px
+    let base = Math.max(10 - (height/300), 4.5); // seconds
+    base -= Math.min(level,5)*0.3;
+    if(streak>5) base-=0.4; if(streak>10) base-=0.4;
+    if(missStreak>2) base+=0.8; if(missStreak>4) base+=0.8;
+    return Math.max(base,3.5);
+  }
+
+  function spawnRate(){
+    let base=2600; base-=level*120; if(streak>5) base-=150; if(missStreak>2) base+=350;
+    return Math.max(base,1100);
+  }
+
+  function maxConcurrent(){
+    let base=2; if(level>2) base++; if(streak>8) base++; if(missStreak>1) base--; return Math.max(1,base);
+  }
+
+  // Free input: pop lowest matching drop
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&active&&!paused){
+      const v=parseInt(input.value,10); input.value=''; if(!isFinite(v))return;
+      total++;
+      const matches=drops.filter(d=>parseInt(d.dataset.a,10)===v);
+      if(matches.length){
+        let best=matches[0];
+        let bestTop=matches[0].offsetTop;
+        for(const d of matches){ if(d.offsetTop>bestTop){best=d;bestTop=d.offsetTop;} }
+        remove(best); score+=10; correct++; streak++; missStreak=0;
+      } else { score=Math.max(0,score-2); streak=0; missStreak++; }
+      adapt();
+      if(mode==='mc') buildMC();
+    }
+  });
+
+  // ==== Multiple Choice Mode ====
+  modeInputBtn.onclick = ()=> setMode('input');
+  modeMCBtn.onclick    = ()=> setMode('mc');
+
+  function setMode(m){
+    mode=m;
+    modeInputBtn.setAttribute('aria-pressed', m==='input');
+    modeMCBtn.setAttribute('aria-pressed', m==='mc');
+    mcRow.style.display = (m==='mc') ? 'grid':'none';
+    if(m==='mc') buildMC();
+    ensureFocus();
+  }
+
+  function buildMC(){
+    mcRow.innerHTML='';
+    if(drops.length===0) return;
+    // target the lowest (riskiest) drop
+    let lowest=drops[0], top=drops[0].offsetTop;
+    for(const d of drops){ if(d.offsetTop>top){lowest=d; top=d.offsetTop;} }
+    const ans = parseInt(lowest.dataset.a,10);
+
+    // Compose 5 options: correct, ±1, sign-flip, ±10 variant, and far miss
+    const opts = new Set([ans]);
+    opts.add(ans+1);
+    opts.add(-ans);
+    opts.add(ans + (ans>10?-10:10));
+    opts.add(ans + 17);
+    const list=[...opts].slice(0,5);
+
+    // Shuffle so correct isn't always first
+    for(let i=list.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [list[i],list[j]]=[list[j],list[i]]; }
+
+    list.forEach(v=>{
+      const btn=document.createElement('button');
+      btn.className='mc-option';
+      btn.textContent=String(v);
+      btn.onclick=()=>gradeMC(lowest, v, ans);
+      mcRow.appendChild(btn);
+    });
+
+    // Subtle attention guidance: randomly pulse one tile every few seconds
+    clearTimeout(pulseTO);
+    const pulseOnce=()=>{
+      const tiles=[...mcRow.querySelectorAll('.mc-option')];
+      tiles.forEach(t=>t.classList.remove('pulse'));
+      if(tiles.length){ tiles[rand(0,tiles.length-1)].classList.add('pulse'); }
+      pulseTO=setTimeout(pulseOnce, 1800);
+    };
+    pulseOnce();
+  }
+
+  function gradeMC(target, pick, correctAns){
+    total++;
+    if(pick===correctAns){ removeDropAndReward(target); }
+    else if(Math.abs(pick-correctAns)===1){ score+=3; streak++; } // near-miss gentle reward
+    else if(pick===-correctAns){ score=Math.max(0, score-2); streak=0; missStreak++; }
+    else if(Math.abs(pick-correctAns)>=15){ score=Math.max(0, score-5); streak=0; missStreak++; }
+    else { score+=1; }
+    adapt();
+    buildMC();
+    ensureFocus();
+  }
+
+  function removeDropAndReward(target){
+    if(!target) return;
+    remove(target); score+=10; correct++; streak++; missStreak=0;
+  }
+
+  function adapt(){
+    if(correct>0&&correct%10===0){level++;feedback(`Leveled up to ${level}`);} // reward flow
+    if(missStreak>=5){level=Math.max(1,level-1);feedback(`Taking it easy: Level ${level}`);missStreak=0;} // gentle downgrade
+  }
+
+  function lose(){lives--;streak=0;missStreak++;if(lives<=0){end();}}
+  function end(){active=false;alert(`Game Over! Score ${score}`);}
+
+  function feedback(msg){
+    const tag=document.createElement('div');tag.textContent=msg;tag.style.position='absolute';tag.style.top='50%';tag.style.left='50%';tag.style.transform='translate(-50%,-50%)';tag.style.background='rgba(0,0,0,.6)';tag.style.padding='10px 20px';tag.style.borderRadius='8px';field.appendChild(tag);setTimeout(()=>tag.remove(),1200);
+  }
+
+  // Pause/resume with spacebar and actually freeze animations
+  function applyPauseState(){
+    for(const d of drops){ d.style.animationPlayState = paused? 'paused':'running'; }
+    if(paused){ field.classList.add('paused'); } else { field.classList.remove('paused'); schedule(); }
+    ensureFocus();
+  }
+
+  window.addEventListener('keydown',e=>{
+    if(e.code==='Space'){
+      e.preventDefault(); paused=!paused; applyPauseState();
+    }
+  });
+  pauseBtn.onclick = ()=>{ paused=!paused; applyPauseState(); };
+
+  // Recalculate speeds on resize (affects new drops)
+  window.addEventListener('resize', ()=>{ /* future drops use new fallSpeed() */ });
+
+  function start(){
+    active=true;paused=false;level=1;score=0;lives=3;streak=0;missStreak=0;correct=0;total=0;
+    drops.forEach(d=>d.remove());drops=[];schedule();
+    setMode('input'); // default to input
+    ensureFocus();
+  }
+  start();
+})();
+</script>
+</body>
+</html>

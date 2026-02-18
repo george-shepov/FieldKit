@@ -1,0 +1,2262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Outdoor Kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #06101a;
+    --bg2: #0a1624;
+    --panel: #112336;
+    --panel2: #162b42;
+    --line: #2a4762;
+    --text: #e7f4ff;
+    --muted: #9db8ce;
+    --brand: #38bdf8;
+    --ok: #34d399;
+    --warn: #fbbf24;
+    --danger: #f87171;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --sans: 'Manrope', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    color: var(--text);
+    font-family: var(--sans);
+    background:
+      radial-gradient(900px 420px at 15% -20%, #175887 0%, transparent 62%),
+      radial-gradient(900px 420px at 85% -20%, #0e6266 0%, transparent 62%),
+      linear-gradient(162deg, var(--bg), var(--bg2));
+  }
+
+  .top {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #213b52;
+    background: rgba(5, 11, 18, .88);
+    backdrop-filter: blur(6px);
+  }
+  .top a {
+    color: var(--muted);
+    text-decoration: none;
+    font: 500 12px/1 var(--mono);
+  }
+  .top a:hover { color: #dcf0ff; }
+  .top span {
+    color: #8fb3cd;
+    font: 500 12px/1 var(--mono);
+  }
+
+  .wrap {
+    max-width: 1200px;
+    margin: 16px auto 32px;
+    padding: 0 14px;
+    display: grid;
+    gap: 12px;
+  }
+
+  .hero {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px;
+    background: linear-gradient(170deg, rgba(14, 31, 47, .95), rgba(10, 21, 33, .95));
+  }
+  .hero h1 {
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
+    letter-spacing: .2px;
+  }
+  .hero p {
+    margin-top: 8px;
+    color: var(--muted);
+    line-height: 1.45;
+    max-width: 1050px;
+  }
+
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .tab {
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: #112335;
+    color: #d8ebfa;
+    padding: 8px 13px;
+    cursor: pointer;
+    font: 600 12px/1 var(--mono);
+  }
+  .tab.active {
+    border-color: #3b7ca1;
+    background: linear-gradient(180deg, #1b4a68, #163d55);
+    color: #f2f9ff;
+  }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .grid {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: linear-gradient(170deg, rgba(14, 29, 45, .95), rgba(11, 22, 35, .95));
+    padding: 12px;
+  }
+  .card h3 {
+    margin-bottom: 8px;
+    font-size: 1rem;
+  }
+
+  .line {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  label {
+    display: block;
+    color: #9eb9ce;
+    margin-bottom: 6px;
+    font: 500 12px/1 var(--mono);
+  }
+  input[type='text'], input[type='password'], textarea, select {
+    width: 100%;
+    border: 1px solid #325674;
+    border-radius: 10px;
+    background: #0f2133;
+    color: var(--text);
+    padding: 9px 10px;
+    font: 500 14px/1.35 var(--sans);
+  }
+  textarea { min-height: 100px; resize: vertical; }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .btn {
+    border: 1px solid #305674;
+    border-radius: 10px;
+    background: #15324a;
+    color: #e2f2ff;
+    padding: 8px 12px;
+    cursor: pointer;
+    font: 700 13px/1 var(--sans);
+  }
+  .btn:hover { background: #1c405f; }
+  .btn.good { border-color: #2e8a6b; background: linear-gradient(180deg, #25795f, #1b604b); }
+  .btn.warn { border-color: #9a7535; background: linear-gradient(180deg, #876325, #6c4d1b); }
+  .btn.danger { border-color: #925050; background: linear-gradient(180deg, #803d3d, #652f2f); }
+
+  .status {
+    margin-top: 8px;
+    border: 1px solid #2f4f6b;
+    border-radius: 10px;
+    background: #102437;
+    padding: 8px 10px;
+    font: 600 12px/1.35 var(--mono);
+    color: #d8ebfa;
+  }
+  .status.ok { border-color: #2c785f; color: #abf1d6; }
+  .status.warn { border-color: #8a6630; color: #ffd5a4; }
+  .status.err { border-color: #8b4747; color: #ffb3b3; }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .metric {
+    border: 1px solid #2d4b67;
+    border-radius: 10px;
+    background: #0f2233;
+    padding: 8px;
+  }
+  .metric .k { color: #9db8cd; font: 500 11px/1 var(--mono); }
+  .metric .v { margin-top: 5px; font: 800 1.12rem/1 var(--sans); }
+
+  .dial-wrap {
+    margin-top: 8px;
+    display: grid;
+    place-items: center;
+  }
+  .dial {
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    border: 2px solid #3a607f;
+    background:
+      radial-gradient(circle at 50% 50%, #1b344b 0%, #112538 56%, #0d1d2e 100%);
+    position: relative;
+  }
+  .needle {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 6px;
+    height: 88px;
+    margin-left: -3px;
+    margin-top: -86px;
+    transform-origin: 50% 86px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #ef4444 0 50%, #d1e9fb 50% 100%);
+    box-shadow: 0 0 14px rgba(239, 68, 68, .35);
+    transform: rotate(0deg);
+  }
+  .dial-center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    margin-top: -7px;
+    border-radius: 50%;
+    background: #eaf5ff;
+  }
+
+  .flash-panel {
+    margin-top: 8px;
+    min-height: 150px;
+    border-radius: 12px;
+    border: 1px solid #335674;
+    background: #0b1a28;
+    display: grid;
+    place-items: center;
+    text-align: center;
+  }
+  .flash-panel.on {
+    background: #f8fbff;
+    color: #09121c;
+    box-shadow: 0 0 36px rgba(255, 255, 255, .65);
+  }
+
+  .log {
+    margin-top: 8px;
+    max-height: 220px;
+    overflow: auto;
+    border: 1px solid #2a4963;
+    border-radius: 10px;
+    background: #0d2030;
+    padding: 8px;
+    font: 500 12px/1.4 var(--mono);
+  }
+  .log p { margin-bottom: 6px; }
+  .log p:last-child { margin-bottom: 0; }
+
+  .chat-box {
+    margin-top: 8px;
+    height: 240px;
+    overflow: auto;
+    border: 1px solid #2d4b67;
+    border-radius: 10px;
+    background: #0f2233;
+    padding: 8px;
+    display: grid;
+    gap: 6px;
+  }
+  .msg {
+    border: 1px solid #315875;
+    border-radius: 9px;
+    background: #11283d;
+    padding: 7px 8px;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .msg.me { border-color: #2f7b63; background: #12382d; }
+  .msg.ai { border-color: #3f6a93; background: #142f47; }
+  .qr-wrap {
+    margin-top: 8px;
+    display: grid;
+    gap: 8px;
+  }
+  .qr-img {
+    width: 220px;
+    height: 220px;
+    border: 1px solid #315875;
+    border-radius: 10px;
+    background: #0d2030;
+    object-fit: contain;
+  }
+  .qr-video {
+    width: 100%;
+    max-height: 220px;
+    border: 1px solid #315875;
+    border-radius: 10px;
+    background: #07101a;
+    object-fit: cover;
+  }
+  .calc-grid {
+    margin-top: 8px;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(46px, 1fr));
+    gap: 8px;
+  }
+  .calc-btn {
+    border: 1px solid #325674;
+    border-radius: 10px;
+    background: #13324a;
+    color: #e2f2ff;
+    font: 700 14px/1 var(--mono);
+    min-height: 42px;
+    cursor: pointer;
+  }
+  .calc-btn:hover { background: #1b425f; }
+  .calc-btn.op { background: #1a3b57; }
+  .calc-btn.act { background: #2a4b22; border-color: #40713a; }
+  .calc-btn.warn { background: #6c4d1b; border-color: #9a7535; }
+  .tap-map-wrap {
+    margin-top: 8px;
+    border: 1px solid #315875;
+    border-radius: 10px;
+    background: #0c1d2d;
+    overflow: hidden;
+  }
+  .tap-map {
+    width: 100%;
+    min-height: 220px;
+    display: block;
+    background: #091522;
+    touch-action: none;
+  }
+  .inline-code {
+    font: 600 12px/1 var(--mono);
+    color: #cfe9ff;
+    background: #10263a;
+    border: 1px solid #2e506a;
+    border-radius: 8px;
+    padding: 2px 6px;
+    display: inline-block;
+  }
+  .calc-list {
+    margin-top: 8px;
+    max-height: 200px;
+    overflow: auto;
+    border: 1px solid #315875;
+    border-radius: 10px;
+    background: #0e2132;
+    padding: 8px;
+    display: grid;
+    gap: 6px;
+  }
+  .calc-row {
+    border: 1px solid #315875;
+    border-radius: 8px;
+    background: #10273b;
+    padding: 6px 8px;
+    cursor: pointer;
+    font: 600 12px/1.35 var(--mono);
+  }
+  .calc-row:hover { border-color: #4990bf; }
+
+  .sub {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  @media (max-width: 1000px) {
+    .grid { grid-template-columns: 1fr; }
+    .line { grid-template-columns: 1fr; }
+    .metrics { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+  <nav class="top">
+    <a href="../index.html">&larr; Back to Suite</a>
+    <span>Outdoor Kit</span>
+  </nav>
+
+  <main class="wrap">
+    <header class="hero">
+      <h1>Outdoor Kit: Offline First, Online Enhanced</h1>
+      <p>
+        Autonomous tools for off-grid use: compass, speed, altitude, SOS beacon, and light utility. If network exists,
+        enable LAN direct chat and optional AI assistant (Ollama or OpenAI-compatible endpoints).
+      </p>
+    </header>
+
+    <section class="tabs" aria-label="Outdoor tool tabs">
+      <button class="tab active" data-tab="nav">Navigation</button>
+      <button class="tab" data-tab="signal">Signal</button>
+      <button class="tab" data-tab="chat">Direct Chat</button>
+      <button class="tab" data-tab="ai">AI Assistant</button>
+      <button class="tab" data-tab="calc">Calculator</button>
+    </section>
+
+    <section id="view-nav" class="view active">
+      <div class="grid">
+        <article class="card">
+          <h3>Compass</h3>
+          <p class="sub">Uses device orientation sensors. On iOS Safari, permission may be required.</p>
+          <div class="btn-row">
+            <button id="compassStart" class="btn good" type="button">Start Compass</button>
+            <button id="compassStop" class="btn danger" type="button">Stop</button>
+          </div>
+          <div class="dial-wrap">
+            <div class="dial" aria-hidden="true">
+              <div id="compassNeedle" class="needle"></div>
+              <div class="dial-center"></div>
+            </div>
+          </div>
+          <div class="metrics">
+            <div class="metric"><div class="k">Heading</div><div id="headingVal" class="v">--</div></div>
+            <div class="metric"><div class="k">Cardinal</div><div id="cardinalVal" class="v">--</div></div>
+            <div class="metric"><div class="k">Accuracy</div><div id="headingAccVal" class="v">--</div></div>
+          </div>
+          <div id="compassStatus" class="status warn">Compass idle.</div>
+        </article>
+
+        <article class="card">
+          <h3>Speed + Altitude</h3>
+          <p class="sub">Uses GPS geolocation. Speed may be unavailable on some devices; fallback is computed from position deltas.</p>
+          <div class="btn-row">
+            <button id="gpsStart" class="btn good" type="button">Start Tracking</button>
+            <button id="gpsStop" class="btn danger" type="button">Stop</button>
+            <button id="gpsReset" class="btn" type="button">Reset Trip</button>
+          </div>
+          <div class="metrics">
+            <div class="metric"><div class="k">Speed (km/h)</div><div id="speedKmhVal" class="v">0.0</div></div>
+            <div class="metric"><div class="k">Speed (mph)</div><div id="speedMphVal" class="v">0.0</div></div>
+            <div class="metric"><div class="k">Altitude (m)</div><div id="altVal" class="v">--</div></div>
+            <div class="metric"><div class="k">Altitude (ft)</div><div id="altFtVal" class="v">--</div></div>
+            <div class="metric"><div class="k">Trip Distance (km)</div><div id="distKmVal" class="v">0.00</div></div>
+            <div class="metric"><div class="k">GPS Accuracy (m)</div><div id="gpsAccVal" class="v">--</div></div>
+          </div>
+          <div id="gpsStatus" class="status warn">Tracking stopped.</div>
+        </article>
+
+        <article class="card">
+          <h3>Distance + Sun/Stars Helper</h3>
+          <div class="line">
+            <div>
+              <label for="distLatA">Point A (lat, lon)</label>
+              <input id="distLatA" type="text" placeholder="40.7128" />
+              <input id="distLonA" type="text" placeholder="-74.0060" style="margin-top:8px;" />
+            </div>
+            <div>
+              <label for="distLatB">Point B (lat, lon)</label>
+              <input id="distLatB" type="text" placeholder="34.0522" />
+              <input id="distLonB" type="text" placeholder="-118.2437" style="margin-top:8px;" />
+            </div>
+          </div>
+          <div class="btn-row">
+            <button id="distUseCurrentA" class="btn" type="button">Use Current for A</button>
+            <button id="distUseCurrentB" class="btn" type="button">Use Current for B</button>
+            <button id="distCompute" class="btn good" type="button">Compute Distance</button>
+          </div>
+          <div class="metrics">
+            <div class="metric"><div class="k">Meters</div><div id="distMetersVal" class="v">--</div></div>
+            <div class="metric"><div class="k">Miles</div><div id="distMilesVal" class="v">--</div></div>
+            <div class="metric"><div class="k">Bearing</div><div id="distBearingVal" class="v">--</div></div>
+            <div class="metric"><div class="k">Cardinal</div><div id="distCardVal" class="v">--</div></div>
+            <div class="metric"><div class="k">Sun Azimuth</div><div id="sunAzVal" class="v">--</div></div>
+            <div class="metric"><div class="k">Sun Altitude</div><div id="sunAltVal" class="v">--</div></div>
+            <div class="metric"><div class="k">Sunrise</div><div id="sunriseVal" class="v">--</div></div>
+            <div class="metric"><div class="k">Solar Noon</div><div id="solarNoonVal" class="v">--</div></div>
+            <div class="metric"><div class="k">Sunset</div><div id="sunsetVal" class="v">--</div></div>
+            <div class="metric"><div class="k">Day Length</div><div id="sunDayLenVal" class="v">--</div></div>
+          </div>
+          <div class="line" style="margin-top:8px;">
+            <div>
+              <label for="sunLat">Sun/Star Ref Lat</label>
+              <input id="sunLat" type="text" placeholder="Latitude" />
+            </div>
+            <div>
+              <label for="sunLon">Sun/Star Ref Lon</label>
+              <input id="sunLon" type="text" placeholder="Longitude" />
+            </div>
+          </div>
+          <div class="btn-row">
+            <button id="sunUseCurrent" class="btn" type="button">Use Current Location</button>
+            <button id="sunRefresh" class="btn good" type="button">Refresh Sun/Star</button>
+          </div>
+          <h3 style="margin-top:12px;">Tap-Map Distance</h3>
+          <p class="sub">Tap two points to measure map distance. Use calibration mode when you know a real-world distance between two points.</p>
+          <div class="line" style="margin-top:8px;">
+            <div>
+              <label for="tapMetersPerPx">Map scale (meters per pixel)</label>
+              <input id="tapMetersPerPx" type="text" value="1" />
+            </div>
+            <div>
+              <label for="tapKnownMeters">Known distance for calibration (meters)</label>
+              <input id="tapKnownMeters" type="text" value="100" />
+            </div>
+          </div>
+          <div class="btn-row">
+            <button id="tapMapMeasureBtn" class="btn good" type="button">Measure Mode</button>
+            <button id="tapMapCalibrateBtn" class="btn" type="button">Calibrate Mode</button>
+            <button id="tapMapClearBtn" class="btn danger" type="button">Clear Points</button>
+          </div>
+          <div class="tap-map-wrap">
+            <canvas id="tapMapCanvas" class="tap-map" width="640" height="240"></canvas>
+          </div>
+          <div class="metrics">
+            <div class="metric"><div class="k">Pixel Distance</div><div id="tapPxDistVal" class="v">--</div></div>
+            <div class="metric"><div class="k">Map Distance (m)</div><div id="tapMapMetersVal" class="v">--</div></div>
+            <div class="metric"><div class="k">Map Distance (mi)</div><div id="tapMapMilesVal" class="v">--</div></div>
+          </div>
+          <div id="tapMapHint" class="sub" style="margin-top:8px;">Tap map helper idle.</div>
+          <div id="sunPolarisVal" class="sub" style="margin-top:8px;">Polaris guidance: --</div>
+          <div id="distStatus" class="status warn">Distance/Sun helper idle.</div>
+        </article>
+      </div>
+    </section>
+
+    <section id="view-signal" class="view">
+      <div class="grid">
+        <article class="card">
+          <h3>SOS Beacon + Flashlight</h3>
+          <p class="sub">Screen flash always works. Torch mode depends on browser/device camera constraints.</p>
+          <div class="line">
+            <div>
+              <label for="flashMode">Flash Mode</label>
+              <select id="flashMode">
+                <option value="screen" selected>Screen</option>
+                <option value="torch">Torch</option>
+                <option value="both">Screen + Torch</option>
+              </select>
+            </div>
+            <div>
+              <label for="unitMs">SOS Unit (ms)</label>
+              <select id="unitMs">
+                <option value="120">120</option>
+                <option value="150" selected>150</option>
+                <option value="200">200</option>
+                <option value="260">260</option>
+              </select>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button id="flashToggle" class="btn" type="button">Toggle Flashlight</button>
+            <button id="sosStart" class="btn good" type="button">Start SOS</button>
+            <button id="sosStop" class="btn danger" type="button">Stop SOS</button>
+          </div>
+          <div id="signalStatus" class="status warn">Signal tools idle.</div>
+        </article>
+
+        <article class="card">
+          <h3>Signal Output</h3>
+          <div id="flashPanel" class="flash-panel">
+            <div>
+              <div id="flashLabel" style="font-weight:800; font-size:1.35rem;">OFF</div>
+              <div class="sub" style="margin-top:6px;">Use as visible signal source</div>
+            </div>
+          </div>
+          <div class="sub" style="margin-top:8px;">
+            SOS pattern: <code>... --- ...</code> repeated until stopped.
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="view-chat" class="view">
+      <div class="grid">
+        <article class="card">
+          <h3>Wi-Fi Direct Chat (WebRTC Manual Pairing)</h3>
+          <p class="sub">No backend required. Exchange offer/answer text via QR, messenger, or voice.</p>
+          <div class="btn-row">
+            <button id="hostBtn" class="btn good" type="button">Host (Create Offer)</button>
+            <button id="joinBtn" class="btn" type="button">Join (Create Answer)</button>
+            <button id="applyAnswerBtn" class="btn" type="button">Apply Remote Answer</button>
+            <button id="chatResetBtn" class="btn danger" type="button">Reset Link</button>
+          </div>
+          <div class="line" style="margin-top:8px;">
+            <div>
+              <label for="localSignal">Local Signal (share this)</label>
+              <textarea id="localSignal" placeholder="Offer/Answer JSON will appear here"></textarea>
+            </div>
+            <div>
+              <label for="remoteSignal">Remote Signal (paste peer JSON)</label>
+              <textarea id="remoteSignal" placeholder="Paste peer Offer/Answer JSON here"></textarea>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button id="qrGenerateBtn" class="btn" type="button">Generate QR (Local Signal)</button>
+            <button id="qrScanStartBtn" class="btn good" type="button">Scan QR</button>
+            <button id="qrScanStopBtn" class="btn danger" type="button">Stop Scan</button>
+          </div>
+          <div class="qr-wrap">
+            <img id="qrImage" class="qr-img" alt="Signal QR preview" />
+            <video id="qrVideo" class="qr-video" playsinline muted></video>
+          </div>
+          <div id="qrStatus" class="status warn">QR helper idle.</div>
+          <div id="chatStatus" class="status warn">Peer channel disconnected.</div>
+        </article>
+
+        <article class="card">
+          <h3>Channel Chat</h3>
+          <div id="peerChatLog" class="chat-box"></div>
+          <div class="line" style="margin-top:8px;">
+            <input id="peerMessage" type="text" placeholder="Type message to peer" />
+            <button id="peerSendBtn" class="btn" type="button">Send</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="view-ai" class="view">
+      <div class="grid">
+        <article class="card">
+          <h3>Optional Online AI</h3>
+          <p class="sub">Offline still works without this. Configure provider only when internet is available.</p>
+          <div class="line">
+            <div>
+              <label for="aiProvider">Provider</label>
+              <select id="aiProvider">
+                <option value="off" selected>Off</option>
+                <option value="openai">OpenAI-Compatible</option>
+                <option value="ollama">Ollama</option>
+              </select>
+            </div>
+            <div>
+              <label for="aiModel">Model</label>
+              <input id="aiModel" type="text" value="gpt-4o-mini" />
+            </div>
+          </div>
+          <div class="line" style="margin-top:8px;">
+            <div>
+              <label for="aiBaseUrl">Base URL</label>
+              <input id="aiBaseUrl" type="text" value="https://api.openai.com/v1" />
+            </div>
+            <div>
+              <label for="aiApiKey">API Key (kept in browser localStorage)</label>
+              <input id="aiApiKey" type="password" placeholder="sk-..." />
+            </div>
+          </div>
+          <div class="btn-row">
+            <button id="aiSaveBtn" class="btn" type="button">Save Settings</button>
+            <button id="aiTestBtn" class="btn" type="button">Test Connection</button>
+            <button id="aiClearBtn" class="btn warn" type="button">Clear Key</button>
+          </div>
+          <div id="aiStatus" class="status warn">AI provider off.</div>
+        </article>
+
+        <article class="card">
+          <h3>AI Chat</h3>
+          <div id="aiChatLog" class="chat-box"></div>
+          <div class="line" style="margin-top:8px;">
+            <input id="aiPrompt" type="text" placeholder="Ask for navigation/help/planning advice" />
+            <button id="aiSendBtn" class="btn" type="button">Send</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="view-calc" class="view">
+      <div class="grid">
+        <article class="card">
+          <h3>Field Calculator</h3>
+          <p class="sub">Supports basic and scientific functions. Trig mode can be switched between degrees and radians.</p>
+          <label for="calcExpr">Expression</label>
+          <input id="calcExpr" type="text" placeholder="(12.5*3)+7/2" />
+          <div class="btn-row">
+            <button id="calcEvalBtn" class="btn good" type="button">Evaluate</button>
+            <button id="calcBackBtn" class="btn" type="button">Backspace</button>
+            <button id="calcClearBtn" class="btn warn" type="button">Clear</button>
+            <button id="calcModeToggleBtn" class="btn" type="button">Trig: DEG</button>
+          </div>
+          <div id="calcResult" class="status">Result: --</div>
+          <div class="calc-grid" id="calcPad">
+            <button class="calc-btn op" data-k="sin(">sin</button>
+            <button class="calc-btn op" data-k="cos(">cos</button>
+            <button class="calc-btn op" data-k="tan(">tan</button>
+            <button class="calc-btn op" data-k="asin(">asin</button>
+            <button class="calc-btn op" data-k="acos(">acos</button>
+            <button class="calc-btn op" data-k="atan(">atan</button>
+
+            <button class="calc-btn op" data-k="sqrt(">sqrt</button>
+            <button class="calc-btn op" data-k="ln(">ln</button>
+            <button class="calc-btn op" data-k="log(">log</button>
+            <button class="calc-btn op" data-k="abs(">abs</button>
+            <button class="calc-btn op" data-k="pi">pi</button>
+            <button class="calc-btn op" data-k="e">e</button>
+
+            <button class="calc-btn" data-k="7">7</button>
+            <button class="calc-btn" data-k="8">8</button>
+            <button class="calc-btn" data-k="9">9</button>
+            <button class="calc-btn op" data-k="/">/</button>
+            <button class="calc-btn op" data-k="(">(</button>
+            <button class="calc-btn warn" data-k=",">,</button>
+
+            <button class="calc-btn" data-k="4">4</button>
+            <button class="calc-btn" data-k="5">5</button>
+            <button class="calc-btn" data-k="6">6</button>
+            <button class="calc-btn op" data-k="*">*</button>
+            <button class="calc-btn op" data-k=")">)</button>
+            <button class="calc-btn op" data-k="^">^</button>
+
+            <button class="calc-btn" data-k="1">1</button>
+            <button class="calc-btn" data-k="2">2</button>
+            <button class="calc-btn" data-k="3">3</button>
+            <button class="calc-btn op" data-k="-">-</button>
+            <button class="calc-btn" data-k="%">%</button>
+            <button class="calc-btn op" data-k="+">+</button>
+
+            <button class="calc-btn" data-k="0">0</button>
+            <button class="calc-btn" data-k=".">.</button>
+            <button class="calc-btn" data-k="00">00</button>
+            <button class="calc-btn op" data-k="(">(</button>
+            <button class="calc-btn op" data-k=")">)</button>
+            <button class="calc-btn act" id="calcEqPad">=</button>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>History + Saved Formulas</h3>
+          <div class="line">
+            <div>
+              <label for="calcPresetName">Preset name</label>
+              <input id="calcPresetName" type="text" placeholder="right_triangle_angle" />
+            </div>
+            <div>
+              <label for="calcPresetSelect">Saved presets</label>
+              <select id="calcPresetSelect"></select>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button id="calcSavePresetBtn" class="btn good" type="button">Save Current</button>
+            <button id="calcLoadPresetBtn" class="btn" type="button">Load Preset</button>
+            <button id="calcDeletePresetBtn" class="btn danger" type="button">Delete Preset</button>
+            <button id="calcClearHistoryBtn" class="btn warn" type="button">Clear History</button>
+          </div>
+          <div id="calcPresetStatus" class="status warn">No saved presets yet.</div>
+          <div id="calcHistoryList" class="calc-list"></div>
+        </article>
+
+        <article class="card">
+          <h3>Quick Conversions</h3>
+          <div class="line">
+            <div>
+              <label for="convInput">Input value</label>
+              <input id="convInput" type="text" value="1" />
+            </div>
+            <div>
+              <label for="convType">Conversion</label>
+              <select id="convType">
+                <option value="km_mi">km -> miles</option>
+                <option value="mi_km">miles -> km</option>
+                <option value="m_ft">meters -> feet</option>
+                <option value="ft_m">feet -> meters</option>
+                <option value="kg_lb">kg -> lb</option>
+                <option value="lb_kg">lb -> kg</option>
+                <option value="c_f">C -> F</option>
+                <option value="f_c">F -> C</option>
+              </select>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button id="convRunBtn" class="btn good" type="button">Convert</button>
+          </div>
+          <div id="convResult" class="status">Converted value: --</div>
+          <h3 style="margin-top:12px;">Trig Mini Tutor</h3>
+          <p class="sub"><code>atan(x)</code> means "what angle has tangent x?" Example: if opposite/adjacent = x, then angle = atan(x).</p>
+          <div class="line" style="margin-top:8px;">
+            <div>
+              <label for="trigOpp">Opposite side</label>
+              <input id="trigOpp" type="text" value="3" />
+            </div>
+            <div>
+              <label for="trigAdj">Adjacent side</label>
+              <input id="trigAdj" type="text" value="4" />
+            </div>
+          </div>
+          <div class="btn-row">
+            <button id="trigAngleBtn" class="btn good" type="button">Compute angle with atan</button>
+          </div>
+          <div id="trigAngleResult" class="status">Angle: --</div>
+          <p class="sub" style="margin-top:8px;">
+            <code>sin(a)=opp/hyp</code>, <code>cos(a)=adj/hyp</code>, <code>tan(a)=opp/adj</code>. Use inverse functions (<code>asin</code>, <code>acos</code>, <code>atan</code>) to get the angle back.
+          </p>
+          <p class="sub" style="margin-top:8px;">
+            Tip: this tab is completely offline and useful for field math, weight, temperature, and distance checks.
+          </p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+<script>
+(() => {
+  const LS_KEY = 'outdoorKit.settings.v1';
+  const CALC_KEY = 'outdoorKit.calc.v1';
+
+  const el = {
+    tabs: Array.from(document.querySelectorAll('.tab')),
+    views: Array.from(document.querySelectorAll('.view')),
+
+    compassStart: document.getElementById('compassStart'),
+    compassStop: document.getElementById('compassStop'),
+    compassNeedle: document.getElementById('compassNeedle'),
+    headingVal: document.getElementById('headingVal'),
+    cardinalVal: document.getElementById('cardinalVal'),
+    headingAccVal: document.getElementById('headingAccVal'),
+    compassStatus: document.getElementById('compassStatus'),
+
+    gpsStart: document.getElementById('gpsStart'),
+    gpsStop: document.getElementById('gpsStop'),
+    gpsReset: document.getElementById('gpsReset'),
+    speedKmhVal: document.getElementById('speedKmhVal'),
+    speedMphVal: document.getElementById('speedMphVal'),
+    altVal: document.getElementById('altVal'),
+    altFtVal: document.getElementById('altFtVal'),
+    distKmVal: document.getElementById('distKmVal'),
+    gpsAccVal: document.getElementById('gpsAccVal'),
+    gpsStatus: document.getElementById('gpsStatus'),
+    distLatA: document.getElementById('distLatA'),
+    distLonA: document.getElementById('distLonA'),
+    distLatB: document.getElementById('distLatB'),
+    distLonB: document.getElementById('distLonB'),
+    distUseCurrentA: document.getElementById('distUseCurrentA'),
+    distUseCurrentB: document.getElementById('distUseCurrentB'),
+    distCompute: document.getElementById('distCompute'),
+    distMetersVal: document.getElementById('distMetersVal'),
+    distMilesVal: document.getElementById('distMilesVal'),
+    distBearingVal: document.getElementById('distBearingVal'),
+    distCardVal: document.getElementById('distCardVal'),
+    sunLat: document.getElementById('sunLat'),
+    sunLon: document.getElementById('sunLon'),
+    sunRefresh: document.getElementById('sunRefresh'),
+    sunUseCurrent: document.getElementById('sunUseCurrent'),
+    sunAzVal: document.getElementById('sunAzVal'),
+    sunAltVal: document.getElementById('sunAltVal'),
+    sunriseVal: document.getElementById('sunriseVal'),
+    solarNoonVal: document.getElementById('solarNoonVal'),
+    sunsetVal: document.getElementById('sunsetVal'),
+    sunDayLenVal: document.getElementById('sunDayLenVal'),
+    tapMetersPerPx: document.getElementById('tapMetersPerPx'),
+    tapKnownMeters: document.getElementById('tapKnownMeters'),
+    tapMapMeasureBtn: document.getElementById('tapMapMeasureBtn'),
+    tapMapCalibrateBtn: document.getElementById('tapMapCalibrateBtn'),
+    tapMapClearBtn: document.getElementById('tapMapClearBtn'),
+    tapMapCanvas: document.getElementById('tapMapCanvas'),
+    tapPxDistVal: document.getElementById('tapPxDistVal'),
+    tapMapMetersVal: document.getElementById('tapMapMetersVal'),
+    tapMapMilesVal: document.getElementById('tapMapMilesVal'),
+    tapMapHint: document.getElementById('tapMapHint'),
+    sunPolarisVal: document.getElementById('sunPolarisVal'),
+    distStatus: document.getElementById('distStatus'),
+
+    flashMode: document.getElementById('flashMode'),
+    unitMs: document.getElementById('unitMs'),
+    flashToggle: document.getElementById('flashToggle'),
+    sosStart: document.getElementById('sosStart'),
+    sosStop: document.getElementById('sosStop'),
+    flashPanel: document.getElementById('flashPanel'),
+    flashLabel: document.getElementById('flashLabel'),
+    signalStatus: document.getElementById('signalStatus'),
+
+    hostBtn: document.getElementById('hostBtn'),
+    joinBtn: document.getElementById('joinBtn'),
+    applyAnswerBtn: document.getElementById('applyAnswerBtn'),
+    chatResetBtn: document.getElementById('chatResetBtn'),
+    localSignal: document.getElementById('localSignal'),
+    remoteSignal: document.getElementById('remoteSignal'),
+    qrGenerateBtn: document.getElementById('qrGenerateBtn'),
+    qrScanStartBtn: document.getElementById('qrScanStartBtn'),
+    qrScanStopBtn: document.getElementById('qrScanStopBtn'),
+    qrImage: document.getElementById('qrImage'),
+    qrVideo: document.getElementById('qrVideo'),
+    qrStatus: document.getElementById('qrStatus'),
+    chatStatus: document.getElementById('chatStatus'),
+    peerChatLog: document.getElementById('peerChatLog'),
+    peerMessage: document.getElementById('peerMessage'),
+    peerSendBtn: document.getElementById('peerSendBtn'),
+
+    aiProvider: document.getElementById('aiProvider'),
+    aiModel: document.getElementById('aiModel'),
+    aiBaseUrl: document.getElementById('aiBaseUrl'),
+    aiApiKey: document.getElementById('aiApiKey'),
+    aiSaveBtn: document.getElementById('aiSaveBtn'),
+    aiTestBtn: document.getElementById('aiTestBtn'),
+    aiClearBtn: document.getElementById('aiClearBtn'),
+    aiStatus: document.getElementById('aiStatus'),
+    aiChatLog: document.getElementById('aiChatLog'),
+    aiPrompt: document.getElementById('aiPrompt'),
+    aiSendBtn: document.getElementById('aiSendBtn'),
+
+    calcExpr: document.getElementById('calcExpr'),
+    calcEvalBtn: document.getElementById('calcEvalBtn'),
+    calcBackBtn: document.getElementById('calcBackBtn'),
+    calcClearBtn: document.getElementById('calcClearBtn'),
+    calcModeToggleBtn: document.getElementById('calcModeToggleBtn'),
+    calcResult: document.getElementById('calcResult'),
+    calcPad: document.getElementById('calcPad'),
+    calcEqPad: document.getElementById('calcEqPad'),
+    calcPresetName: document.getElementById('calcPresetName'),
+    calcPresetSelect: document.getElementById('calcPresetSelect'),
+    calcSavePresetBtn: document.getElementById('calcSavePresetBtn'),
+    calcLoadPresetBtn: document.getElementById('calcLoadPresetBtn'),
+    calcDeletePresetBtn: document.getElementById('calcDeletePresetBtn'),
+    calcClearHistoryBtn: document.getElementById('calcClearHistoryBtn'),
+    calcPresetStatus: document.getElementById('calcPresetStatus'),
+    calcHistoryList: document.getElementById('calcHistoryList'),
+    convInput: document.getElementById('convInput'),
+    convType: document.getElementById('convType'),
+    convRunBtn: document.getElementById('convRunBtn'),
+    convResult: document.getElementById('convResult'),
+    trigOpp: document.getElementById('trigOpp'),
+    trigAdj: document.getElementById('trigAdj'),
+    trigAngleBtn: document.getElementById('trigAngleBtn'),
+    trigAngleResult: document.getElementById('trigAngleResult')
+  };
+
+  const state = {
+    compassOn: false,
+    gpsWatchId: null,
+    lastGeo: null,
+    tripMeters: 0,
+
+    torchTrack: null,
+    torchStream: null,
+    flashOn: false,
+    sosRunning: false,
+    sosStop: false,
+
+    pc: null,
+    dataChannel: null,
+    isHost: false,
+    qrDetector: null,
+    qrRafId: 0,
+    qrStream: null,
+    tapMode: 'measure',
+    tapPoints: [],
+    calcTrigMode: 'deg',
+    calcHistory: [],
+    calcPresets: [],
+
+    aiMessages: [{ role: 'system', content: 'You are a practical field assistant. Keep responses short, concrete, and safety-aware.' }]
+  };
+
+  function setTab(tab) {
+    el.tabs.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
+    el.views.forEach(view => view.classList.toggle('active', view.id === `view-${tab}`));
+  }
+
+  function status(node, msg, kind) {
+    node.textContent = msg;
+    node.className = 'status';
+    if (kind) node.classList.add(kind);
+  }
+
+  function isSecureFeatureContext() {
+    const host = String(location.hostname || '').toLowerCase();
+    return Boolean(
+      window.isSecureContext ||
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host === '::1'
+    );
+  }
+
+  function secureContextHint() {
+    return 'Use HTTPS (or localhost) for phone sensors/GPS. LAN http://192.168.x.x is blocked by many mobile browsers.';
+  }
+
+  function formatGeoError(err, prefix) {
+    const lead = prefix || 'GPS error';
+    const code = err && typeof err.code === 'number' ? err.code : 0;
+    const map = {
+      1: 'permission denied',
+      2: 'position unavailable',
+      3: 'request timeout'
+    };
+    const detail = (err && err.message) ? err.message : (map[code] || 'unknown error');
+    let msg = `${lead}: ${detail}`;
+    if (!isSecureFeatureContext()) {
+      msg += ` | ${secureContextHint()}`;
+    }
+    return msg;
+  }
+
+  function cardinalFromHeading(deg) {
+    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const idx = Math.round((((deg % 360) + 360) % 360) / 45) % 8;
+    return dirs[idx];
+  }
+
+  function setHeading(deg, accText) {
+    const norm = ((deg % 360) + 360) % 360;
+    el.compassNeedle.style.transform = `rotate(${norm}deg)`;
+    el.headingVal.textContent = `${norm.toFixed(1)}°`;
+    el.cardinalVal.textContent = cardinalFromHeading(norm);
+    el.headingAccVal.textContent = accText || '--';
+  }
+
+  function onOrientation(event) {
+    let heading = null;
+    let acc = '--';
+
+    if (typeof event.webkitCompassHeading === 'number') {
+      heading = event.webkitCompassHeading;
+      if (typeof event.webkitCompassAccuracy === 'number') {
+        acc = `${event.webkitCompassAccuracy.toFixed(0)}°`;
+      }
+    } else if (typeof event.alpha === 'number') {
+      heading = 360 - event.alpha;
+      if (typeof event.absolute === 'boolean') {
+        acc = event.absolute ? 'abs' : 'rel';
+      }
+    }
+
+    if (heading !== null) setHeading(heading, acc);
+  }
+
+  async function startCompass() {
+    try {
+      if (!isSecureFeatureContext()) {
+        status(el.compassStatus, `Compass unavailable on insecure origin. ${secureContextHint()}`, 'err');
+        return;
+      }
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        const p = await DeviceOrientationEvent.requestPermission();
+        if (p !== 'granted') {
+          const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+          status(
+            el.compassStatus,
+            ios
+              ? 'Compass permission denied. In iOS Safari enable Motion & Orientation Access.'
+              : 'Compass permission denied in browser/device settings.',
+            'err'
+          );
+          return;
+        }
+      }
+      window.addEventListener('deviceorientation', onOrientation, true);
+      state.compassOn = true;
+      status(el.compassStatus, 'Compass active.', 'ok');
+    } catch (error) {
+      status(el.compassStatus, `Compass unavailable: ${error.message}. ${secureContextHint()}`, 'err');
+    }
+  }
+
+  function stopCompass() {
+    window.removeEventListener('deviceorientation', onOrientation, true);
+    state.compassOn = false;
+    status(el.compassStatus, 'Compass stopped.', 'warn');
+  }
+
+  function haversineMeters(a, b) {
+    const R = 6371000;
+    const dLat = (b.lat - a.lat) * Math.PI / 180;
+    const dLon = (b.lon - a.lon) * Math.PI / 180;
+    const lat1 = a.lat * Math.PI / 180;
+    const lat2 = b.lat * Math.PI / 180;
+    const x = Math.sin(dLat / 2) ** 2 + Math.sin(dLon / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
+    return 2 * R * Math.asin(Math.sqrt(x));
+  }
+
+  function parseCoord(v) {
+    const n = Number(String(v || '').trim());
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function initialBearingDeg(a, b) {
+    const lat1 = a.lat * Math.PI / 180;
+    const lat2 = b.lat * Math.PI / 180;
+    const dLon = (b.lon - a.lon) * Math.PI / 180;
+    const y = Math.sin(dLon) * Math.cos(lat2);
+    const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+    const brng = Math.atan2(y, x) * 180 / Math.PI;
+    return ((brng % 360) + 360) % 360;
+  }
+
+  function computeDistance() {
+    const a = { lat: parseCoord(el.distLatA.value), lon: parseCoord(el.distLonA.value) };
+    const b = { lat: parseCoord(el.distLatB.value), lon: parseCoord(el.distLonB.value) };
+    if (a.lat === null || a.lon === null || b.lat === null || b.lon === null) {
+      status(el.distStatus, 'Enter valid numeric coordinates for both points.', 'err');
+      return;
+    }
+    const d = haversineMeters(a, b);
+    const bearing = initialBearingDeg(a, b);
+    el.distMetersVal.textContent = d.toFixed(1);
+    el.distMilesVal.textContent = (d / 1609.344).toFixed(3);
+    el.distBearingVal.textContent = `${bearing.toFixed(1)}°`;
+    el.distCardVal.textContent = cardinalFromHeading(bearing);
+    status(el.distStatus, 'Distance and bearing updated.', 'ok');
+  }
+
+  function solarFactors(date) {
+    const dayStart = new Date(date.getFullYear(), 0, 0);
+    const dayMs = 24 * 60 * 60 * 1000;
+    const day = Math.floor((date - dayStart) / dayMs);
+    const hour = date.getHours() + date.getMinutes() / 60 + date.getSeconds() / 3600;
+    const gamma = 2 * Math.PI / 365 * (day - 1 + (hour - 12) / 24);
+
+    const eqTime = 229.18 * (
+      0.000075 +
+      0.001868 * Math.cos(gamma) -
+      0.032077 * Math.sin(gamma) -
+      0.014615 * Math.cos(2 * gamma) -
+      0.040849 * Math.sin(2 * gamma)
+    );
+
+    const decl =
+      0.006918 -
+      0.399912 * Math.cos(gamma) +
+      0.070257 * Math.sin(gamma) -
+      0.006758 * Math.cos(2 * gamma) +
+      0.000907 * Math.sin(2 * gamma) -
+      0.002697 * Math.cos(3 * gamma) +
+      0.00148 * Math.sin(3 * gamma);
+
+    return { eqTime, decl };
+  }
+
+  function noaaSunPosition(date, lat, lon) {
+    const rad = Math.PI / 180;
+    const f = solarFactors(date);
+    const hour = date.getHours() + date.getMinutes() / 60 + date.getSeconds() / 3600;
+    const tzMin = -date.getTimezoneOffset();
+    const trueSolarTime = ((hour * 60 + f.eqTime + 4 * lon - tzMin) % 1440 + 1440) % 1440;
+    let ha = trueSolarTime / 4 - 180;
+    if (ha < -180) ha += 360;
+
+    const haRad = ha * rad;
+    const latRad = lat * rad;
+    const cosZenith = Math.sin(latRad) * Math.sin(f.decl) + Math.cos(latRad) * Math.cos(f.decl) * Math.cos(haRad);
+    const zenith = Math.acos(Math.min(1, Math.max(-1, cosZenith)));
+    const altitude = 90 - zenith / rad;
+    const azNumer = Math.sin(haRad);
+    const azDenom = Math.cos(haRad) * Math.sin(latRad) - Math.tan(f.decl) * Math.cos(latRad);
+    const azimuth = ((Math.atan2(azNumer, azDenom) / rad) + 180 + 360) % 360;
+    return { azimuth, altitude };
+  }
+
+  function noaaSolarTimes(date, lat, lon) {
+    const rad = Math.PI / 180;
+    const noon = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0, 0);
+    const f = solarFactors(noon);
+    const latRad = lat * rad;
+    const zenith = 90.833 * rad;
+    const cosH = (Math.cos(zenith) / (Math.cos(latRad) * Math.cos(f.decl))) - (Math.tan(latRad) * Math.tan(f.decl));
+    const tzHours = -date.getTimezoneOffset() / 60;
+
+    if (cosH > 1) return { polar: 'night' };
+    if (cosH < -1) return { polar: 'day' };
+
+    const h = Math.acos(cosH) / rad;
+    const solarNoonMin = 720 - (4 * lon) - f.eqTime + (tzHours * 60);
+    const sunriseMin = solarNoonMin - (h * 4);
+    const sunsetMin = solarNoonMin + (h * 4);
+    return {
+      sunriseMin,
+      sunsetMin,
+      solarNoonMin,
+      dayLengthMin: sunsetMin - sunriseMin
+    };
+  }
+
+  function minutesToClock(baseDate, minutes) {
+    const d = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 0, 0, 0, 0);
+    d.setMinutes(Math.round(minutes));
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function durationToHm(mins) {
+    const total = Math.max(0, Math.round(mins));
+    const h = Math.floor(total / 60);
+    const m = total % 60;
+    return `${h}h ${m}m`;
+  }
+
+  function updateSunHelper() {
+    const lat = parseCoord(el.sunLat.value);
+    const lon = parseCoord(el.sunLon.value);
+    if (lat === null || lon === null) {
+      status(el.distStatus, 'Set valid Sun/Star coordinates first.', 'warn');
+      return;
+    }
+
+    const now = new Date();
+    const sun = noaaSunPosition(now, lat, lon);
+    const times = noaaSolarTimes(now, lat, lon);
+    el.sunAzVal.textContent = `${sun.azimuth.toFixed(1)}°`;
+    el.sunAltVal.textContent = `${sun.altitude.toFixed(1)}°`;
+
+    if (times.polar === 'night') {
+      el.sunriseVal.textContent = '--';
+      el.solarNoonVal.textContent = '--';
+      el.sunsetVal.textContent = '--';
+      el.sunDayLenVal.textContent = '0h 0m';
+    } else if (times.polar === 'day') {
+      el.sunriseVal.textContent = '--';
+      el.solarNoonVal.textContent = '--';
+      el.sunsetVal.textContent = '--';
+      el.sunDayLenVal.textContent = '24h 0m';
+    } else {
+      el.sunriseVal.textContent = minutesToClock(now, times.sunriseMin);
+      el.solarNoonVal.textContent = minutesToClock(now, times.solarNoonMin);
+      el.sunsetVal.textContent = minutesToClock(now, times.sunsetMin);
+      el.sunDayLenVal.textContent = durationToHm(times.dayLengthMin);
+    }
+
+    if (lat >= 0) {
+      el.sunPolarisVal.textContent = `Polaris guidance: face north; Polaris altitude is about ${Math.abs(lat).toFixed(1)}° above horizon.`;
+    } else {
+      el.sunPolarisVal.textContent = 'Polaris guidance: not visible in southern hemisphere; use Southern Cross method + compass/sun.';
+    }
+    status(el.distStatus, 'Sun/Star guidance refreshed.', 'ok');
+  }
+
+  function setCurrentToPoint(target) {
+    const apply = (lat, lon) => {
+      if (target === 'A') {
+        el.distLatA.value = lat.toFixed(6);
+        el.distLonA.value = lon.toFixed(6);
+      } else {
+        el.distLatB.value = lat.toFixed(6);
+        el.distLonB.value = lon.toFixed(6);
+      }
+      status(el.distStatus, `Current GPS set to point ${target}.`, 'ok');
+    };
+
+    if (state.lastGeo) {
+      apply(state.lastGeo.lat, state.lastGeo.lon);
+      return;
+    }
+    if (!navigator.geolocation) {
+      status(el.distStatus, 'Geolocation not supported on this device.', 'err');
+      return;
+    }
+    if (!isSecureFeatureContext()) {
+      status(el.distStatus, `Unable to read location. ${secureContextHint()}`, 'err');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => apply(pos.coords.latitude, pos.coords.longitude),
+      (err) => status(el.distStatus, formatGeoError(err, 'Unable to read location'), 'err'),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 }
+    );
+  }
+
+  function setCurrentSunLocation() {
+    const apply = (lat, lon) => {
+      el.sunLat.value = lat.toFixed(6);
+      el.sunLon.value = lon.toFixed(6);
+      updateSunHelper();
+    };
+
+    if (state.lastGeo) {
+      apply(state.lastGeo.lat, state.lastGeo.lon);
+      return;
+    }
+    if (!navigator.geolocation) {
+      status(el.distStatus, 'Geolocation not supported on this device.', 'err');
+      return;
+    }
+    if (!isSecureFeatureContext()) {
+      status(el.distStatus, `Unable to read location. ${secureContextHint()}`, 'err');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => apply(pos.coords.latitude, pos.coords.longitude),
+      (err) => status(el.distStatus, formatGeoError(err, 'Unable to read location'), 'err'),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 }
+    );
+  }
+
+  function drawTapMap() {
+    const canvas = el.tapMapCanvas;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#0a1624';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = '#1f3e59';
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= canvas.width; x += 40) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvas.height);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= canvas.height; y += 40) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvas.width, y);
+      ctx.stroke();
+    }
+
+    if (state.tapPoints.length >= 2) {
+      const a = state.tapPoints[0];
+      const b = state.tapPoints[1];
+      ctx.strokeStyle = '#53d1ff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+    }
+
+    state.tapPoints.forEach((p, idx) => {
+      ctx.fillStyle = idx === 0 ? '#fbbf24' : '#34d399';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#d9efff';
+      ctx.font = '700 12px IBM Plex Mono';
+      ctx.fillText(idx === 0 ? 'A' : 'B', p.x + 8, p.y - 8);
+    });
+  }
+
+  function setTapMode(mode) {
+    state.tapMode = mode === 'calibrate' ? 'calibrate' : 'measure';
+    el.tapMapMeasureBtn.classList.toggle('good', state.tapMode === 'measure');
+    el.tapMapCalibrateBtn.classList.toggle('good', state.tapMode === 'calibrate');
+    if (state.tapMode === 'measure') {
+      el.tapMapHint.textContent = 'Measure mode: tap point A then point B.';
+    } else {
+      el.tapMapHint.textContent = 'Calibrate mode: tap two known points; scale updates automatically.';
+    }
+  }
+
+  function clearTapMap() {
+    state.tapPoints = [];
+    el.tapPxDistVal.textContent = '--';
+    el.tapMapMetersVal.textContent = '--';
+    el.tapMapMilesVal.textContent = '--';
+    drawTapMap();
+  }
+
+  function tapPointFromEvent(event) {
+    const rect = el.tapMapCanvas.getBoundingClientRect();
+    const scaleX = el.tapMapCanvas.width / rect.width;
+    const scaleY = el.tapMapCanvas.height / rect.height;
+    return {
+      x: (event.clientX - rect.left) * scaleX,
+      y: (event.clientY - rect.top) * scaleY
+    };
+  }
+
+  function updateTapMapMetrics(pxDist) {
+    el.tapPxDistVal.textContent = pxDist.toFixed(2);
+    const metersPerPx = parseCoord(el.tapMetersPerPx.value);
+    if (metersPerPx === null || metersPerPx <= 0) {
+      el.tapMapMetersVal.textContent = '--';
+      el.tapMapMilesVal.textContent = '--';
+      status(el.distStatus, 'Map scale must be a positive number.', 'warn');
+      return;
+    }
+    const meters = pxDist * metersPerPx;
+    el.tapMapMetersVal.textContent = meters.toFixed(2);
+    el.tapMapMilesVal.textContent = (meters / 1609.344).toFixed(4);
+    status(el.distStatus, 'Tap-map distance measured.', 'ok');
+  }
+
+  function onTapMapPointer(event) {
+    event.preventDefault();
+    const p = tapPointFromEvent(event);
+    if (state.tapPoints.length >= 2) state.tapPoints = [];
+    state.tapPoints.push(p);
+    drawTapMap();
+    if (state.tapPoints.length < 2) return;
+
+    const a = state.tapPoints[0];
+    const b = state.tapPoints[1];
+    const pxDist = Math.hypot(b.x - a.x, b.y - a.y);
+    if (state.tapMode === 'calibrate') {
+      const knownMeters = parseCoord(el.tapKnownMeters.value);
+      if (knownMeters === null || knownMeters <= 0) {
+        status(el.distStatus, 'Known calibration distance must be a positive number.', 'err');
+        return;
+      }
+      const newScale = knownMeters / Math.max(pxDist, 0.000001);
+      el.tapMetersPerPx.value = newScale.toFixed(6);
+      el.tapMapHint.textContent = `Calibrated: ${newScale.toFixed(6)} meters/px.`;
+      status(el.distStatus, 'Tap-map scale calibrated.', 'ok');
+    }
+    updateTapMapMetrics(pxDist);
+  }
+
+  function onPosition(pos) {
+    const c = pos.coords;
+    const now = pos.timestamp;
+
+    let speedMs = c.speed;
+    const point = { lat: c.latitude, lon: c.longitude, t: now };
+
+    if ((speedMs === null || Number.isNaN(speedMs)) && state.lastGeo) {
+      const d = haversineMeters(state.lastGeo, point);
+      const dt = Math.max(0.001, (point.t - state.lastGeo.t) / 1000);
+      speedMs = d / dt;
+    }
+
+    if (state.lastGeo) {
+      const seg = haversineMeters(state.lastGeo, point);
+      if (seg < 120) state.tripMeters += seg;
+    }
+    state.lastGeo = point;
+    if (!String(el.sunLat.value).trim()) el.sunLat.value = point.lat.toFixed(6);
+    if (!String(el.sunLon.value).trim()) el.sunLon.value = point.lon.toFixed(6);
+
+    const speed = Number.isFinite(speedMs) ? speedMs : 0;
+    const kmh = speed * 3.6;
+    const mph = speed * 2.236936;
+
+    el.speedKmhVal.textContent = kmh.toFixed(1);
+    el.speedMphVal.textContent = mph.toFixed(1);
+
+    if (Number.isFinite(c.altitude)) {
+      el.altVal.textContent = c.altitude.toFixed(1);
+      el.altFtVal.textContent = (c.altitude * 3.28084).toFixed(1);
+    } else {
+      el.altVal.textContent = '--';
+      el.altFtVal.textContent = '--';
+    }
+
+    el.distKmVal.textContent = (state.tripMeters / 1000).toFixed(2);
+    el.gpsAccVal.textContent = Number.isFinite(c.accuracy) ? c.accuracy.toFixed(1) : '--';
+
+    status(el.gpsStatus, 'GPS tracking active.', 'ok');
+  }
+
+  function onPositionError(err) {
+    status(el.gpsStatus, formatGeoError(err, 'GPS error'), 'err');
+  }
+
+  function startGps() {
+    if (!navigator.geolocation) {
+      status(el.gpsStatus, 'Geolocation not supported.', 'err');
+      return;
+    }
+    if (!isSecureFeatureContext()) {
+      status(el.gpsStatus, `GPS unavailable on insecure origin. ${secureContextHint()}`, 'err');
+      return;
+    }
+    if (state.gpsWatchId !== null) return;
+
+    state.gpsWatchId = navigator.geolocation.watchPosition(onPosition, onPositionError, {
+      enableHighAccuracy: true,
+      maximumAge: 1000,
+      timeout: 10000
+    });
+    status(el.gpsStatus, 'Starting GPS...', 'warn');
+  }
+
+  function stopGps() {
+    if (state.gpsWatchId !== null) {
+      navigator.geolocation.clearWatch(state.gpsWatchId);
+      state.gpsWatchId = null;
+    }
+    status(el.gpsStatus, 'Tracking stopped.', 'warn');
+  }
+
+  function resetTrip() {
+    state.tripMeters = 0;
+    state.lastGeo = null;
+    el.distKmVal.textContent = '0.00';
+    status(el.gpsStatus, 'Trip reset.', 'ok');
+  }
+
+  async function ensureTorch() {
+    if (state.torchTrack) return true;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false
+      });
+      const track = stream.getVideoTracks()[0];
+      const caps = track.getCapabilities ? track.getCapabilities() : {};
+      if (!caps.torch) {
+        stream.getTracks().forEach(t => t.stop());
+        return false;
+      }
+      state.torchTrack = track;
+      state.torchStream = stream;
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  async function setTorch(on) {
+    if (!state.torchTrack) return false;
+    try {
+      await state.torchTrack.applyConstraints({ advanced: [{ torch: !!on }] });
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function releaseTorch() {
+    if (state.torchTrack) state.torchTrack.stop();
+    if (state.torchStream) state.torchStream.getTracks().forEach(t => t.stop());
+    state.torchTrack = null;
+    state.torchStream = null;
+  }
+
+  function setScreenFlash(on) {
+    state.flashOn = !!on;
+    el.flashPanel.classList.toggle('on', state.flashOn);
+    el.flashLabel.textContent = state.flashOn ? 'ON' : 'OFF';
+  }
+
+  async function setSignalOutput(on) {
+    const mode = el.flashMode.value;
+    if (mode === 'screen' || mode === 'both') setScreenFlash(on);
+    if (mode === 'torch' || mode === 'both') {
+      const ok = await ensureTorch();
+      if (!ok) {
+        status(el.signalStatus, 'Torch unavailable. Falling back to screen mode.', 'warn');
+        if (mode === 'torch') {
+          setScreenFlash(on);
+        }
+      } else {
+        await setTorch(on);
+      }
+    }
+  }
+
+  async function toggleFlashlight() {
+    if (state.sosRunning) return;
+    const next = !state.flashOn;
+    await setSignalOutput(next);
+    status(el.signalStatus, next ? 'Flashlight on.' : 'Flashlight off.', next ? 'ok' : 'warn');
+  }
+
+  async function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  async function startSos() {
+    if (state.sosRunning) return;
+    state.sosRunning = true;
+    state.sosStop = false;
+    status(el.signalStatus, 'SOS running...', 'ok');
+
+    const unit = Number(el.unitMs.value || 150);
+    const pattern = [
+      1, 1, 1,
+      3, 3, 3,
+      1, 1, 1
+    ];
+
+    while (!state.sosStop) {
+      for (let i = 0; i < pattern.length; i += 1) {
+        if (state.sosStop) break;
+        await setSignalOutput(true);
+        await sleep(pattern[i] * unit);
+        await setSignalOutput(false);
+        await sleep(unit);
+        if (i === 2 || i === 5) await sleep(2 * unit);
+      }
+      await sleep(5 * unit);
+    }
+
+    await setSignalOutput(false);
+    state.sosRunning = false;
+    status(el.signalStatus, 'SOS stopped.', 'warn');
+  }
+
+  function stopSos() {
+    state.sosStop = true;
+  }
+
+  function addPeerMessage(text, role) {
+    const row = document.createElement('div');
+    row.className = `msg ${role || ''}`;
+    row.textContent = text;
+    el.peerChatLog.appendChild(row);
+    el.peerChatLog.scrollTop = el.peerChatLog.scrollHeight;
+  }
+
+  function addAiMessage(text, role) {
+    const row = document.createElement('div');
+    row.className = `msg ${role || ''}`;
+    row.textContent = text;
+    el.aiChatLog.appendChild(row);
+    el.aiChatLog.scrollTop = el.aiChatLog.scrollHeight;
+  }
+
+  function createPeerConnection() {
+    const pc = new RTCPeerConnection({ iceServers: [] });
+
+    pc.onconnectionstatechange = () => {
+      const s = pc.connectionState;
+      if (s === 'connected') status(el.chatStatus, 'Peer channel connected.', 'ok');
+      else if (s === 'connecting') status(el.chatStatus, 'Peer connecting...', 'warn');
+      else if (s === 'failed' || s === 'disconnected' || s === 'closed') {
+        status(el.chatStatus, `Peer state: ${s}`, 'err');
+      }
+    };
+
+    pc.ondatachannel = (event) => {
+      setupDataChannel(event.channel);
+    };
+
+    state.pc = pc;
+    return pc;
+  }
+
+  function setupDataChannel(channel) {
+    state.dataChannel = channel;
+    channel.onopen = () => status(el.chatStatus, 'Peer chat ready.', 'ok');
+    channel.onclose = () => status(el.chatStatus, 'Peer chat closed.', 'warn');
+    channel.onerror = () => status(el.chatStatus, 'Peer chat error.', 'err');
+    channel.onmessage = (event) => addPeerMessage(`Peer: ${event.data}`, '');
+  }
+
+  function waitIceComplete(pc) {
+    return new Promise(resolve => {
+      if (pc.iceGatheringState === 'complete') {
+        resolve();
+        return;
+      }
+      const handler = () => {
+        if (pc.iceGatheringState === 'complete') {
+          pc.removeEventListener('icegatheringstatechange', handler);
+          resolve();
+        }
+      };
+      pc.addEventListener('icegatheringstatechange', handler);
+    });
+  }
+
+  async function hostSession() {
+    try {
+      resetPeer(false);
+      state.isHost = true;
+      const pc = createPeerConnection();
+      setupDataChannel(pc.createDataChannel('chat'));
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      await waitIceComplete(pc);
+      el.localSignal.value = JSON.stringify(pc.localDescription);
+      generateQrFromLocalSignal();
+      status(el.chatStatus, 'Offer created. Send it to peer.', 'ok');
+    } catch (error) {
+      status(el.chatStatus, `Host error: ${error.message}`, 'err');
+    }
+  }
+
+  async function joinSession() {
+    try {
+      resetPeer(false);
+      state.isHost = false;
+      const pc = createPeerConnection();
+      const offer = JSON.parse(el.remoteSignal.value.trim());
+      await pc.setRemoteDescription(offer);
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      await waitIceComplete(pc);
+      el.localSignal.value = JSON.stringify(pc.localDescription);
+      generateQrFromLocalSignal();
+      status(el.chatStatus, 'Answer created. Send it back to host.', 'ok');
+    } catch (error) {
+      status(el.chatStatus, `Join error: ${error.message}`, 'err');
+    }
+  }
+
+  async function applyRemoteAnswer() {
+    try {
+      if (!state.pc) {
+        status(el.chatStatus, 'Create host offer first.', 'warn');
+        return;
+      }
+      const desc = JSON.parse(el.remoteSignal.value.trim());
+      await state.pc.setRemoteDescription(desc);
+      status(el.chatStatus, 'Remote description applied.', 'ok');
+    } catch (error) {
+      status(el.chatStatus, `Apply error: ${error.message}`, 'err');
+    }
+  }
+
+  function generateQrFromLocalSignal() {
+    const text = el.localSignal.value.trim();
+    if (!text) {
+      status(el.qrStatus, 'Local signal is empty. Create offer/answer first.', 'warn');
+      return;
+    }
+    const encoded = encodeURIComponent(text);
+    el.qrImage.src = `https://quickchart.io/qr?size=220&text=${encoded}`;
+    status(el.qrStatus, 'QR generated. Peer can scan this.', 'ok');
+  }
+
+  async function startQrScan() {
+    if (!('BarcodeDetector' in window)) {
+      status(el.qrStatus, 'BarcodeDetector API not available on this browser.', 'err');
+      return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      status(el.qrStatus, 'Camera API unavailable.', 'err');
+      return;
+    }
+    if (state.qrStream) return;
+
+    try {
+      state.qrDetector = new BarcodeDetector({ formats: ['qr_code'] });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false
+      });
+      state.qrStream = stream;
+      el.qrVideo.srcObject = stream;
+      await el.qrVideo.play();
+      status(el.qrStatus, 'Scanning QR...', 'ok');
+
+      const loop = async () => {
+        if (!state.qrStream) return;
+        try {
+          const found = await state.qrDetector.detect(el.qrVideo);
+          if (found && found.length) {
+            const raw = found[0].rawValue || '';
+            el.remoteSignal.value = raw;
+            status(el.qrStatus, 'QR captured into Remote Signal.', 'ok');
+            stopQrScan();
+            return;
+          }
+        } catch (_) {}
+        state.qrRafId = requestAnimationFrame(loop);
+      };
+      state.qrRafId = requestAnimationFrame(loop);
+    } catch (error) {
+      status(el.qrStatus, `QR scan failed: ${error.message}`, 'err');
+    }
+  }
+
+  function stopQrScan() {
+    if (state.qrRafId) cancelAnimationFrame(state.qrRafId);
+    state.qrRafId = 0;
+    if (state.qrStream) state.qrStream.getTracks().forEach(t => t.stop());
+    state.qrStream = null;
+    el.qrVideo.srcObject = null;
+    if (!el.qrStatus.classList.contains('ok')) {
+      status(el.qrStatus, 'QR scan stopped.', 'warn');
+    }
+  }
+
+  function resetPeer(clearText = true) {
+    if (state.dataChannel) {
+      try { state.dataChannel.close(); } catch (_) {}
+    }
+    if (state.pc) {
+      try { state.pc.close(); } catch (_) {}
+    }
+    state.dataChannel = null;
+    state.pc = null;
+    if (clearText) {
+      el.localSignal.value = '';
+      el.remoteSignal.value = '';
+      el.qrImage.removeAttribute('src');
+      el.peerChatLog.innerHTML = '';
+    }
+    stopQrScan();
+    status(el.chatStatus, 'Peer channel reset.', 'warn');
+  }
+
+  function sendPeerMessage() {
+    const msg = el.peerMessage.value.trim();
+    if (!msg) return;
+    if (!state.dataChannel || state.dataChannel.readyState !== 'open') {
+      status(el.chatStatus, 'Peer channel not open.', 'warn');
+      return;
+    }
+    state.dataChannel.send(msg);
+    addPeerMessage(`You: ${msg}`, 'me');
+    el.peerMessage.value = '';
+  }
+
+  function saveAiSettings() {
+    const payload = {
+      provider: el.aiProvider.value,
+      model: el.aiModel.value.trim(),
+      baseUrl: el.aiBaseUrl.value.trim(),
+      apiKey: el.aiApiKey.value
+    };
+    localStorage.setItem(LS_KEY, JSON.stringify(payload));
+    status(el.aiStatus, 'AI settings saved locally.', 'ok');
+  }
+
+  function loadAiSettings() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (!raw) return;
+      const cfg = JSON.parse(raw);
+      if (cfg.provider) el.aiProvider.value = cfg.provider;
+      if (cfg.model) el.aiModel.value = cfg.model;
+      if (cfg.baseUrl) el.aiBaseUrl.value = cfg.baseUrl;
+      if (cfg.apiKey) el.aiApiKey.value = cfg.apiKey;
+    } catch (_) {}
+  }
+
+  function clearAiKey() {
+    el.aiApiKey.value = '';
+    saveAiSettings();
+    status(el.aiStatus, 'API key cleared.', 'warn');
+  }
+
+  async function aiRequest(messages) {
+    const provider = el.aiProvider.value;
+    const model = el.aiModel.value.trim();
+    const baseUrl = el.aiBaseUrl.value.trim().replace(/\/$/, '');
+    const apiKey = el.aiApiKey.value.trim();
+
+    if (provider === 'off') {
+      throw new Error('AI provider is off. Enable provider first.');
+    }
+
+    if (!model) {
+      throw new Error('Model is required.');
+    }
+
+    if (provider === 'ollama') {
+      const url = `${baseUrl || 'http://localhost:11434'}/api/chat`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model, messages, stream: false })
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Ollama error ${response.status}: ${text.slice(0, 220)}`);
+      }
+      const data = await response.json();
+      const content = data && data.message && data.message.content;
+      if (!content) throw new Error('Ollama returned no message content.');
+      return content;
+    }
+
+    const url = `${baseUrl || 'https://api.openai.com/v1'}/chat/completions`;
+    const headers = { 'Content-Type': 'application/json' };
+    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ model, messages, temperature: 0.4 })
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`API error ${response.status}: ${text.slice(0, 220)}`);
+    }
+
+    const data = await response.json();
+    const content = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+    if (!content) throw new Error('Provider returned no content.');
+    return typeof content === 'string' ? content : JSON.stringify(content);
+  }
+
+  async function sendAiPrompt() {
+    const prompt = el.aiPrompt.value.trim();
+    if (!prompt) return;
+
+    addAiMessage(`You: ${prompt}`, 'me');
+    state.aiMessages.push({ role: 'user', content: prompt });
+    el.aiPrompt.value = '';
+    status(el.aiStatus, 'Sending request...', 'warn');
+
+    try {
+      const content = await aiRequest(state.aiMessages);
+      state.aiMessages.push({ role: 'assistant', content });
+      addAiMessage(`AI: ${content}`, 'ai');
+      status(el.aiStatus, 'AI response received.', 'ok');
+    } catch (error) {
+      addAiMessage(`AI error: ${error.message}`, '');
+      status(el.aiStatus, error.message, 'err');
+    }
+  }
+
+  async function testAiConnection() {
+    const probe = [
+      state.aiMessages[0],
+      { role: 'user', content: 'Reply with: OK' }
+    ];
+
+    try {
+      const content = await aiRequest(probe);
+      status(el.aiStatus, `Connected. Sample reply: ${String(content).slice(0, 80)}`, 'ok');
+    } catch (error) {
+      status(el.aiStatus, `Connection failed: ${error.message}`, 'err');
+    }
+  }
+
+  function formatCalcValue(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return 'NaN';
+    const abs = Math.abs(n);
+    if (abs !== 0 && (abs >= 1e9 || abs < 1e-6)) return n.toExponential(6);
+    const fixed = Number(n.toFixed(10));
+    return String(Object.is(fixed, -0) ? 0 : fixed);
+  }
+
+  function calcScope() {
+    const toRad = (x) => state.calcTrigMode === 'deg' ? (x * Math.PI / 180) : x;
+    const fromRad = (x) => state.calcTrigMode === 'deg' ? (x * 180 / Math.PI) : x;
+    return {
+      pi: Math.PI,
+      e: Math.E,
+      abs: Math.abs,
+      sqrt: Math.sqrt,
+      ln: Math.log,
+      log: (x) => Math.log10 ? Math.log10(x) : Math.log(x) / Math.LN10,
+      pow: Math.pow,
+      sin: (x) => Math.sin(toRad(x)),
+      cos: (x) => Math.cos(toRad(x)),
+      tan: (x) => Math.tan(toRad(x)),
+      asin: (x) => fromRad(Math.asin(x)),
+      acos: (x) => fromRad(Math.acos(x)),
+      atan: (x) => fromRad(Math.atan(x))
+    };
+  }
+
+  function saveCalcState() {
+    const payload = {
+      mode: state.calcTrigMode,
+      history: state.calcHistory.slice(0, 25),
+      presets: state.calcPresets.slice(0, 50)
+    };
+    localStorage.setItem(CALC_KEY, JSON.stringify(payload));
+  }
+
+  function loadCalcState() {
+    try {
+      const raw = localStorage.getItem(CALC_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      state.calcTrigMode = data.mode === 'rad' ? 'rad' : 'deg';
+      state.calcHistory = Array.isArray(data.history) ? data.history.slice(0, 25) : [];
+      state.calcPresets = Array.isArray(data.presets) ? data.presets.slice(0, 50) : [];
+    } catch (_) {
+      state.calcTrigMode = 'deg';
+      state.calcHistory = [];
+      state.calcPresets = [];
+    }
+  }
+
+  function renderCalcMode() {
+    el.calcModeToggleBtn.textContent = `Trig: ${state.calcTrigMode.toUpperCase()}`;
+  }
+
+  function renderCalcPresets() {
+    el.calcPresetSelect.innerHTML = '';
+    if (!state.calcPresets.length) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'No presets';
+      el.calcPresetSelect.appendChild(opt);
+      status(el.calcPresetStatus, 'No saved presets yet.', 'warn');
+      return;
+    }
+    state.calcPresets.forEach((entry, idx) => {
+      const opt = document.createElement('option');
+      opt.value = String(idx);
+      opt.textContent = `${entry.name}: ${entry.expr}`;
+      el.calcPresetSelect.appendChild(opt);
+    });
+    status(el.calcPresetStatus, `${state.calcPresets.length} preset(s) available.`, 'ok');
+  }
+
+  function renderCalcHistory() {
+    el.calcHistoryList.innerHTML = '';
+    if (!state.calcHistory.length) {
+      const row = document.createElement('div');
+      row.className = 'calc-row';
+      row.textContent = 'No history yet.';
+      el.calcHistoryList.appendChild(row);
+      return;
+    }
+    state.calcHistory.forEach((item) => {
+      const row = document.createElement('div');
+      row.className = 'calc-row';
+      row.textContent = `${item.expr} = ${item.value}`;
+      row.title = 'Click to reuse expression';
+      row.addEventListener('click', () => {
+        el.calcExpr.value = item.expr;
+        el.calcExpr.focus();
+      });
+      el.calcHistoryList.appendChild(row);
+    });
+  }
+
+  function pushCalcHistory(expr, value) {
+    state.calcHistory.unshift({ expr, value: formatCalcValue(value), at: Date.now() });
+    state.calcHistory = state.calcHistory.slice(0, 25);
+    saveCalcState();
+    renderCalcHistory();
+  }
+
+  function toggleCalcMode() {
+    state.calcTrigMode = state.calcTrigMode === 'deg' ? 'rad' : 'deg';
+    renderCalcMode();
+    saveCalcState();
+    status(el.calcResult, `Result: trig mode set to ${state.calcTrigMode.toUpperCase()}.`, 'ok');
+  }
+
+  function saveCurrentPreset() {
+    const name = el.calcPresetName.value.trim();
+    const expr = el.calcExpr.value.trim();
+    if (!name || !expr) {
+      status(el.calcPresetStatus, 'Preset name and expression are required.', 'err');
+      return;
+    }
+    const existing = state.calcPresets.findIndex((p) => p.name.toLowerCase() === name.toLowerCase());
+    if (existing >= 0) state.calcPresets[existing] = { name, expr };
+    else state.calcPresets.push({ name, expr });
+    saveCalcState();
+    renderCalcPresets();
+    status(el.calcPresetStatus, `Preset saved: ${name}`, 'ok');
+  }
+
+  function loadSelectedPreset() {
+    const idx = Number(el.calcPresetSelect.value);
+    if (!Number.isFinite(idx) || idx < 0 || idx >= state.calcPresets.length) {
+      status(el.calcPresetStatus, 'Pick a preset first.', 'warn');
+      return;
+    }
+    const preset = state.calcPresets[idx];
+    el.calcExpr.value = preset.expr;
+    el.calcPresetName.value = preset.name;
+    el.calcExpr.focus();
+    status(el.calcPresetStatus, `Preset loaded: ${preset.name}`, 'ok');
+  }
+
+  function deleteSelectedPreset() {
+    const idx = Number(el.calcPresetSelect.value);
+    if (!Number.isFinite(idx) || idx < 0 || idx >= state.calcPresets.length) {
+      status(el.calcPresetStatus, 'Pick a preset first.', 'warn');
+      return;
+    }
+    const removed = state.calcPresets.splice(idx, 1);
+    saveCalcState();
+    renderCalcPresets();
+    status(el.calcPresetStatus, `Preset deleted: ${removed[0].name}`, 'warn');
+  }
+
+  function clearCalcHistory() {
+    state.calcHistory = [];
+    saveCalcState();
+    renderCalcHistory();
+    status(el.calcPresetStatus, 'History cleared.', 'warn');
+  }
+
+  function evaluateExpression() {
+    const raw = el.calcExpr.value.trim();
+    if (!raw) {
+      status(el.calcResult, 'Result: enter an expression first.', 'warn');
+      return;
+    }
+    if (!/^[0-9+\-*/().,%\s^a-zA-Z_]+$/.test(raw)) {
+      status(el.calcResult, 'Result: invalid characters.', 'err');
+      return;
+    }
+
+    const scope = calcScope();
+    const allowedWords = new Set(Object.keys(scope));
+    const words = raw.match(/[A-Za-z_][A-Za-z0-9_]*/g) || [];
+    const bad = words.find((w) => !allowedWords.has(w));
+    if (bad) {
+      status(el.calcResult, `Result: unknown token "${bad}".`, 'err');
+      return;
+    }
+
+    try {
+      const expr = raw.replace(/\^/g, '**');
+      const names = Object.keys(scope).join(',');
+      const value = Function('scope', `"use strict"; const {${names}} = scope; return (${expr});`)(scope);
+      if (!Number.isFinite(value)) throw new Error('Not finite');
+      status(el.calcResult, `Result: ${formatCalcValue(value)}`, 'ok');
+      pushCalcHistory(raw, value);
+    } catch (_) {
+      status(el.calcResult, 'Result: invalid expression.', 'err');
+    }
+  }
+
+  function computeTrigAngle() {
+    const opp = parseCoord(el.trigOpp.value);
+    const adj = parseCoord(el.trigAdj.value);
+    if (opp === null || adj === null || adj === 0) {
+      status(el.trigAngleResult, 'Angle: enter valid opposite/adjacent (adjacent must not be 0).', 'err');
+      return;
+    }
+    const ratio = opp / adj;
+    const angleRad = Math.atan(ratio);
+    const angleDeg = angleRad * 180 / Math.PI;
+    status(
+      el.trigAngleResult,
+      `Angle: atan(${formatCalcValue(ratio)}) = ${angleDeg.toFixed(2)} deg (${angleRad.toFixed(4)} rad)`,
+      'ok'
+    );
+  }
+
+  function convertValue() {
+    const input = Number(String(el.convInput.value || '').trim());
+    if (!Number.isFinite(input)) {
+      status(el.convResult, 'Converted value: invalid input.', 'err');
+      return;
+    }
+
+    const type = el.convType.value;
+    let out = input;
+    let suffix = '';
+    if (type === 'km_mi') { out = input * 0.621371; suffix = 'mi'; }
+    if (type === 'mi_km') { out = input / 0.621371; suffix = 'km'; }
+    if (type === 'm_ft') { out = input * 3.28084; suffix = 'ft'; }
+    if (type === 'ft_m') { out = input / 3.28084; suffix = 'm'; }
+    if (type === 'kg_lb') { out = input * 2.20462; suffix = 'lb'; }
+    if (type === 'lb_kg') { out = input / 2.20462; suffix = 'kg'; }
+    if (type === 'c_f') { out = input * 9 / 5 + 32; suffix = 'F'; }
+    if (type === 'f_c') { out = (input - 32) * 5 / 9; suffix = 'C'; }
+
+    status(el.convResult, `Converted value: ${out.toFixed(4)} ${suffix}`, 'ok');
+  }
+
+  function bind() {
+    el.tabs.forEach(btn => btn.addEventListener('click', () => setTab(btn.dataset.tab)));
+
+    el.compassStart.addEventListener('click', startCompass);
+    el.compassStop.addEventListener('click', stopCompass);
+
+    el.gpsStart.addEventListener('click', startGps);
+    el.gpsStop.addEventListener('click', stopGps);
+    el.gpsReset.addEventListener('click', resetTrip);
+    el.distUseCurrentA.addEventListener('click', () => setCurrentToPoint('A'));
+    el.distUseCurrentB.addEventListener('click', () => setCurrentToPoint('B'));
+    el.distCompute.addEventListener('click', computeDistance);
+    el.sunUseCurrent.addEventListener('click', setCurrentSunLocation);
+    el.sunRefresh.addEventListener('click', updateSunHelper);
+    el.tapMapMeasureBtn.addEventListener('click', () => setTapMode('measure'));
+    el.tapMapCalibrateBtn.addEventListener('click', () => setTapMode('calibrate'));
+    el.tapMapClearBtn.addEventListener('click', clearTapMap);
+    el.tapMapCanvas.addEventListener('pointerdown', onTapMapPointer);
+
+    el.flashToggle.addEventListener('click', toggleFlashlight);
+    el.sosStart.addEventListener('click', startSos);
+    el.sosStop.addEventListener('click', stopSos);
+
+    el.hostBtn.addEventListener('click', hostSession);
+    el.joinBtn.addEventListener('click', joinSession);
+    el.applyAnswerBtn.addEventListener('click', applyRemoteAnswer);
+    el.qrGenerateBtn.addEventListener('click', generateQrFromLocalSignal);
+    el.qrScanStartBtn.addEventListener('click', startQrScan);
+    el.qrScanStopBtn.addEventListener('click', stopQrScan);
+    el.qrImage.addEventListener('error', () => {
+      status(el.qrStatus, 'QR image service unavailable (likely offline). Use text signal copy/paste.', 'warn');
+    });
+    el.qrImage.addEventListener('load', () => {
+      if (el.qrImage.getAttribute('src')) status(el.qrStatus, 'QR image ready for scan.', 'ok');
+    });
+    el.chatResetBtn.addEventListener('click', () => resetPeer(true));
+    el.peerSendBtn.addEventListener('click', sendPeerMessage);
+    el.peerMessage.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendPeerMessage();
+      }
+    });
+
+    el.aiSaveBtn.addEventListener('click', saveAiSettings);
+    el.aiTestBtn.addEventListener('click', testAiConnection);
+    el.aiClearBtn.addEventListener('click', clearAiKey);
+    el.aiSendBtn.addEventListener('click', sendAiPrompt);
+    el.aiPrompt.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendAiPrompt();
+      }
+    });
+
+    el.calcEvalBtn.addEventListener('click', evaluateExpression);
+    el.calcModeToggleBtn.addEventListener('click', toggleCalcMode);
+    el.calcBackBtn.addEventListener('click', () => {
+      el.calcExpr.value = el.calcExpr.value.slice(0, -1);
+    });
+    el.calcClearBtn.addEventListener('click', () => {
+      el.calcExpr.value = '';
+      status(el.calcResult, 'Result: --', 'warn');
+    });
+    el.calcSavePresetBtn.addEventListener('click', saveCurrentPreset);
+    el.calcLoadPresetBtn.addEventListener('click', loadSelectedPreset);
+    el.calcDeletePresetBtn.addEventListener('click', deleteSelectedPreset);
+    el.calcClearHistoryBtn.addEventListener('click', clearCalcHistory);
+    el.calcEqPad.addEventListener('click', evaluateExpression);
+    el.calcPad.addEventListener('click', (event) => {
+      const btn = event.target.closest('button[data-k]');
+      if (!btn) return;
+      el.calcExpr.value += btn.dataset.k;
+      el.calcExpr.focus();
+    });
+    el.calcExpr.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        evaluateExpression();
+      }
+    });
+
+    el.convRunBtn.addEventListener('click', convertValue);
+    el.trigAngleBtn.addEventListener('click', computeTrigAngle);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && state.sosRunning) stopSos();
+      if (document.hidden) stopQrScan();
+    });
+
+    window.addEventListener('resize', drawTapMap);
+    window.addEventListener('beforeunload', () => {
+      stopCompass();
+      stopGps();
+      stopSos();
+      stopQrScan();
+      releaseTorch();
+      resetPeer(false);
+    });
+  }
+
+  function init() {
+    loadAiSettings();
+    loadCalcState();
+    bind();
+    renderCalcMode();
+    renderCalcPresets();
+    renderCalcHistory();
+    setTapMode('measure');
+    drawTapMap();
+    setHeading(0, '--');
+    status(el.compassStatus, 'Compass idle.', 'warn');
+    status(el.gpsStatus, 'Tracking stopped.', 'warn');
+    status(el.signalStatus, 'Signal tools idle.', 'warn');
+    status(el.distStatus, 'Distance/Sun helper idle.', 'warn');
+    status(el.qrStatus, 'QR helper idle.', 'warn');
+    status(el.chatStatus, 'Peer channel disconnected.', 'warn');
+    status(el.aiStatus, 'AI provider off.', 'warn');
+    status(el.calcResult, 'Result: --', 'warn');
+    status(el.convResult, 'Converted value: --', 'warn');
+    status(el.trigAngleResult, 'Angle: --', 'warn');
+    addPeerMessage('Peer chat ready. Create offer or join with remote signal.', '');
+    addAiMessage('AI chat is optional. Configure provider to enable online assistance.', '');
+  }
+
+  init();
+})();
+</script>
+  <script src="../shared/help-content.js"></script>
+  <script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

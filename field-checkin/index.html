@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Field Check-In</title>
+<style>
+  :root {
+    --bg: #0b1320;
+    --card: #121c2d;
+    --ink: #e7eefc;
+    --muted: #9eb2d0;
+    --line: #294062;
+    --ok: #18c17f;
+    --warn: #f0ad35;
+    --err: #f05a67;
+    --accent: #56a3ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: radial-gradient(circle at 20% -10%, #1a2a45 0%, #0b1320 45%, #060c16 100%);
+    color: var(--ink);
+    padding: 18px;
+  }
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    display: grid;
+    gap: 12px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px;
+  }
+  h1 { margin: 0 0 8px; font-size: 1.35rem; }
+  h2 { margin: 0 0 10px; font-size: 1.05rem; }
+  .muted { color: var(--muted); }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 10px;
+  }
+  label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.86rem;
+    color: var(--muted);
+  }
+  input, textarea, select {
+    width: 100%;
+    border: 1px solid var(--line);
+    background: #0a1423;
+    color: var(--ink);
+    border-radius: 10px;
+    padding: 9px 10px;
+    font-size: 0.95rem;
+  }
+  textarea { min-height: 86px; resize: vertical; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .btn {
+    border: 1px solid #356299;
+    border-radius: 10px;
+    background: #1f3f69;
+    color: #fff;
+    padding: 8px 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn.ok { background: #105c40; border-color: #1a8b61; }
+  .btn.warn { background: #7b5b17; border-color: #d29c33; }
+  .dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 999px;
+    display: inline-block;
+    background: #777;
+  }
+  .dot.ok { background: var(--ok); box-shadow: 0 0 10px rgba(24, 193, 127, 0.6); }
+  .dot.err { background: var(--err); }
+  .status {
+    margin-top: 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 8px 10px;
+    background: #0a1423;
+    color: var(--muted);
+  }
+  .status.ok { border-color: #1f7f5b; color: #9df0cc; }
+  .status.err { border-color: #944653; color: #ffb1b7; }
+  .status.warn { border-color: #9d7431; color: #ffd18b; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Field Check-In</h1>
+    <div class="muted">Register device, emergency contact, and send heartbeat updates to your VPS/Cloud API.</div>
+  </div>
+
+  <div class="card">
+    <h2>API Connection</h2>
+    <div class="grid">
+      <div>
+        <label for="apiBase">API Base URL</label>
+        <input id="apiBase" type="text" placeholder="https://your-domain.example/api" />
+      </div>
+      <div>
+        <label for="apiKey">API Key (optional)</label>
+        <input id="apiKey" type="password" placeholder="token..." />
+      </div>
+      <div>
+        <label for="deviceId">Device ID</label>
+        <input id="deviceId" type="text" placeholder="phone-001" />
+      </div>
+      <div>
+        <label for="appVersion">App Version</label>
+        <input id="appVersion" type="text" placeholder="v1.0.0" />
+      </div>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button id="saveConfigBtn" class="btn" type="button">Save Config</button>
+      <button id="pulseBtn" class="btn ok" type="button">Test Pulse</button>
+      <span id="pulseDot" class="dot"></span>
+      <span id="pulseText" class="muted">Not tested yet.</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Registration</h2>
+    <div class="grid">
+      <div>
+        <label for="ownerName">Owner Name</label>
+        <input id="ownerName" type="text" />
+      </div>
+      <div>
+        <label for="ownerEmail">Owner Email</label>
+        <input id="ownerEmail" type="email" />
+      </div>
+      <div>
+        <label for="platform">Platform</label>
+        <input id="platform" type="text" placeholder="android / ios / windows / linux" />
+      </div>
+      <div>
+        <label for="emergencyName">Emergency Contact Name</label>
+        <input id="emergencyName" type="text" />
+      </div>
+      <div>
+        <label for="emergencyPhone">Emergency Contact Phone</label>
+        <input id="emergencyPhone" type="text" />
+      </div>
+      <div>
+        <label for="emergencyEmail">Emergency Contact Email</label>
+        <input id="emergencyEmail" type="email" />
+      </div>
+    </div>
+    <div style="margin-top:10px;">
+      <label for="regNotes">Notes</label>
+      <textarea id="regNotes" placeholder="Mt Rainier plan, expected return window, route notes..."></textarea>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <label style="display:flex;align-items:center;gap:6px;">
+        <input id="consentEmergency" type="checkbox" />
+        <span>I consent to emergency-contact workflow.</span>
+      </label>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button id="registerBtn" class="btn ok" type="button">Send Registration</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Heartbeat</h2>
+    <div class="grid">
+      <div>
+        <label for="hbStatus">Status</label>
+        <select id="hbStatus">
+          <option value="ok">ok</option>
+          <option value="active-field">active-field</option>
+          <option value="delayed">delayed</option>
+          <option value="need-assistance">need-assistance</option>
+        </select>
+      </div>
+      <div>
+        <label for="hbBattery">Battery %</label>
+        <input id="hbBattery" type="number" min="0" max="100" step="1" />
+      </div>
+      <div>
+        <label for="hbLat">Latitude</label>
+        <input id="hbLat" type="number" step="any" />
+      </div>
+      <div>
+        <label for="hbLng">Longitude</label>
+        <input id="hbLng" type="number" step="any" />
+      </div>
+      <div>
+        <label for="hbOfflineHours">Offline Hours</label>
+        <input id="hbOfflineHours" type="number" min="0" step="0.25" />
+      </div>
+      <div>
+        <label for="hbPlan">Last Field Plan</label>
+        <input id="hbPlan" type="text" placeholder="Trail A > Ridge B > Camp C" />
+      </div>
+    </div>
+    <div style="margin-top:10px;">
+      <label for="hbNote">Heartbeat Note</label>
+      <textarea id="hbNote" placeholder="All good. Weather clear. Heading to waypoint 2."></textarea>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button id="geoBtn" class="btn" type="button">Use Current GPS</button>
+      <button id="heartbeatBtn" class="btn ok" type="button">Send Heartbeat</button>
+      <button id="toggleAutoBtn" class="btn warn" type="button">Start Auto Heartbeat</button>
+      <span id="autoLabel" class="muted">Auto: off</span>
+    </div>
+  </div>
+
+  <div id="status" class="status warn">Ready.</div>
+</div>
+
+<script>
+(() => {
+  const CFG_KEY = 'fieldCheckin.config.v1';
+  const state = {
+    autoTimer: 0
+  };
+  const el = {
+    apiBase: document.getElementById('apiBase'),
+    apiKey: document.getElementById('apiKey'),
+    deviceId: document.getElementById('deviceId'),
+    appVersion: document.getElementById('appVersion'),
+    saveConfigBtn: document.getElementById('saveConfigBtn'),
+    pulseBtn: document.getElementById('pulseBtn'),
+    pulseDot: document.getElementById('pulseDot'),
+    pulseText: document.getElementById('pulseText'),
+    ownerName: document.getElementById('ownerName'),
+    ownerEmail: document.getElementById('ownerEmail'),
+    platform: document.getElementById('platform'),
+    emergencyName: document.getElementById('emergencyName'),
+    emergencyPhone: document.getElementById('emergencyPhone'),
+    emergencyEmail: document.getElementById('emergencyEmail'),
+    regNotes: document.getElementById('regNotes'),
+    consentEmergency: document.getElementById('consentEmergency'),
+    registerBtn: document.getElementById('registerBtn'),
+    hbStatus: document.getElementById('hbStatus'),
+    hbBattery: document.getElementById('hbBattery'),
+    hbLat: document.getElementById('hbLat'),
+    hbLng: document.getElementById('hbLng'),
+    hbOfflineHours: document.getElementById('hbOfflineHours'),
+    hbPlan: document.getElementById('hbPlan'),
+    hbNote: document.getElementById('hbNote'),
+    geoBtn: document.getElementById('geoBtn'),
+    heartbeatBtn: document.getElementById('heartbeatBtn'),
+    toggleAutoBtn: document.getElementById('toggleAutoBtn'),
+    autoLabel: document.getElementById('autoLabel'),
+    status: document.getElementById('status')
+  };
+
+  function setStatus(msg, kind) {
+    el.status.textContent = msg;
+    el.status.className = 'status';
+    if (kind) el.status.classList.add(kind);
+  }
+
+  function normalizeApiBase(raw) {
+    const v = String(raw || '').trim();
+    if (v) return v.replace(/\/+$/, '');
+    if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+      return `${window.location.origin}/api`;
+    }
+    return '';
+  }
+
+  function getOrCreateDeviceId() {
+    const key = 'prosepilot.deviceId';
+    const existing = localStorage.getItem(key);
+    if (existing) return existing;
+    const generated = `device-${Math.random().toString(36).slice(2, 10)}`;
+    localStorage.setItem(key, generated);
+    return generated;
+  }
+
+  function authHeaders() {
+    const headers = { 'Content-Type': 'application/json' };
+    const key = String(el.apiKey.value || '').trim();
+    if (key) headers.Authorization = `Bearer ${key}`;
+    return headers;
+  }
+
+  function configPayload() {
+    return {
+      apiBase: normalizeApiBase(el.apiBase.value),
+      apiKey: String(el.apiKey.value || '').trim(),
+      deviceId: String(el.deviceId.value || '').trim() || getOrCreateDeviceId(),
+      appVersion: String(el.appVersion.value || '').trim(),
+      ownerName: String(el.ownerName.value || '').trim(),
+      ownerEmail: String(el.ownerEmail.value || '').trim(),
+      platform: String(el.platform.value || '').trim(),
+      emergencyName: String(el.emergencyName.value || '').trim(),
+      emergencyPhone: String(el.emergencyPhone.value || '').trim(),
+      emergencyEmail: String(el.emergencyEmail.value || '').trim(),
+      regNotes: String(el.regNotes.value || '').trim(),
+      consentEmergency: !!el.consentEmergency.checked
+    };
+  }
+
+  function saveConfig() {
+    const cfg = configPayload();
+    localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+    el.apiBase.value = cfg.apiBase;
+    el.deviceId.value = cfg.deviceId;
+    setStatus('Config saved.', 'ok');
+  }
+
+  function loadConfig() {
+    const defaults = {
+      apiBase: normalizeApiBase(''),
+      deviceId: getOrCreateDeviceId(),
+      platform: /android|iphone|ipad/i.test(navigator.userAgent) ? 'mobile-web' : 'desktop-web'
+    };
+    let cfg = defaults;
+    try {
+      const raw = localStorage.getItem(CFG_KEY);
+      if (raw) cfg = { ...defaults, ...JSON.parse(raw) };
+    } catch (_) {}
+
+    el.apiBase.value = cfg.apiBase || defaults.apiBase;
+    el.apiKey.value = cfg.apiKey || '';
+    el.deviceId.value = cfg.deviceId || defaults.deviceId;
+    el.appVersion.value = cfg.appVersion || '';
+    el.ownerName.value = cfg.ownerName || '';
+    el.ownerEmail.value = cfg.ownerEmail || '';
+    el.platform.value = cfg.platform || defaults.platform;
+    el.emergencyName.value = cfg.emergencyName || '';
+    el.emergencyPhone.value = cfg.emergencyPhone || '';
+    el.emergencyEmail.value = cfg.emergencyEmail || '';
+    el.regNotes.value = cfg.regNotes || '';
+    el.consentEmergency.checked = !!cfg.consentEmergency;
+  }
+
+  async function testPulse() {
+    const apiBase = normalizeApiBase(el.apiBase.value);
+    if (!apiBase) {
+      setStatus('Set API Base URL first.', 'warn');
+      return;
+    }
+    try {
+      const res = await fetch(`${apiBase}/pulse`, { method: 'GET', cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const body = await res.json();
+      el.pulseDot.className = 'dot ok';
+      el.pulseText.textContent = `Online at ${body.serverTime || 'server'}`;
+      setStatus('Pulse is online.', 'ok');
+    } catch (error) {
+      el.pulseDot.className = 'dot err';
+      el.pulseText.textContent = `Offline/unreachable (${error.message})`;
+      setStatus('Pulse failed. Check endpoint/CORS/network.', 'err');
+    }
+  }
+
+  async function sendRegistration() {
+    const cfg = configPayload();
+    if (!cfg.apiBase) {
+      setStatus('Set API Base URL first.', 'warn');
+      return;
+    }
+    if (!cfg.deviceId) {
+      setStatus('Device ID is required.', 'warn');
+      return;
+    }
+    const payload = {
+      deviceId: cfg.deviceId,
+      appVersion: cfg.appVersion,
+      platform: cfg.platform,
+      ownerName: cfg.ownerName,
+      ownerEmail: cfg.ownerEmail,
+      emergencyName: cfg.emergencyName,
+      emergencyPhone: cfg.emergencyPhone,
+      emergencyEmail: cfg.emergencyEmail,
+      consentEmergency: cfg.consentEmergency,
+      notes: cfg.regNotes
+    };
+    try {
+      const res = await fetch(`${cfg.apiBase}/register`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(payload)
+      });
+      const txt = await res.text();
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${txt.slice(0, 120)}`);
+      saveConfig();
+      setStatus('Registration sent.', 'ok');
+    } catch (error) {
+      setStatus(`Registration failed: ${error.message}`, 'err');
+    }
+  }
+
+  async function getCurrentGps() {
+    if (!navigator.geolocation) {
+      setStatus('Geolocation not available in this browser.', 'warn');
+      return;
+    }
+    setStatus('Reading GPS...', 'warn');
+    navigator.geolocation.getCurrentPosition((pos) => {
+      el.hbLat.value = pos.coords.latitude.toFixed(6);
+      el.hbLng.value = pos.coords.longitude.toFixed(6);
+      setStatus('GPS captured.', 'ok');
+    }, (err) => {
+      setStatus(`GPS error: ${err.message}`, 'err');
+    }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 });
+  }
+
+  function heartbeatPayload() {
+    const cfg = configPayload();
+    return {
+      apiBase: cfg.apiBase,
+      body: {
+        deviceId: cfg.deviceId,
+        status: String(el.hbStatus.value || '').trim(),
+        note: String(el.hbNote.value || '').trim(),
+        batteryPct: el.hbBattery.value === '' ? null : Number(el.hbBattery.value),
+        lat: el.hbLat.value === '' ? null : Number(el.hbLat.value),
+        lng: el.hbLng.value === '' ? null : Number(el.hbLng.value),
+        offlineHours: el.hbOfflineHours.value === '' ? null : Number(el.hbOfflineHours.value),
+        lastFieldPlan: String(el.hbPlan.value || '').trim()
+      }
+    };
+  }
+
+  async function sendHeartbeat() {
+    const hb = heartbeatPayload();
+    if (!hb.apiBase) {
+      setStatus('Set API Base URL first.', 'warn');
+      return;
+    }
+    try {
+      const res = await fetch(`${hb.apiBase}/heartbeat`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(hb.body)
+      });
+      const txt = await res.text();
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${txt.slice(0, 120)}`);
+      saveConfig();
+      setStatus(`Heartbeat sent at ${new Date().toLocaleTimeString()}.`, 'ok');
+    } catch (error) {
+      setStatus(`Heartbeat failed: ${error.message}`, 'err');
+    }
+  }
+
+  function toggleAutoHeartbeat() {
+    if (state.autoTimer) {
+      clearInterval(state.autoTimer);
+      state.autoTimer = 0;
+      el.autoLabel.textContent = 'Auto: off';
+      el.toggleAutoBtn.textContent = 'Start Auto Heartbeat';
+      setStatus('Auto heartbeat stopped.', 'warn');
+      return;
+    }
+    sendHeartbeat();
+    state.autoTimer = setInterval(sendHeartbeat, 5 * 60 * 1000);
+    el.autoLabel.textContent = 'Auto: every 5 min';
+    el.toggleAutoBtn.textContent = 'Stop Auto Heartbeat';
+    setStatus('Auto heartbeat started.', 'ok');
+  }
+
+  function bind() {
+    el.saveConfigBtn.addEventListener('click', saveConfig);
+    el.pulseBtn.addEventListener('click', testPulse);
+    el.registerBtn.addEventListener('click', sendRegistration);
+    el.geoBtn.addEventListener('click', getCurrentGps);
+    el.heartbeatBtn.addEventListener('click', sendHeartbeat);
+    el.toggleAutoBtn.addEventListener('click', toggleAutoHeartbeat);
+    window.addEventListener('beforeunload', () => {
+      if (state.autoTimer) clearInterval(state.autoTimer);
+    });
+  }
+
+  function init() {
+    loadConfig();
+    bind();
+    setStatus('Ready.', 'warn');
+  }
+
+  init();
+})();
+</script>
+<script src="../shared/help-content.js"></script>
+<script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

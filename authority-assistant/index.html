@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Authority Assistant</title>
+<style>
+  :root{
+    --bg:#070b12;--bg2:#0f1623;--bg3:#141f33;
+    --line:#2d405c;--text:#e8f2ff;--muted:#9eb4cb;
+    --ok:#2ec27e;--warn:#f6b73c;--bad:#ff5c7a;--accent:#59c7ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    min-height:100vh;color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:radial-gradient(900px 420px at 8% -20%, rgba(80,140,220,.2), transparent 62%),linear-gradient(160deg,var(--bg),#090f1a);
+  }
+  .suite-nav{
+    display:flex;align-items:center;justify-content:space-between;padding:8px 16px;
+    background:var(--bg2);border-bottom:1px solid var(--line);font-size:12px
+  }
+  .suite-nav a{color:var(--muted);text-decoration:none}
+  .suite-nav a:hover{color:var(--accent)}
+  .suite-name{color:#7f92a6}
+  .wrap{width:min(1280px,100%);margin:0 auto;padding:16px;display:grid;gap:12px}
+  .hero,.panel{
+    background:linear-gradient(165deg,rgba(17,27,43,.95),rgba(12,20,33,.95));
+    border:1px solid var(--line);border-radius:14px;padding:14px;
+  }
+  .hero h1{font-size:clamp(1.25rem,2.5vw,1.65rem)}
+  .hero p{margin-top:8px;color:var(--muted);line-height:1.45}
+  .legal{
+    margin-top:10px;border:1px solid #5b3f30;background:#2b1f18;color:#ffd9c5;
+    border-radius:10px;padding:10px;font-size:12px;line-height:1.45;
+  }
+  .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:12px}
+  .col{display:grid;gap:12px}
+  .panel h2{font-size:1.02rem;margin-bottom:10px}
+  .field{display:grid;gap:6px;margin-bottom:8px}
+  .field label{font-size:12px;color:#b8cde3;font-weight:600}
+  .input,.select,.textarea{
+    width:100%;border:1px solid #3a5270;background:#0f2238;color:var(--text);
+    border-radius:10px;padding:10px 11px;font-size:14px;
+  }
+  .textarea{min-height:80px;resize:vertical}
+  .muted{color:var(--muted);font-size:12px}
+  .checks{display:grid;gap:8px}
+  .check{
+    display:flex;align-items:flex-start;gap:8px;background:#102238;border:1px solid #2f4968;border-radius:10px;padding:8px;
+  }
+  .check input{margin-top:2px}
+  .check span{font-size:13px;line-height:1.35}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .chip{
+    border:1px solid #3d5878;background:#132a44;color:#d8eaff;border-radius:999px;
+    padding:7px 10px;font-size:12px;cursor:pointer;
+  }
+  .chip:hover{background:#1a3657}
+  .file-chip{
+    display:inline-flex;align-items:center;justify-content:center;
+    border:1px solid #3d5878;background:#132a44;color:#d8eaff;border-radius:999px;
+    padding:7px 12px;font-size:12px;cursor:pointer;min-height:34px;
+  }
+  .file-chip:hover{background:#1a3657}
+  .clip-summary{
+    margin-top:8px;border:1px solid #2f4968;background:#102238;border-radius:10px;padding:8px;
+    font-size:12px;color:#c1d5ea;line-height:1.4;
+  }
+  .big-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .btn{
+    border:1px solid #395977;background:#173553;color:#eaf4ff;border-radius:12px;
+    padding:12px;min-height:58px;font-weight:760;cursor:pointer;
+  }
+  a.btn{
+    display:inline-flex;align-items:center;justify-content:center;text-decoration:none;
+  }
+  .btn:hover{background:#1f4469}
+  .btn.primary{
+    background:linear-gradient(180deg,#38b2ff,#1f6fb5);border-color:#3ea8f6;color:#03111f;
+    min-height:82px;font-size:22px;letter-spacing:.2px;
+  }
+  .btn.ok{background:linear-gradient(180deg,#3ad18e,#228353);border-color:#3acf8e;color:#03190d}
+  .btn.warn{background:linear-gradient(180deg,#f6c04d,#b18224);border-color:#f5bc44;color:#1f1301}
+  .btn.bad{background:linear-gradient(180deg,#ff8aa2,#b64965);border-color:#ff8aa2;color:#22040d}
+  .preview{
+    margin-top:8px;border:1px solid #365171;background:#0d1d30;border-radius:10px;padding:10px;
+    white-space:pre-wrap;font-size:13px;line-height:1.45;max-height:220px;overflow:auto;
+  }
+  .status{
+    margin-top:8px;border:1px solid #334c6b;background:#11243a;border-radius:10px;padding:9px 10px;
+    font:600 12px/1.35 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  .history{display:grid;gap:8px;max-height:360px;overflow:auto}
+  .log{
+    border:1px solid #2d4865;background:#0f2238;border-radius:10px;padding:8px;
+    font-size:12px;line-height:1.4;
+  }
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  .library-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .library-list{display:grid;gap:8px;max-height:320px;overflow:auto}
+  .library-item{
+    border:1px solid #2d4865;background:#0f2238;border-radius:10px;padding:9px;
+    display:grid;gap:6px;
+  }
+  .library-item h3{font-size:13px}
+  .library-meta{font-size:11px;color:var(--muted)}
+  .library-actions{display:flex;gap:6px;flex-wrap:wrap}
+  .stress-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+  .search-results{display:grid;gap:8px;max-height:320px;overflow:auto}
+  .search-hit{
+    border:1px solid #2d4865;background:#0f2238;border-radius:10px;padding:9px;
+    display:grid;gap:5px;
+  }
+  .search-snippet{font-size:12px;color:#c0d3e7;line-height:1.35}
+  .pin-on{border-color:#d0a43d;background:#3d2d10;color:#ffe7b3}
+  .gate-overlay{
+    position:fixed;inset:0;z-index:80;background:rgba(4,7,12,.9);
+    display:grid;place-items:center;padding:14px;
+  }
+  .gate-overlay[hidden]{display:none !important}
+  .gate-card{
+    width:min(980px,100%);
+    border:1px solid var(--line);border-radius:14px;
+    background:linear-gradient(165deg,rgba(17,27,43,.98),rgba(12,20,33,.98));
+    padding:14px;
+    display:grid;gap:12px;
+  }
+  .gate-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .gate-panel{
+    border:1px solid #38516f;background:#102238;border-radius:12px;padding:12px;
+    display:grid;gap:8px;
+  }
+  .gate-panel h3{font-size:1.02rem}
+  .gate-actions{display:flex;gap:10px;flex-wrap:wrap}
+  body.gate-open main{filter:blur(1.5px);pointer-events:none;user-select:none}
+  @media(max-width:980px){
+    .grid{grid-template-columns:1fr}
+    .library-grid{grid-template-columns:1fr}
+    .stress-grid{grid-template-columns:1fr}
+    .big-row{grid-template-columns:1fr}
+    .btn.primary{min-height:94px;font-size:26px}
+    .gate-grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<nav class="suite-nav">
+  <a href="../index.html">&larr; Back to Suite</a>
+  <span class="suite-name">ProSe Pilot</span>
+</nav>
+
+<section id="consentGate" class="gate-overlay" aria-live="polite" role="dialog" aria-modal="true">
+  <article class="gate-card">
+    <h2>Before You Enter Legal Assistant</h2>
+    <p class="muted">This app provides communication support and reference information only. It is not legal advice and does not replace an attorney.</p>
+    <div class="gate-grid">
+      <section class="gate-panel">
+        <h3>Real Emergency</h3>
+        <p class="muted">If there is immediate danger, injury, fire, or active violent threat, call emergency services now.</p>
+        <div class="gate-actions">
+          <a class="btn bad" href="tel:911">Call 9-1-1 Now</a>
+        </div>
+      </section>
+      <section class="gate-panel">
+        <h3>Pulled Over / Questioning</h3>
+        <p class="muted">Use this tool to stay calm, communicate clearly, and document the event. Continue only if you understand this is informational support.</p>
+        <div class="gate-actions">
+          <button id="gateAgreeBtn" class="btn ok" type="button">I Agree, Continue</button>
+          <a class="btn" href="../index.html">Go Back to Main Menu</a>
+        </div>
+      </section>
+    </div>
+  </article>
+</section>
+
+<main id="mainApp" class="wrap">
+  <section class="hero">
+    <h1>Authority Assistant</h1>
+    <p>Stress-mode communication helper for encounters with officials. Generates calm statements, speaks them aloud, and can send incident alerts to your contacts and optional dispatch endpoint.</p>
+    <div class="legal">
+      Legal safety note: this is not legal advice and does not replace an attorney. Laws vary by jurisdiction. Use this as a communication aid and consult qualified counsel for legal decisions.
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="col">
+      <article class="panel">
+        <h2>Profile and Encounter</h2>
+        <div class="field">
+          <label for="encounterType">Encounter type</label>
+          <select id="encounterType" class="select">
+            <option value="traffic-stop">Traffic stop / police</option>
+            <option value="ice">ICE / immigration enforcement</option>
+            <option value="customs">Customs / border patrol</option>
+            <option value="campus">Campus police / security</option>
+            <option value="other">Other authority encounter</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="fullName">Full name</label>
+          <input id="fullName" class="input" placeholder="John Doe">
+        </div>
+        <div class="field">
+          <label for="dob">Date of birth (optional)</label>
+          <input id="dob" class="input" placeholder="YYYY-MM-DD">
+        </div>
+        <div class="field">
+          <label for="language">Preferred language</label>
+          <input id="language" class="input" placeholder="English">
+        </div>
+        <div class="field">
+          <label for="medicalNote">Medical safety note (optional)</label>
+          <input id="medicalNote" class="input" placeholder="Diabetic, hearing impaired, etc.">
+        </div>
+      </article>
+
+      <article class="panel">
+        <h2>Rights Script Builder</h2>
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="optCalm" checked><span>I will remain calm and comply with lawful instructions.</span></label>
+          <label class="check"><input type="checkbox" id="optSilent" checked><span>I am choosing to remain silent.</span></label>
+          <label class="check"><input type="checkbox" id="optLawyer" checked><span>I want to speak with an attorney before answering questions.</span></label>
+          <label class="check"><input type="checkbox" id="optNoSearch" checked><span>I do not consent to searches.</span></label>
+          <label class="check"><input type="checkbox" id="optIdOnly" checked><span>I can provide legally required identification/documents.</span></label>
+        </div>
+        <div class="field" style="margin-top:10px">
+          <label for="customLine">Custom line (optional)</label>
+          <textarea id="customLine" class="textarea" placeholder="I would like a translator present."></textarea>
+        </div>
+        <div class="chips">
+          <button class="chip" data-chip="I would like a translator.">Need translator</button>
+          <button class="chip" data-chip="Please speak slowly and clearly.">Slow/clear speech</button>
+          <button class="chip" data-chip="I have a medical condition and need care.">Medical request</button>
+          <button class="chip" data-chip="I am recording details for my attorney.">Record note</button>
+        </div>
+      </article>
+    </div>
+
+    <div class="col">
+      <article class="panel">
+        <h2>Speak Mode</h2>
+        <p class="muted">Large controls for high-stress use.</p>
+        <div class="field" style="margin-top:10px">
+          <label for="voiceMode">Voice output mode</label>
+          <select id="voiceMode" class="select">
+            <option value="browser">Browser voice (built-in)</option>
+            <option value="clips">Pre-recorded clips (natural voice)</option>
+          </select>
+        </div>
+        <div id="clipPackSection" class="field">
+          <label>Clip pack (optional, local files)</label>
+          <div class="row">
+            <label class="file-chip">Intro clip<input id="clipIntro" type="file" accept="audio/*" hidden></label>
+            <label class="file-chip">Rights clip<input id="clipRights" type="file" accept="audio/*" hidden></label>
+            <label class="file-chip">Full clip<input id="clipFull" type="file" accept="audio/*" hidden></label>
+          </div>
+          <div id="clipSummary" class="clip-summary">No clips loaded. If a clip is missing, app falls back to browser voice.</div>
+        </div>
+        <div class="big-row" style="margin-top:10px">
+          <button id="speakFullBtn" class="btn primary" type="button">SPEAK</button>
+          <button id="stopSpeakBtn" class="btn bad" type="button">Stop Voice</button>
+          <button id="speakIntroBtn" class="btn" type="button">Speak Intro</button>
+          <button id="speakRightsBtn" class="btn" type="button">Speak Rights</button>
+        </div>
+        <div class="preview" id="scriptPreview"></div>
+      </article>
+
+      <article class="panel">
+        <h2>Alert and Dispatch</h2>
+        <div class="field">
+          <label for="contacts">Contacts (one per line)</label>
+          <textarea id="contacts" class="textarea" placeholder="Alice - +1 555 0100&#10;Bob - bob@example.com"></textarea>
+        </div>
+        <div class="field">
+          <label for="webhookUrl">Dispatch webhook URL (optional)</label>
+          <input id="webhookUrl" class="input" placeholder="https://your-domain/alerts">
+        </div>
+        <div class="field">
+          <label for="apiKey">API key (optional)</label>
+          <input id="apiKey" class="input" placeholder="token">
+        </div>
+        <label class="check"><input type="checkbox" id="sendSupportApi"><span>Also post to local `/api/support/ticket` when available.</span></label>
+        <div class="row" style="margin-top:10px">
+          <button id="geoBtn" class="btn warn" type="button">Get Location</button>
+          <button id="copyAlertBtn" class="btn" type="button">Copy Alert Text</button>
+          <button id="sendAlertBtn" class="btn ok" type="button">Send Alert</button>
+        </div>
+        <div class="status" id="status">Ready.</div>
+      </article>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Legal Library</h2>
+    <p class="muted">Library tools moved to a standalone app for cleaner workflow.</p>
+    <div class="row" style="margin-top:10px">
+      <a class="btn" href="../legal-library/index.html">Open Legal Library</a>
+      <span class="muted">Includes import/search, pinned stress docs, and recent references.</span>
+    </div>
+  </section>
+
+  <section style="display:none" aria-hidden="true">
+    <input id="libraryFiles" class="input" type="file" multiple accept=".pdf,.epub,.md,.txt,application/pdf,application/epub+zip,text/plain,text/markdown">
+    <button id="importLibraryBtn" class="btn" type="button">Import to Library</button>
+    <button id="clearLibraryBtn" class="btn bad" type="button">Clear Imported Docs</button>
+    <div id="libraryStatus" class="status">Library ready.</div>
+    <input id="librarySearch" class="input" type="text" placeholder="Search built-in refs and imported docs..." />
+    <button id="clearLibrarySearchBtn" class="btn" type="button">Clear Search</button>
+    <div id="pinnedList" class="library-list"></div>
+    <div id="recentList" class="library-list"></div>
+    <div id="searchResults" class="search-results"></div>
+    <div id="builtInRefs" class="library-list"></div>
+    <div id="userDocs" class="library-list"></div>
+    <div id="libraryPreview" class="preview">Select a text document to preview it here.</div>
+  </section>
+
+  <section class="panel">
+    <h2>Recent Incident Logs</h2>
+    <div id="history" class="history"></div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const STORAGE_KEY = "authority.assistant.v1";
+  const LIBRARY_DB = "authority.assistant.library.v1";
+  const LIBRARY_STORE = "docs";
+  const MAX_HISTORY = 40;
+  const MAX_RECENT = 12;
+  const MAX_TEXT_STORE = 200000;
+  const nowISO = () => new Date().toISOString();
+  const esc = (s) => String(s).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+  const BUILTIN_REFS = [
+    {
+      title: "U.S. Constitution - Fifth Amendment",
+      summary: "Primary source for protection against self-incrimination and due process.",
+      url: "https://constitution.congress.gov/constitution/amendment-5/"
+    },
+    {
+      title: "Berghuis v. Thompkins (2010)",
+      summary: "Supreme Court case on explicit invocation of right to remain silent.",
+      url: "https://supreme.justia.com/cases/federal/us/560/370/"
+    },
+    {
+      title: "Salinas v. Texas (2013)",
+      summary: "Supreme Court case relevant to pre-arrest silence and invocation context.",
+      url: "https://supreme.justia.com/cases/federal/us/570/178/"
+    },
+    {
+      title: "ACLU Know Your Rights - Law Enforcement Encounters",
+      summary: "Practical rights guidance for interactions with law enforcement and military.",
+      url: "https://www.aclu.org/news/national-security/know-your-rights-in-encounters-with-law-enforcement-and-military-troops"
+    },
+    {
+      title: "ACLU NorCal - Immigration Enforcement & Warrants",
+      summary: "Guide on immigration encounters and warrant distinctions.",
+      url: "https://www.aclunorcal.org/know-your-rights/know-your-rights-immigration-enforcement-and-warrants/"
+    },
+    {
+      title: "ABA Model Rule 5.5 (Unauthorized Practice of Law)",
+      summary: "Boundary reference for legal-information tools vs legal representation.",
+      url: "https://www.americanbar.org/groups/professional_responsibility/publications/model_rules_of_professional_conduct/rule_5_5_unauthorized_practice_of_law_multijurisdictional_practice_of_law/"
+    }
+  ];
+
+  const el = {
+    consentGate: document.getElementById("consentGate"),
+    gateAgreeBtn: document.getElementById("gateAgreeBtn"),
+    mainApp: document.getElementById("mainApp"),
+    encounterType: document.getElementById("encounterType"),
+    fullName: document.getElementById("fullName"),
+    dob: document.getElementById("dob"),
+    language: document.getElementById("language"),
+    medicalNote: document.getElementById("medicalNote"),
+    optCalm: document.getElementById("optCalm"),
+    optSilent: document.getElementById("optSilent"),
+    optLawyer: document.getElementById("optLawyer"),
+    optNoSearch: document.getElementById("optNoSearch"),
+    optIdOnly: document.getElementById("optIdOnly"),
+    customLine: document.getElementById("customLine"),
+    contacts: document.getElementById("contacts"),
+    webhookUrl: document.getElementById("webhookUrl"),
+    apiKey: document.getElementById("apiKey"),
+    sendSupportApi: document.getElementById("sendSupportApi"),
+    voiceMode: document.getElementById("voiceMode"),
+    clipIntro: document.getElementById("clipIntro"),
+    clipRights: document.getElementById("clipRights"),
+    clipFull: document.getElementById("clipFull"),
+    clipSummary: document.getElementById("clipSummary"),
+    clipPackSection: document.getElementById("clipPackSection"),
+    scriptPreview: document.getElementById("scriptPreview"),
+    speakFullBtn: document.getElementById("speakFullBtn"),
+    stopSpeakBtn: document.getElementById("stopSpeakBtn"),
+    speakIntroBtn: document.getElementById("speakIntroBtn"),
+    speakRightsBtn: document.getElementById("speakRightsBtn"),
+    geoBtn: document.getElementById("geoBtn"),
+    copyAlertBtn: document.getElementById("copyAlertBtn"),
+    sendAlertBtn: document.getElementById("sendAlertBtn"),
+    status: document.getElementById("status"),
+    history: document.getElementById("history"),
+    libraryFiles: document.getElementById("libraryFiles"),
+    importLibraryBtn: document.getElementById("importLibraryBtn"),
+    clearLibraryBtn: document.getElementById("clearLibraryBtn"),
+    librarySearch: document.getElementById("librarySearch"),
+    clearLibrarySearchBtn: document.getElementById("clearLibrarySearchBtn"),
+    libraryStatus: document.getElementById("libraryStatus"),
+    pinnedList: document.getElementById("pinnedList"),
+    recentList: document.getElementById("recentList"),
+    searchResults: document.getElementById("searchResults"),
+    builtInRefs: document.getElementById("builtInRefs"),
+    userDocs: document.getElementById("userDocs"),
+    libraryPreview: document.getElementById("libraryPreview")
+  };
+
+  let state = {
+    lastGeo: null,
+    history: [],
+    docs: [],
+    pinned: [],
+    recent: []
+  };
+  let dbPromise = null;
+  const clipFiles = { intro: null, rights: null, full: null };
+  const clipUrls = { intro: "", rights: "", full: "" };
+  const clipAudio = new Audio();
+
+  function setStatus(message) {
+    el.status.textContent = message;
+  }
+
+  function openConsentGate() {
+    document.body.classList.add("gate-open");
+    el.consentGate.hidden = false;
+    el.consentGate.style.display = "grid";
+    el.mainApp.setAttribute("aria-hidden", "true");
+  }
+
+  function closeConsentGate() {
+    document.body.classList.remove("gate-open");
+    el.consentGate.hidden = true;
+    el.consentGate.style.display = "none";
+    el.mainApp.removeAttribute("aria-hidden");
+    setStatus("Ready.");
+  }
+
+  function setLibraryStatus(message) {
+    el.libraryStatus.textContent = message;
+  }
+
+  function isSecureGeoContext() {
+    const host = String(location.hostname || "").toLowerCase();
+    return Boolean(
+      window.isSecureContext ||
+      host === "localhost" ||
+      host === "127.0.0.1" ||
+      host === "::1"
+    );
+  }
+
+  function secureGeoHint() {
+    return "Location requires HTTPS (or localhost). LAN http://192.168.x.x is blocked on many phone browsers.";
+  }
+
+  function formatGeoStatusError(err) {
+    const code = err && typeof err.code === "number" ? err.code : 0;
+    const map = {
+      1: "permission denied",
+      2: "position unavailable",
+      3: "request timeout"
+    };
+    const detail = err && err.message ? err.message : (map[code] || "unknown error");
+    let msg = `Location unavailable: ${detail}`;
+    if (!isSecureGeoContext()) msg += ` | ${secureGeoHint()}`;
+    return msg;
+  }
+
+  function formatBytes(bytes) {
+    const n = Number(bytes || 0);
+    if (n < 1024) return `${n} B`;
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+    return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  function fileExt(name) {
+    const idx = String(name || "").lastIndexOf(".");
+    return idx >= 0 ? String(name).slice(idx).toLowerCase() : "";
+  }
+
+  function isAllowedLibraryDoc(name) {
+    const ext = fileExt(name);
+    return ext === ".pdf" || ext === ".epub" || ext === ".md" || ext === ".txt";
+  }
+
+  function isTextLikeDoc(name) {
+    const ext = fileExt(name);
+    return ext === ".md" || ext === ".txt";
+  }
+
+  function openLibraryDb() {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise((resolve, reject) => {
+      if (!("indexedDB" in window)) {
+        reject(new Error("IndexedDB not available"));
+        return;
+      }
+      const req = indexedDB.open(LIBRARY_DB, 1);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(LIBRARY_STORE)) {
+          db.createObjectStore(LIBRARY_STORE, { keyPath: "id" });
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error || new Error("DB open failed"));
+    });
+    return dbPromise;
+  }
+
+  async function dbGetAllDocs() {
+    const db = await openLibraryDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(LIBRARY_STORE, "readonly");
+      const req = tx.objectStore(LIBRARY_STORE).getAll();
+      req.onsuccess = () => resolve((req.result || []).sort((a, b) => (b.addedAt || "").localeCompare(a.addedAt || "")));
+      req.onerror = () => reject(req.error || new Error("DB read failed"));
+    });
+  }
+
+  async function dbGetDoc(id) {
+    const db = await openLibraryDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(LIBRARY_STORE, "readonly");
+      const req = tx.objectStore(LIBRARY_STORE).get(id);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error || new Error("DB read failed"));
+    });
+  }
+
+  async function dbPutDoc(doc) {
+    const db = await openLibraryDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(LIBRARY_STORE, "readwrite");
+      tx.objectStore(LIBRARY_STORE).put(doc);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error("DB write failed"));
+    });
+  }
+
+  async function dbDeleteDoc(id) {
+    const db = await openLibraryDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(LIBRARY_STORE, "readwrite");
+      tx.objectStore(LIBRARY_STORE).delete(id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error("DB delete failed"));
+    });
+  }
+
+  async function dbClearDocs() {
+    const db = await openLibraryDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(LIBRARY_STORE, "readwrite");
+      tx.objectStore(LIBRARY_STORE).clear();
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error("DB clear failed"));
+    });
+  }
+
+  function builtinKey(idx) {
+    return `ref:${idx}`;
+  }
+
+  function docKey(id) {
+    return `doc:${id}`;
+  }
+
+  function resolveEntryByKey(key) {
+    if (!key) return null;
+    if (key.startsWith("ref:")) {
+      const idx = Number(key.slice(4));
+      const ref = BUILTIN_REFS[idx];
+      if (!ref) return null;
+      return {
+        key,
+        type: "ref",
+        index: idx,
+        title: ref.title,
+        subtitle: ref.summary,
+        searchableText: `${ref.title}\n${ref.summary}\n${ref.url}`,
+        url: ref.url,
+        hasPreview: false
+      };
+    }
+    if (key.startsWith("doc:")) {
+      const id = key.slice(4);
+      const doc = state.docs.find((d) => d.id === id);
+      if (!doc) return null;
+      return {
+        key,
+        type: "doc",
+        id: doc.id,
+        title: doc.name || "Untitled",
+        subtitle: `${(doc.ext || "").toUpperCase()} | ${formatBytes(doc.size)}`,
+        searchableText: `${doc.name || ""}\n${doc.extractedText || ""}`,
+        hasPreview: Boolean(doc.extractedText),
+        rawDoc: doc
+      };
+    }
+    return null;
+  }
+
+  function normalizeLibraryState() {
+    state.pinned = Array.from(new Set((state.pinned || []).filter((k) => resolveEntryByKey(k))));
+    state.recent = (state.recent || [])
+      .filter((r) => r && resolveEntryByKey(r.key))
+      .reduce((acc, r) => {
+        if (!acc.some((x) => x.key === r.key)) acc.push(r);
+        return acc;
+      }, [])
+      .slice(0, MAX_RECENT);
+  }
+
+  function isPinned(key) {
+    return (state.pinned || []).includes(key);
+  }
+
+  function togglePinned(key) {
+    if (!key) return;
+    if (isPinned(key)) state.pinned = state.pinned.filter((k) => k !== key);
+    else state.pinned = [...state.pinned, key];
+    saveState();
+    renderAllLibraryViews();
+  }
+
+  function touchRecent(key) {
+    if (!key) return;
+    state.recent = [{ key, openedAt: nowISO() }, ...(state.recent || []).filter((r) => r.key !== key)].slice(0, MAX_RECENT);
+    saveState();
+    renderStressPanels();
+  }
+
+  async function openBuiltinRef(idx) {
+    const ref = BUILTIN_REFS[idx];
+    if (!ref) return;
+    window.open(ref.url, "_blank", "noopener,noreferrer");
+    touchRecent(builtinKey(idx));
+    setLibraryStatus(`Opened ${ref.title}.`);
+  }
+
+  async function openImportedDoc(id) {
+    const doc = state.docs.find((d) => d.id === id);
+    if (!doc) return;
+    const full = await dbGetDoc(doc.id).catch(() => null);
+    if (!full || !full.blob) {
+      setLibraryStatus("Document payload not found. Re-import it.");
+      return;
+    }
+    const url = URL.createObjectURL(full.blob);
+    const opened = window.open(url, "_blank", "noopener,noreferrer");
+    if (!opened) {
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = full.name || "document";
+      a.click();
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 120000);
+    touchRecent(docKey(id));
+    setLibraryStatus(`Opened ${full.name}.`);
+  }
+
+  function previewDocText(id) {
+    const doc = state.docs.find((d) => d.id === id);
+    if (!doc || !doc.extractedText) return;
+    el.libraryPreview.textContent = doc.extractedText;
+    setLibraryStatus(`Previewing ${doc.name}.`);
+  }
+
+  function searchEntries(query) {
+    const q = String(query || "").trim().toLowerCase();
+    if (!q) return [];
+    const terms = q.split(/\s+/).filter(Boolean);
+    const refs = BUILTIN_REFS.map((r, idx) => resolveEntryByKey(builtinKey(idx))).filter(Boolean);
+    const docs = state.docs.map((d) => resolveEntryByKey(docKey(d.id))).filter(Boolean);
+    const all = [...refs, ...docs];
+    return all
+      .map((e) => {
+        const hay = String(e.searchableText || "").toLowerCase();
+        const ok = terms.every((t) => hay.includes(t));
+        return ok ? e : null;
+      })
+      .filter(Boolean)
+      .slice(0, 60);
+  }
+
+  function snippetFor(entry, query) {
+    const text = String(entry.searchableText || "").replace(/\s+/g, " ");
+    if (!text) return "";
+    const q = String(query || "").trim().toLowerCase();
+    if (!q) return text.slice(0, 180);
+    const idx = text.toLowerCase().indexOf(q);
+    if (idx < 0) return text.slice(0, 180);
+    const start = Math.max(0, idx - 60);
+    const end = Math.min(text.length, idx + q.length + 100);
+    const prefix = start > 0 ? "..." : "";
+    const suffix = end < text.length ? "..." : "";
+    return `${prefix}${text.slice(start, end)}${suffix}`;
+  }
+
+  function renderSearchResults() {
+    const q = el.librarySearch.value.trim();
+    if (!q) {
+      el.searchResults.innerHTML = `<div class="muted">Type a query to search built-in references and imported documents.</div>`;
+      return;
+    }
+    const hits = searchEntries(q);
+    if (!hits.length) {
+      el.searchResults.innerHTML = `<div class="muted">No matches for "${esc(q)}".</div>`;
+      return;
+    }
+    el.searchResults.innerHTML = hits.map((h) => `
+      <article class="search-hit">
+        <div><strong>${esc(h.title)}</strong> <span class="library-meta">(${h.type === "ref" ? "Built-in" : "Imported"})</span></div>
+        <div class="library-meta">${esc(h.subtitle || "")}</div>
+        <div class="search-snippet">${esc(snippetFor(h, q))}</div>
+        <div class="library-actions">
+          <button class="chip" type="button" data-hit-open="${esc(h.key)}">Open</button>
+          ${h.hasPreview && h.type === "doc" ? `<button class="chip" type="button" data-hit-preview="${esc(h.key)}">Preview Text</button>` : ""}
+          <button class="chip ${isPinned(h.key) ? "pin-on" : ""}" type="button" data-hit-pin="${esc(h.key)}">${isPinned(h.key) ? "Unpin" : "Pin"}</button>
+        </div>
+      </article>
+    `).join("");
+
+    el.searchResults.querySelectorAll("[data-hit-open]").forEach((b) => {
+      b.addEventListener("click", async () => {
+        const key = b.getAttribute("data-hit-open");
+        const e = resolveEntryByKey(key);
+        if (!e) return;
+        if (e.type === "ref") await openBuiltinRef(e.index);
+        else await openImportedDoc(e.id);
+      });
+    });
+    el.searchResults.querySelectorAll("[data-hit-preview]").forEach((b) => {
+      b.addEventListener("click", () => {
+        const key = b.getAttribute("data-hit-preview");
+        const e = resolveEntryByKey(key);
+        if (!e || e.type !== "doc") return;
+        previewDocText(e.id);
+      });
+    });
+    el.searchResults.querySelectorAll("[data-hit-pin]").forEach((b) => {
+      b.addEventListener("click", () => togglePinned(b.getAttribute("data-hit-pin")));
+    });
+  }
+
+  function renderStressPanels() {
+    const pinnedEntries = (state.pinned || []).map(resolveEntryByKey).filter(Boolean);
+    if (!pinnedEntries.length) {
+      el.pinnedList.innerHTML = `<div class="muted">No pinned items yet.</div>`;
+    } else {
+      el.pinnedList.innerHTML = pinnedEntries.map((e) => `
+        <article class="library-item">
+          <h3>${esc(e.title)}</h3>
+          <div class="library-meta">${esc(e.subtitle || "")}</div>
+          <div class="library-actions">
+            <button class="chip" type="button" data-pin-open="${esc(e.key)}">Open</button>
+            ${e.hasPreview && e.type === "doc" ? `<button class="chip" type="button" data-pin-preview="${esc(e.key)}">Preview Text</button>` : ""}
+            <button class="chip pin-on" type="button" data-pin-toggle="${esc(e.key)}">Unpin</button>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    const recentEntries = (state.recent || []).map((r) => ({ r, e: resolveEntryByKey(r.key) })).filter((x) => x.e);
+    if (!recentEntries.length) {
+      el.recentList.innerHTML = `<div class="muted">No recent opens yet.</div>`;
+    } else {
+      el.recentList.innerHTML = recentEntries.map(({ r, e }) => `
+        <article class="library-item">
+          <h3>${esc(e.title)}</h3>
+          <div class="library-meta">${esc(e.subtitle || "")}</div>
+          <div class="library-meta">Opened: ${esc(r.openedAt || "")}</div>
+          <div class="library-actions">
+            <button class="chip" type="button" data-recent-open="${esc(e.key)}">Open</button>
+            ${e.hasPreview && e.type === "doc" ? `<button class="chip" type="button" data-recent-preview="${esc(e.key)}">Preview Text</button>` : ""}
+            <button class="chip ${isPinned(e.key) ? "pin-on" : ""}" type="button" data-recent-pin="${esc(e.key)}">${isPinned(e.key) ? "Unpin" : "Pin"}</button>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    el.pinnedList.querySelectorAll("[data-pin-open]").forEach((b) => b.addEventListener("click", async () => {
+      const e = resolveEntryByKey(b.getAttribute("data-pin-open"));
+      if (!e) return;
+      if (e.type === "ref") await openBuiltinRef(e.index);
+      else await openImportedDoc(e.id);
+    }));
+    el.pinnedList.querySelectorAll("[data-pin-preview]").forEach((b) => b.addEventListener("click", () => {
+      const e = resolveEntryByKey(b.getAttribute("data-pin-preview"));
+      if (!e || e.type !== "doc") return;
+      previewDocText(e.id);
+    }));
+    el.pinnedList.querySelectorAll("[data-pin-toggle]").forEach((b) => b.addEventListener("click", () => togglePinned(b.getAttribute("data-pin-toggle"))));
+
+    el.recentList.querySelectorAll("[data-recent-open]").forEach((b) => b.addEventListener("click", async () => {
+      const e = resolveEntryByKey(b.getAttribute("data-recent-open"));
+      if (!e) return;
+      if (e.type === "ref") await openBuiltinRef(e.index);
+      else await openImportedDoc(e.id);
+    }));
+    el.recentList.querySelectorAll("[data-recent-preview]").forEach((b) => b.addEventListener("click", () => {
+      const e = resolveEntryByKey(b.getAttribute("data-recent-preview"));
+      if (!e || e.type !== "doc") return;
+      previewDocText(e.id);
+    }));
+    el.recentList.querySelectorAll("[data-recent-pin]").forEach((b) => b.addEventListener("click", () => togglePinned(b.getAttribute("data-recent-pin"))));
+  }
+
+  function renderBuiltInRefs() {
+    el.builtInRefs.innerHTML = BUILTIN_REFS.map((r, idx) => {
+      const key = builtinKey(idx);
+      return `
+      <article class="library-item">
+        <h3>${esc(r.title)}</h3>
+        <div class="library-meta">${esc(r.summary)}</div>
+        <div class="library-actions">
+          <button class="chip" type="button" data-ref-open="${idx}">Open Source</button>
+          <button class="chip" type="button" data-ref-copy="${idx}">Copy Link</button>
+          <button class="chip ${isPinned(key) ? "pin-on" : ""}" type="button" data-ref-pin="${idx}">${isPinned(key) ? "Unpin" : "Pin"}</button>
+        </div>
+      </article>`;
+    }).join("");
+
+    el.builtInRefs.querySelectorAll("[data-ref-open]").forEach((b) => {
+      b.addEventListener("click", () => openBuiltinRef(Number(b.getAttribute("data-ref-open"))));
+    });
+    el.builtInRefs.querySelectorAll("[data-ref-copy]").forEach((b) => {
+      b.addEventListener("click", async () => {
+        const ref = BUILTIN_REFS[Number(b.getAttribute("data-ref-copy"))];
+        if (!ref) return;
+        await navigator.clipboard.writeText(ref.url).catch(() => {});
+        setLibraryStatus("Reference link copied.");
+      });
+    });
+    el.builtInRefs.querySelectorAll("[data-ref-pin]").forEach((b) => {
+      b.addEventListener("click", () => togglePinned(builtinKey(Number(b.getAttribute("data-ref-pin")))));
+    });
+  }
+
+  function renderUserDocs() {
+    if (!state.docs.length) {
+      el.userDocs.innerHTML = `<div class="muted">No imported documents yet.</div>`;
+      return;
+    }
+    el.userDocs.innerHTML = state.docs.map((d) => {
+      const key = docKey(d.id);
+      return `
+      <article class="library-item">
+        <h3>${esc(d.name || "Untitled")}</h3>
+        <div class="library-meta">${esc((d.ext || "").toUpperCase())} | ${esc(formatBytes(d.size))} | ${esc(d.addedAt || "")}</div>
+        <div class="library-actions">
+          <button class="chip" type="button" data-doc-open="${esc(d.id)}">Open</button>
+          ${d.extractedText ? `<button class="chip" type="button" data-doc-preview="${esc(d.id)}">Preview Text</button>` : ""}
+          <button class="chip ${isPinned(key) ? "pin-on" : ""}" type="button" data-doc-pin="${esc(d.id)}">${isPinned(key) ? "Unpin" : "Pin"}</button>
+          <button class="chip" type="button" data-doc-delete="${esc(d.id)}">Delete</button>
+        </div>
+      </article>`;
+    }).join("");
+
+    el.userDocs.querySelectorAll("[data-doc-open]").forEach((b) => {
+      b.addEventListener("click", () => openImportedDoc(b.getAttribute("data-doc-open")));
+    });
+    el.userDocs.querySelectorAll("[data-doc-preview]").forEach((b) => {
+      b.addEventListener("click", () => previewDocText(b.getAttribute("data-doc-preview")));
+    });
+    el.userDocs.querySelectorAll("[data-doc-pin]").forEach((b) => {
+      b.addEventListener("click", () => togglePinned(docKey(b.getAttribute("data-doc-pin"))));
+    });
+    el.userDocs.querySelectorAll("[data-doc-delete]").forEach((b) => {
+      b.addEventListener("click", async () => {
+        const id = b.getAttribute("data-doc-delete");
+        const doc = state.docs.find((d) => d.id === id);
+        if (!doc) return;
+        await dbDeleteDoc(doc.id).catch(() => {});
+        state.docs = state.docs.filter((x) => x.id !== doc.id);
+        normalizeLibraryState();
+        saveState();
+        renderAllLibraryViews();
+        setLibraryStatus(`Deleted ${doc.name}.`);
+      });
+    });
+  }
+
+  function renderAllLibraryViews() {
+    renderBuiltInRefs();
+    renderUserDocs();
+    renderStressPanels();
+    renderSearchResults();
+  }
+
+  async function refreshDocsFromDb() {
+    try {
+      state.docs = await dbGetAllDocs();
+      normalizeLibraryState();
+      renderAllLibraryViews();
+      setLibraryStatus(`Library ready. ${state.docs.length} imported document(s).`);
+    } catch (err) {
+      setLibraryStatus(`Library unavailable: ${err && err.message ? err.message : String(err)}`);
+    }
+  }
+
+  async function importLibraryDocs(files) {
+    if (!files || !files.length) {
+      setLibraryStatus("Choose one or more files first.");
+      return;
+    }
+    let imported = 0;
+    let skipped = 0;
+    for (const file of files) {
+      if (!isAllowedLibraryDoc(file.name)) {
+        skipped++;
+        continue;
+      }
+      let extractedText = "";
+      if (isTextLikeDoc(file.name)) {
+        extractedText = (await file.text().catch(() => "")).slice(0, MAX_TEXT_STORE);
+      }
+      const doc = {
+        id: `doc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        name: file.name,
+        ext: fileExt(file.name),
+        mime: file.type || "",
+        size: Number(file.size || 0),
+        addedAt: nowISO(),
+        extractedText,
+        blob: file
+      };
+      await dbPutDoc(doc);
+      imported++;
+    }
+    await refreshDocsFromDb();
+    setLibraryStatus(`Imported ${imported} file(s). Skipped ${skipped}.`);
+    el.libraryFiles.value = "";
+  }
+
+  function parseContacts(raw) {
+    return raw
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const idx = line.indexOf("-");
+        if (idx <= 0) return { name: line, handle: "" };
+        return { name: line.slice(0, idx).trim(), handle: line.slice(idx + 1).trim() };
+      });
+  }
+
+  function encounterLabel(code) {
+    const map = {
+      "traffic-stop": "Traffic stop / police",
+      "ice": "ICE / immigration enforcement",
+      "customs": "Customs / border patrol",
+      "campus": "Campus police / security",
+      "other": "Other authority encounter"
+    };
+    return map[code] || code;
+  }
+
+  function introLine() {
+    const name = el.fullName.value.trim();
+    const language = el.language.value.trim();
+    const parts = [
+      "Hello officer.",
+      name ? `My name is ${name}.` : "I am ready to identify myself."
+    ];
+    if (language && !/^english$/i.test(language)) {
+      parts.push(`My preferred language is ${language}.`);
+    }
+    return parts.join(" ");
+  }
+
+  function rightsLines() {
+    const lines = [];
+    if (el.optCalm.checked) lines.push("I will stay calm and comply with lawful instructions.");
+    if (el.optSilent.checked) lines.push("I am exercising my right to remain silent.");
+    if (el.optLawyer.checked) lines.push("I want to speak with an attorney before answering questions.");
+    if (el.optNoSearch.checked) lines.push("I do not consent to searches.");
+    if (el.optIdOnly.checked) lines.push("I can provide legally required identification and documents.");
+    const med = el.medicalNote.value.trim();
+    if (med) lines.push(`Medical note: ${med}.`);
+    const custom = el.customLine.value.trim();
+    if (custom) lines.push(custom);
+    return lines;
+  }
+
+  function buildFullScript() {
+    const lines = [introLine(), ...rightsLines()];
+    return lines.join("\n");
+  }
+
+  function renderPreview() {
+    el.scriptPreview.textContent = buildFullScript();
+  }
+
+  function setClipSummary() {
+    const mode = el.voiceMode.value;
+    const intro = clipFiles.intro ? clipFiles.intro.name : "none";
+    const rights = clipFiles.rights ? clipFiles.rights.name : "none";
+    const full = clipFiles.full ? clipFiles.full.name : "none";
+    el.clipPackSection.style.display = mode === "clips" ? "grid" : "none";
+    el.clipSummary.textContent = `Intro: ${intro} | Rights: ${rights} | Full: ${full}`;
+  }
+
+  function revokeClipUrl(kind) {
+    if (clipUrls[kind]) {
+      URL.revokeObjectURL(clipUrls[kind]);
+      clipUrls[kind] = "";
+    }
+  }
+
+  function setClipFile(kind, file) {
+    revokeClipUrl(kind);
+    clipFiles[kind] = file || null;
+    clipUrls[kind] = file ? URL.createObjectURL(file) : "";
+    setClipSummary();
+  }
+
+  async function playClip(kind) {
+    if (el.voiceMode.value !== "clips") return false;
+    const url = clipUrls[kind];
+    if (!url) return false;
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    clipAudio.pause();
+    clipAudio.currentTime = 0;
+    clipAudio.src = url;
+    clipAudio.onplay = () => setStatus("Playing pre-recorded clip...");
+    clipAudio.onended = () => setStatus("Clip complete.");
+    clipAudio.onerror = () => setStatus("Clip playback failed. Falling back to browser voice.");
+    try {
+      await clipAudio.play();
+      return true;
+    } catch (_e) {
+      return false;
+    }
+  }
+
+  function speak(text) {
+    if (!window.speechSynthesis) {
+      setStatus("Speech synthesis is not available in this browser.");
+      return;
+    }
+    if (!text.trim()) {
+      setStatus("Nothing to speak.");
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    u.onstart = () => setStatus("Speaking...");
+    u.onend = () => setStatus("Speech complete.");
+    u.onerror = () => setStatus("Speech failed in this browser.");
+    window.speechSynthesis.speak(u);
+  }
+
+  async function speakByKind(kind, textBuilder) {
+    const played = await playClip(kind);
+    if (played) return;
+    speak(textBuilder());
+  }
+
+  async function getLocation() {
+    if (!navigator.geolocation) {
+      setStatus("Geolocation API is unavailable.");
+      return null;
+    }
+    if (!isSecureGeoContext()) {
+      setStatus(secureGeoHint());
+      return null;
+    }
+    setStatus("Requesting location...");
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          state.lastGeo = {
+            latitude: Number(pos.coords.latitude.toFixed(6)),
+            longitude: Number(pos.coords.longitude.toFixed(6)),
+            accuracyM: Math.round(pos.coords.accuracy || 0),
+            capturedAt: nowISO()
+          };
+          saveState();
+          setStatus(`Location captured: ${state.lastGeo.latitude}, ${state.lastGeo.longitude}`);
+          resolve(state.lastGeo);
+        },
+        (err) => {
+          setStatus(formatGeoStatusError(err));
+          resolve(null);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 120000 }
+      );
+    });
+  }
+
+  function makeAlertText(payload) {
+    const lines = [
+      `ALERT: ${encounterLabel(payload.encounterType)}`,
+      `Time: ${payload.timestamp}`,
+      payload.profile.fullName ? `Name: ${payload.profile.fullName}` : "",
+      payload.profile.dob ? `DOB: ${payload.profile.dob}` : "",
+      payload.location ? `Location: ${payload.location.latitude}, ${payload.location.longitude} (+/-${payload.location.accuracyM}m)` : "Location: not available",
+      payload.contacts.length ? `Notify contacts: ${payload.contacts.map((c) => c.name || c.handle).join(", ")}` : "Notify contacts: none configured",
+      "",
+      "Statement:",
+      payload.script
+    ].filter(Boolean);
+    return lines.join("\n");
+  }
+
+  async function postJSON(url, body, apiKey) {
+    const headers = { "Content-Type": "application/json" };
+    if (apiKey) headers["X-API-Key"] = apiKey;
+    const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
+    if (!res.ok) throw new Error(`${url} -> HTTP ${res.status}`);
+    return res.json().catch(() => ({}));
+  }
+
+  function addHistory(entry) {
+    state.history.unshift(entry);
+    state.history = state.history.slice(0, MAX_HISTORY);
+    saveState();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    if (!state.history.length) {
+      el.history.innerHTML = `<div class="muted">No incidents logged yet.</div>`;
+      return;
+    }
+    el.history.innerHTML = state.history.map((h, idx) => `
+      <article class="log">
+        <div><strong>${esc(encounterLabel(h.encounterType))}</strong></div>
+        <div class="muted">${esc(h.timestamp)}${h.result ? ` | ${esc(h.result)}` : ""}</div>
+        <div style="margin-top:4px">${esc(h.summary)}</div>
+        <div class="row" style="margin-top:8px">
+          <button class="chip" data-copy="${idx}">Copy</button>
+          <button class="chip" data-delete="${idx}">Delete</button>
+        </div>
+      </article>
+    `).join("");
+    el.history.querySelectorAll("[data-copy]").forEach((b) => {
+      b.addEventListener("click", async () => {
+        const item = state.history[Number(b.getAttribute("data-copy"))];
+        if (!item) return;
+        await navigator.clipboard.writeText(item.fullText).catch(() => {});
+        setStatus("Copied log text.");
+      });
+    });
+    el.history.querySelectorAll("[data-delete]").forEach((b) => {
+      b.addEventListener("click", () => {
+        const idx = Number(b.getAttribute("data-delete"));
+        state.history.splice(idx, 1);
+        saveState();
+        renderHistory();
+      });
+    });
+  }
+
+  function saveState() {
+    const payload = {
+      form: {
+        encounterType: el.encounterType.value,
+        fullName: el.fullName.value,
+        dob: el.dob.value,
+        language: el.language.value,
+        medicalNote: el.medicalNote.value,
+        optCalm: el.optCalm.checked,
+        optSilent: el.optSilent.checked,
+        optLawyer: el.optLawyer.checked,
+        optNoSearch: el.optNoSearch.checked,
+        optIdOnly: el.optIdOnly.checked,
+        customLine: el.customLine.value,
+        contacts: el.contacts.value,
+        webhookUrl: el.webhookUrl.value,
+        apiKey: el.apiKey.value,
+        sendSupportApi: el.sendSupportApi.checked,
+        voiceMode: el.voiceMode.value
+      },
+      lastGeo: state.lastGeo,
+      history: state.history,
+      pinned: state.pinned,
+      recent: state.recent
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return;
+      const f = parsed.form || {};
+      el.encounterType.value = f.encounterType || "traffic-stop";
+      el.fullName.value = f.fullName || "";
+      el.dob.value = f.dob || "";
+      el.language.value = f.language || "English";
+      el.medicalNote.value = f.medicalNote || "";
+      el.optCalm.checked = f.optCalm !== false;
+      el.optSilent.checked = f.optSilent !== false;
+      el.optLawyer.checked = f.optLawyer !== false;
+      el.optNoSearch.checked = f.optNoSearch !== false;
+      el.optIdOnly.checked = f.optIdOnly !== false;
+      el.customLine.value = f.customLine || "";
+      el.contacts.value = f.contacts || "";
+      el.webhookUrl.value = f.webhookUrl || "";
+      el.apiKey.value = f.apiKey || "";
+      el.sendSupportApi.checked = Boolean(f.sendSupportApi);
+      el.voiceMode.value = f.voiceMode === "clips" ? "clips" : "browser";
+      state.lastGeo = parsed.lastGeo || null;
+      state.history = Array.isArray(parsed.history) ? parsed.history.slice(0, MAX_HISTORY) : [];
+      state.pinned = Array.isArray(parsed.pinned) ? parsed.pinned.filter((x) => typeof x === "string") : [];
+      state.recent = Array.isArray(parsed.recent)
+        ? parsed.recent
+            .filter((x) => x && typeof x.key === "string")
+            .map((x) => ({ key: x.key, openedAt: x.openedAt || "" }))
+            .slice(0, MAX_RECENT)
+        : [];
+    } catch (_e) {
+      state.lastGeo = null;
+      state.history = [];
+      state.pinned = [];
+      state.recent = [];
+    }
+  }
+
+  async function sendAlert() {
+    const payload = {
+      timestamp: nowISO(),
+      encounterType: el.encounterType.value,
+      profile: {
+        fullName: el.fullName.value.trim(),
+        dob: el.dob.value.trim(),
+        language: el.language.value.trim(),
+        medicalNote: el.medicalNote.value.trim()
+      },
+      location: state.lastGeo,
+      contacts: parseContacts(el.contacts.value),
+      script: buildFullScript()
+    };
+    const fullText = makeAlertText(payload);
+    const outcomes = [];
+
+    const webhook = el.webhookUrl.value.trim();
+    const apiKey = el.apiKey.value.trim();
+    if (webhook) {
+      try {
+        await postJSON(webhook, payload, apiKey);
+        outcomes.push("dispatch webhook ok");
+      } catch (e) {
+        outcomes.push(`dispatch webhook error: ${e.message}`);
+      }
+    }
+
+    if (el.sendSupportApi.checked) {
+      try {
+        const subject = `Authority encounter: ${encounterLabel(payload.encounterType)}`;
+        await postJSON("/api/support/ticket", {
+          app: "authority-assistant",
+          subject,
+          description: fullText,
+          severity: "high",
+          contact: payload.contacts.map((c) => `${c.name} ${c.handle}`.trim()).join("; "),
+          preferredChannel: "phone",
+          reproSteps: "User triggered Send Alert in Authority Assistant",
+          expectedBehavior: "Record and route emergency context",
+          actualBehavior: "Emergency context submitted"
+        }, apiKey);
+        outcomes.push("local /api/support/ticket ok");
+      } catch (e) {
+        outcomes.push(`/api/support/ticket error: ${e.message}`);
+      }
+    }
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Authority encounter alert",
+          text: fullText
+        });
+        outcomes.push("share sheet opened");
+      } catch (_e) {
+        outcomes.push("share sheet canceled");
+      }
+    }
+
+    addHistory({
+      timestamp: payload.timestamp,
+      encounterType: payload.encounterType,
+      summary: `${payload.profile.fullName || "Unnamed"} | ${payload.contacts.length} contact(s)`,
+      result: outcomes.join(" | ") || "saved locally",
+      fullText
+    });
+    setStatus(`Alert saved. ${outcomes.join(" | ") || "Local-only mode."}`);
+  }
+
+  function bind() {
+    const continueIntoApp = () => closeConsentGate();
+    el.gateAgreeBtn.addEventListener("click", continueIntoApp);
+    el.gateAgreeBtn.addEventListener("touchend", (e) => {
+      e.preventDefault();
+      continueIntoApp();
+    }, { passive: false });
+
+    const watched = [
+      el.encounterType, el.fullName, el.dob, el.language, el.medicalNote,
+      el.optCalm, el.optSilent, el.optLawyer, el.optNoSearch, el.optIdOnly,
+      el.customLine, el.contacts, el.webhookUrl, el.apiKey, el.sendSupportApi, el.voiceMode
+    ];
+    watched.forEach((node) => node.addEventListener("input", () => {
+      renderPreview();
+      saveState();
+    }));
+    watched.forEach((node) => node.addEventListener("change", () => {
+      renderPreview();
+      saveState();
+    }));
+
+    document.querySelectorAll("[data-chip]").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const text = chip.getAttribute("data-chip") || "";
+        const curr = el.customLine.value.trim();
+        el.customLine.value = curr ? `${curr}\n${text}` : text;
+        renderPreview();
+        saveState();
+      });
+    });
+
+    el.voiceMode.addEventListener("change", () => {
+      setClipSummary();
+      saveState();
+    });
+
+    el.clipIntro.addEventListener("change", () => setClipFile("intro", el.clipIntro.files && el.clipIntro.files[0]));
+    el.clipRights.addEventListener("change", () => setClipFile("rights", el.clipRights.files && el.clipRights.files[0]));
+    el.clipFull.addEventListener("change", () => setClipFile("full", el.clipFull.files && el.clipFull.files[0]));
+
+    el.speakFullBtn.addEventListener("click", () => speakByKind("full", buildFullScript));
+    el.speakIntroBtn.addEventListener("click", () => speakByKind("intro", introLine));
+    el.speakRightsBtn.addEventListener("click", () => speakByKind("rights", () => rightsLines().join(" ")));
+    el.stopSpeakBtn.addEventListener("click", () => {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      clipAudio.pause();
+      clipAudio.currentTime = 0;
+      setStatus("Voice stopped.");
+    });
+
+    el.geoBtn.addEventListener("click", () => getLocation());
+    el.copyAlertBtn.addEventListener("click", async () => {
+      const text = makeAlertText({
+        timestamp: nowISO(),
+        encounterType: el.encounterType.value,
+        profile: { fullName: el.fullName.value.trim(), dob: el.dob.value.trim() },
+        location: state.lastGeo,
+        contacts: parseContacts(el.contacts.value),
+        script: buildFullScript()
+      });
+      await navigator.clipboard.writeText(text).catch(() => {});
+      setStatus("Alert text copied.");
+    });
+    el.sendAlertBtn.addEventListener("click", () => sendAlert());
+    el.importLibraryBtn.addEventListener("click", () => importLibraryDocs(el.libraryFiles.files));
+    el.librarySearch.addEventListener("input", () => renderSearchResults());
+    el.clearLibrarySearchBtn.addEventListener("click", () => {
+      el.librarySearch.value = "";
+      renderSearchResults();
+    });
+    el.clearLibraryBtn.addEventListener("click", async () => {
+      if (!confirm("Delete all imported library documents from this device?")) return;
+      await dbClearDocs().catch(() => {});
+      state.docs = [];
+      normalizeLibraryState();
+      saveState();
+      renderAllLibraryViews();
+      el.libraryPreview.textContent = "Select a text document to preview it here.";
+      setLibraryStatus("Imported library documents cleared.");
+    });
+  }
+
+  loadState();
+  bind();
+  renderPreview();
+  setClipSummary();
+  renderHistory();
+  renderAllLibraryViews();
+  refreshDocsFromDb();
+  openConsentGate();
+})();
+</script>
+<script src="../shared/help-content.js"></script>
+<script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

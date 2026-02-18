@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MIDI Note Helper</title>
+<style>
+  :root {
+    --bg: #0f1320;
+    --panel: #171f33;
+    --line: #354a72;
+    --text: #eef4ff;
+    --muted: #a3b8d8;
+    --accent: #6dc0ff;
+    --ok: #1cc587;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background:
+      radial-gradient(900px 420px at 85% -10%, rgba(89, 139, 215, .28), transparent 50%),
+      radial-gradient(900px 420px at 10% -10%, rgba(89, 205, 215, .15), transparent 50%),
+      var(--bg);
+    padding: 16px;
+  }
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    display: grid;
+    gap: 12px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px;
+  }
+  h1 { margin: 0 0 8px; font-size: 1.35rem; }
+  h2 { margin: 0 0 8px; font-size: 1.05rem; }
+  .muted { color: var(--muted); }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+  }
+  label {
+    color: var(--muted);
+    font-size: .85rem;
+    display: block;
+    margin-bottom: 4px;
+  }
+  input, select {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #0d1627;
+    color: var(--text);
+    padding: 9px 10px;
+    font-size: .95rem;
+  }
+  .big {
+    font-size: clamp(1.3rem, 5vw, 2.1rem);
+    font-weight: 800;
+    color: #d9ebff;
+    margin: 3px 0;
+  }
+  .pill {
+    display: inline-block;
+    border: 1px solid #4b6696;
+    border-radius: 999px;
+    padding: 3px 8px;
+    font-size: .75rem;
+    color: #cbe2ff;
+    background: #1a2a46;
+    margin-right: 6px;
+    margin-top: 6px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  th, td {
+    text-align: left;
+    font-size: .88rem;
+    padding: 8px 7px;
+    border-bottom: 1px solid #2b3f62;
+  }
+  th { color: var(--muted); }
+  .hot { color: #a6ffd7; font-weight: 700; }
+  .ok {
+    border: 1px solid #2a8b67;
+    background: #123c2f;
+    color: #a6ffd7;
+    border-radius: 9px;
+    padding: 6px 8px;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>MIDI Note Helper</h1>
+    <div class="muted">Map MIDI note numbers to note names/octaves and convert note names back to MIDI.</div>
+  </div>
+
+  <div class="card">
+    <h2>MIDI Number -> Note</h2>
+    <div class="grid">
+      <div>
+        <label for="midiNumber">MIDI Number (0-127)</label>
+        <input id="midiNumber" type="number" min="0" max="127" step="1" value="60" />
+      </div>
+      <div>
+        <label for="midiSlider">Quick Slider</label>
+        <input id="midiSlider" type="range" min="0" max="127" step="1" value="60" />
+      </div>
+      <div>
+        <label for="a4Hz">A4 Reference (Hz)</label>
+        <input id="a4Hz" type="number" min="400" max="480" step="0.1" value="440" />
+      </div>
+    </div>
+    <div id="display" class="big">C4 (60)</div>
+    <div id="detail" class="muted"></div>
+    <div>
+      <span class="pill">24 = C1</span>
+      <span class="pill">36 = C2</span>
+      <span class="pill">48 = C3</span>
+      <span class="pill">60 = C4</span>
+      <span class="pill">72 = C5</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Note Name -> MIDI</h2>
+    <div class="grid">
+      <div>
+        <label for="noteName">Note Name</label>
+        <select id="noteName">
+          <option>C</option><option>C#</option><option>D</option><option>D#</option>
+          <option>E</option><option>F</option><option>F#</option><option>G</option>
+          <option>G#</option><option>A</option><option>A#</option><option>B</option>
+        </select>
+      </div>
+      <div>
+        <label for="octave">Octave</label>
+        <input id="octave" type="number" min="-1" max="9" step="1" value="4" />
+      </div>
+    </div>
+    <div id="reverseOut" class="ok">MIDI 60</div>
+  </div>
+
+  <div class="card">
+    <h2>Octave Table</h2>
+    <div class="muted">C notes and nearby references:</div>
+    <table>
+      <thead><tr><th>Label</th><th>MIDI</th><th>Frequency (Hz)</th></tr></thead>
+      <tbody id="cTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+(() => {
+  const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const el = {
+    midiNumber: document.getElementById('midiNumber'),
+    midiSlider: document.getElementById('midiSlider'),
+    a4Hz: document.getElementById('a4Hz'),
+    display: document.getElementById('display'),
+    detail: document.getElementById('detail'),
+    noteName: document.getElementById('noteName'),
+    octave: document.getElementById('octave'),
+    reverseOut: document.getElementById('reverseOut'),
+    cTable: document.getElementById('cTable')
+  };
+
+  function clampMidi(v) {
+    return Math.max(0, Math.min(127, Math.round(Number(v) || 0)));
+  }
+
+  function noteFromMidi(midi) {
+    const note = NAMES[midi % 12];
+    const octave = Math.floor(midi / 12) - 1;
+    return `${note}${octave}`;
+  }
+
+  function freqFromMidi(midi, a4) {
+    return a4 * Math.pow(2, (midi - 69) / 12);
+  }
+
+  function midiFromNote(name, octave) {
+    const idx = NAMES.indexOf(name);
+    return idx + (Number(octave) + 1) * 12;
+  }
+
+  function renderMain() {
+    const midi = clampMidi(el.midiNumber.value);
+    const a4 = Number(el.a4Hz.value || 440);
+    el.midiNumber.value = midi;
+    el.midiSlider.value = midi;
+    const name = noteFromMidi(midi);
+    const freq = freqFromMidi(midi, a4);
+    el.display.textContent = `${name} (${midi})`;
+    el.detail.textContent = `Frequency ${freq.toFixed(2)} Hz | Pitch class ${NAMES[midi % 12]}`;
+  }
+
+  function renderReverse() {
+    const n = String(el.noteName.value || 'C');
+    const o = Number(el.octave.value || 4);
+    const midi = midiFromNote(n, o);
+    const bounded = clampMidi(midi);
+    const note = noteFromMidi(bounded);
+    el.reverseOut.textContent = `MIDI ${bounded} = ${note}`;
+  }
+
+  function renderCTable() {
+    const a4 = Number(el.a4Hz.value || 440);
+    const rows = [];
+    for (let oct = 0; oct <= 8; oct += 1) {
+      const midi = 12 * (oct + 1);
+      const hz = freqFromMidi(midi, a4);
+      const hot = [24, 36, 48, 60, 72].includes(midi) ? 'hot' : '';
+      rows.push(`<tr><td class="${hot}">C${oct}</td><td>${midi}</td><td>${hz.toFixed(2)}</td></tr>`);
+    }
+    el.cTable.innerHTML = rows.join('');
+  }
+
+  function syncFromSlider() {
+    el.midiNumber.value = el.midiSlider.value;
+    renderMain();
+  }
+
+  function bind() {
+    el.midiNumber.addEventListener('input', renderMain);
+    el.midiSlider.addEventListener('input', syncFromSlider);
+    el.a4Hz.addEventListener('input', () => {
+      renderMain();
+      renderCTable();
+    });
+    el.noteName.addEventListener('change', renderReverse);
+    el.octave.addEventListener('input', renderReverse);
+  }
+
+  function init() {
+    bind();
+    renderMain();
+    renderReverse();
+    renderCTable();
+  }
+
+  init();
+})();
+</script>
+<script src="../shared/help-content.js"></script>
+<script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<!-- saved from url=(0073)file:///home/shepov/dev/GigTax/ProSePilot-v3.2/drivers-license/index.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>US Drivers License Prep — Multilingual Flashcards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link href="./DriversLicensePrep_files/css2" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:hsl(222,47%,6%);--bg2:hsl(222,30%,10%);--bg3:hsl(222,20%,14%);
+  --border:hsl(222,15%,20%);--text:hsl(210,20%,88%);--text2:hsl(215,15%,55%);--text3:hsl(215,10%,40%);
+  --accent:hsl(160,60%,45%);--accent2:hsl(160,50%,25%);--accent-bg:hsl(160,60%,10%);
+  --red:hsl(0,65%,55%);--red-bg:hsl(0,40%,12%);
+  --amber:hsl(38,75%,55%);--amber-bg:hsl(38,40%,12%);
+  --blue:hsl(210,65%,55%);--blue-bg:hsl(210,40%,12%);
+  --radius:8px;--radius-lg:12px;
+  --font:'DM Sans',system-ui,sans-serif;--mono:'DM Mono',monospace;
+}
+html{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+body{min-height:100vh;min-height:100dvh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+.suite-nav{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:12px}
+.suite-nav a{color:var(--text2);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .15s}
+.suite-nav a:hover{color:var(--accent)}
+.suite-nav .suite-name{color:var(--text3);font-family:var(--mono);font-size:11px}
+
+.app{max-width:480px;margin:0 auto;padding:16px 12px 40px}
+.header{text-align:center;padding:8px 0 12px}
+.header h1{font-size:18px;font-weight:700;color:var(--accent)}
+.header small{font-size:11px;color:var(--text3)}
+
+/* Language selector */
+.lang-bar{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
+.lang-btn{padding:6px 12px;border-radius:var(--radius);font-size:12px;font-weight:500;background:var(--bg2);color:var(--text2);border:1px solid transparent;cursor:pointer;transition:all .15s}
+.lang-btn:active{transform:scale(.95)}
+.lang-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* Stats bar */
+.stats{display:flex;justify-content:space-around;padding:10px 0;margin-bottom:12px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.stat{text-align:center}
+.stat-val{font-size:16px;font-weight:700;font-family:var(--mono);color:var(--accent)}
+.stat-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.stat-val.correct{color:var(--accent)}
+.stat-val.wrong{color:var(--red)}
+
+/* Progress bar */
+.progress-bar{height:6px;background:var(--bg3);border-radius:3px;margin-bottom:16px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s ease}
+
+/* Category tabs */
+.cat-tabs{display:flex;gap:4px;margin-bottom:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+.cat-tab{padding:6px 12px;border-radius:var(--radius);font-size:11px;font-weight:500;background:var(--bg2);color:var(--text2);border:1px solid transparent;cursor:pointer;white-space:nowrap;transition:all .15s}
+.cat-tab.active{background:var(--blue);color:#fff}
+
+/* Flashcard */
+.card-container{perspective:1000px;margin-bottom:16px;min-height:260px}
+.flashcard{position:relative;width:100%;min-height:260px;transition:transform .5s;transform-style:preserve-3d;cursor:pointer}
+.flashcard.flipped{transform:rotateY(180deg)}
+.card-face{position:absolute;inset:0;backface-visibility:hidden;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.card-back{transform:rotateY(180deg)}
+.card-cat{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:3px 8px;border-radius:4px;margin-bottom:12px}
+.card-q{font-size:16px;font-weight:600;line-height:1.4}
+.card-hint{font-size:11px;color:var(--text3);margin-top:12px}
+.card-a{font-size:15px;font-weight:600;color:var(--accent);line-height:1.4;margin-bottom:8px}
+.card-explain{font-size:12px;color:var(--text2);line-height:1.4}
+.card-number{position:absolute;top:10px;right:14px;font-size:10px;color:var(--text3);font-family:var(--mono)}
+
+/* Answer buttons (quiz mode) */
+.answers{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.answer-btn{padding:12px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);font-size:13px;text-align:left;cursor:pointer;transition:all .15s;color:var(--text);font-family:inherit}
+.answer-btn:active{transform:scale(.98)}
+.answer-btn.correct{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+.answer-btn.wrong{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.answer-btn.disabled{pointer-events:none;opacity:.6}
+
+/* Nav buttons */
+.nav-row{display:flex;gap:8px}
+.nav-btn{flex:1;padding:12px;border-radius:var(--radius);font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.nav-btn:active{transform:scale(.96)}
+.nav-btn.primary{background:var(--accent);color:#fff}
+.nav-btn.ghost{background:var(--bg2);color:var(--text2);border:1px solid var(--border)}
+
+/* Mode toggle */
+.mode-toggle{display:flex;gap:4px;justify-content:center;margin-bottom:12px}
+.mode-btn{padding:6px 14px;border-radius:var(--radius);font-size:12px;font-weight:500;background:var(--bg2);color:var(--text2);border:1px solid transparent;cursor:pointer;transition:all .15s}
+.mode-btn.active{background:var(--accent);color:#fff}
+
+/* Results */
+.results{text-align:center;padding:20px}
+.results h2{font-size:22px;color:var(--accent);margin-bottom:8px}
+.results .big{font-size:48px;font-weight:700;font-family:var(--mono);color:var(--accent)}
+.results .detail{font-size:13px;color:var(--text2);margin:8px 0 16px}
+</style>
+</head>
+<body>
+<nav class="suite-nav">
+  <a href="file:///home/shepov/dev/GigTax/ProSePilot-v3.2/index.html">← Back to Suite</a>
+  <span class="suite-name">ProSe Pilot</span>
+</nav>
+<div class="app">
+  <div class="header">
+    <h1>🚗 US Drivers License Prep</h1>
+    <small>Multilingual flashcards for the US permit test</small>
+  </div>
+
+  <div class="lang-bar" id="langBar"><button class="lang-btn active" data-lang="en">🇺🇸 English</button><button class="lang-btn " data-lang="ru">🇷🇺 Русский</button><button class="lang-btn " data-lang="es">🇪🇸 Español</button><button class="lang-btn " data-lang="fr">🇫🇷 Français</button><button class="lang-btn " data-lang="de">🇩🇪 Deutsch</button><button class="lang-btn " data-lang="zh">🇨🇳 中文</button></div>
+  <div class="mode-toggle">
+    <button class="mode-btn active" data-mode="quiz">Quiz Mode</button>
+    <button class="mode-btn" data-mode="flash">Flashcards</button>
+  </div>
+  <div class="stats" id="statsBar">
+    <div class="stat"><div class="stat-val" id="sCorrect">0</div><div class="stat-lbl">Correct</div></div>
+    <div class="stat"><div class="stat-val wrong" id="sWrong">0</div><div class="stat-lbl">Wrong</div></div>
+    <div class="stat"><div class="stat-val" id="sRemaining">12</div><div class="stat-lbl">Remaining</div></div>
+    <div class="stat"><div class="stat-val" id="sPercent">0%</div><div class="stat-lbl">Score</div></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%;"></div></div>
+  <div class="cat-tabs" id="catTabs"><button class="cat-tab active" data-cat="all">All</button><button class="cat-tab " data-cat="signs">Signs &amp; Signals</button><button class="cat-tab " data-cat="rules">Rules of the Road</button><button class="cat-tab " data-cat="safety">Safety</button><button class="cat-tab " data-cat="parking">Parking</button></div>
+
+  <div id="gameArea">
+      <div class="card-container" style="perspective:none">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;text-align:center;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative">
+          <span class="card-cat" style="background:var(--blue-bg);color:var(--blue)">Safety</span>
+          <div class="card-q" style="margin-top:8px">When should you use your headlights?</div>
+          <span class="card-number">1/12</span>
+        </div>
+      </div>
+      <div class="answers" id="answers">
+        <button class="answer-btn" data-ans="Only at night">Only at night</button><button class="answer-btn" data-ans="Only on highways">Only on highways</button><button class="answer-btn" data-ans="Only in rain">Only in rain</button><button class="answer-btn" data-ans="From sunset to sunrise and in poor visibility">From sunset to sunrise and in poor visibility</button>
+      </div>
+      <div id="feedback" style="display:none;margin-bottom:12px;padding:12px;border-radius:var(--radius);font-size:12px;line-height:1.4"></div>
+      <div class="nav-row">
+        <button class="nav-btn primary" id="nextBtn" style="display:none">Next →</button>
+      </div></div>
+</div>
+
+<script>
+const LS='driversprep_progress';
+
+// ── Question Bank ──
+// 40 common US permit test questions with translations
+const QUESTIONS = [
+  // SIGNS & SIGNALS
+  {cat:"signs",en:{q:"What does a red octagonal sign mean?",a:"Stop",opts:["Stop","Yield","Speed Limit","No Entry"],explain:"A red octagon always means STOP. Come to a complete stop at the marked stop line."},
+   ru:{q:"Что означает красный восьмиугольный знак?",a:"Стоп",opts:["Стоп","Уступи дорогу","Ограничение скорости","Въезд запрещён"],explain:"Красный восьмиугольник всегда означает СТОП. Полностью остановитесь у стоп-линии."},
+   es:{q:"¿Qué significa una señal octagonal roja?",a:"Pare",opts:["Pare","Ceda el paso","Límite de velocidad","No entrar"],explain:"Un octágono rojo siempre significa PARE. Deténgase completamente en la línea de parada."},
+   fr:{q:"Que signifie un panneau octogonal rouge ?",a:"Arrêt",opts:["Arrêt","Cédez le passage","Limite de vitesse","Entrée interdite"],explain:"Un octogone rouge signifie toujours ARRÊT. Arrêtez-vous complètement à la ligne d'arrêt."},
+   de:{q:"Was bedeutet ein rotes achteckiges Schild?",a:"Halt",opts:["Halt","Vorfahrt gewähren","Geschwindigkeitsbegrenzung","Einfahrt verboten"],explain:"Ein rotes Achteck bedeutet immer HALT. Halten Sie vollständig an der Haltelinie an."},
+   zh:{q:"红色八角形标志是什么意思？",a:"停车",opts:["停车","让行","限速","禁止进入"],explain:"红色八角形始终表示停车。在停车线处完全停下。"}},
+
+  {cat:"signs",en:{q:"What does a yellow triangle sign mean?",a:"Yield",opts:["Yield","Stop","Caution","Merge"],explain:"A yellow/red triangle means YIELD — slow down and give the right-of-way."},
+   ru:{q:"Что означает жёлтый треугольный знак?",a:"Уступи дорогу",opts:["Уступи дорогу","Стоп","Осторожно","Слияние"],explain:"Жёлтый/красный треугольник означает — уступите дорогу."},
+   es:{q:"¿Qué significa una señal triangular amarilla?",a:"Ceda el paso",opts:["Ceda el paso","Pare","Precaución","Incorporación"],explain:"Un triángulo amarillo/rojo significa CEDA EL PASO."},
+   fr:{q:"Que signifie un panneau triangulaire jaune ?",a:"Cédez le passage",opts:["Cédez le passage","Arrêt","Attention","Fusion"],explain:"Un triangle jaune/rouge signifie CÉDEZ LE PASSAGE."},
+   de:{q:"Was bedeutet ein gelbes Dreieck-Schild?",a:"Vorfahrt gewähren",opts:["Vorfahrt gewähren","Halt","Vorsicht","Einfädeln"],explain:"Ein gelbes/rotes Dreieck bedeutet — Vorfahrt gewähren."},
+   zh:{q:"黄色三角形标志是什么意思？",a:"让行",opts:["让行","停车","注意","合流"],explain:"黄色/红色三角形表示让行——减速并让路。"}},
+
+  {cat:"signs",en:{q:"What does a flashing red light mean?",a:"Stop, then proceed when safe",opts:["Stop, then proceed when safe","Slow down","Go with caution","Signal is broken"],explain:"A flashing red light is treated the same as a stop sign."},
+   ru:{q:"Что означает мигающий красный свет?",a:"Остановитесь, затем продолжайте когда безопасно",opts:["Остановитесь, затем продолжайте когда безопасно","Замедлите","Двигайтесь осторожно","Сигнал сломан"],explain:"Мигающий красный свет — как знак стоп."},
+   es:{q:"¿Qué significa una luz roja intermitente?",a:"Pare, luego avance cuando sea seguro",opts:["Pare, luego avance cuando sea seguro","Reduzca velocidad","Avance con precaución","Semáforo descompuesto"],explain:"Una luz roja intermitente se trata igual que una señal de pare."},
+   fr:{q:"Que signifie un feu rouge clignotant ?",a:"Arrêtez, puis continuez quand c'est sûr",opts:["Arrêtez, puis continuez quand c'est sûr","Ralentissez","Avancez prudemment","Le signal est en panne"],explain:"Un feu rouge clignotant est traité comme un panneau d'arrêt."},
+   de:{q:"Was bedeutet ein blinkendes rotes Licht?",a:"Anhalten, dann weiterfahren wenn sicher",opts:["Anhalten, dann weiterfahren wenn sicher","Langsamer fahren","Vorsichtig weiterfahren","Signal kaputt"],explain:"Ein blinkendes rotes Licht wird wie ein Stoppschild behandelt."},
+   zh:{q:"闪烁的红灯是什么意思？",a:"停车，安全时继续行驶",opts:["停车，安全时继续行驶","减速","小心通过","信号灯故障"],explain:"闪烁红灯等同于停车标志。"}},
+
+  {cat:"signs",en:{q:"What does a flashing yellow light mean?",a:"Slow down and proceed with caution",opts:["Slow down and proceed with caution","Stop completely","Speed up to clear intersection","Prepare to stop"],explain:"A flashing yellow means proceed with caution — the intersection may be dangerous."},
+   ru:{q:"Что означает мигающий жёлтый свет?",a:"Замедлите и двигайтесь осторожно",opts:["Замедлите и двигайтесь осторожно","Полностью остановитесь","Ускорьтесь","Приготовьтесь остановиться"],explain:"Мигающий жёлтый — двигайтесь осторожно."},
+   es:{q:"¿Qué significa una luz amarilla intermitente?",a:"Reduzca velocidad y avance con precaución",opts:["Reduzca velocidad y avance con precaución","Pare completamente","Acelere","Prepárese para parar"],explain:"Una luz amarilla intermitente significa avanzar con precaución."},
+   fr:{q:"Que signifie un feu jaune clignotant ?",a:"Ralentissez et avancez prudemment",opts:["Ralentissez et avancez prudemment","Arrêtez complètement","Accélérez","Préparez-vous à vous arrêter"],explain:"Un feu jaune clignotant signifie avancer avec prudence."},
+   de:{q:"Was bedeutet ein blinkendes gelbes Licht?",a:"Langsam fahren und vorsichtig weiter",opts:["Langsam fahren und vorsichtig weiter","Vollständig anhalten","Beschleunigen","Anhalten vorbereiten"],explain:"Blinkendes Gelb — vorsichtig weiterfahren."},
+   zh:{q:"闪烁的黄灯是什么意思？",a:"减速谨慎通行",opts:["减速谨慎通行","完全停车","加速通过","准备停车"],explain:"闪烁黄灯表示谨慎通行。"}},
+
+  // RULES OF THE ROAD
+  {cat:"rules",en:{q:"When approaching a school bus with flashing red lights, you must:",a:"Stop and wait until lights stop flashing",opts:["Stop and wait until lights stop flashing","Slow to 15 mph","Honk and pass carefully","Stop only if children are visible"],explain:"You must stop for a school bus with flashing red lights. It is illegal to pass."},
+   ru:{q:"Подъезжая к школьному автобусу с мигающими красными огнями, вы должны:",a:"Остановиться и ждать пока огни перестанут мигать",opts:["Остановиться и ждать пока огни перестанут мигать","Замедлить до 25 км/ч","Посигналить и аккуратно обогнать","Остановиться только если видны дети"],explain:"Вы обязаны остановиться перед школьным автобусом с мигающими красными огнями."},
+   es:{q:"Al acercarse a un autobús escolar con luces rojas intermitentes, debe:",a:"Parar y esperar hasta que las luces dejen de parpadear",opts:["Parar y esperar hasta que las luces dejen de parpadear","Reducir a 25 km/h","Tocar bocina y pasar con cuidado","Parar solo si hay niños visibles"],explain:"Debe detenerse ante un autobús escolar con luces rojas intermitentes."},
+   fr:{q:"En approchant d'un bus scolaire aux feux rouges clignotants, vous devez :",a:"S'arrêter et attendre que les feux cessent",opts:["S'arrêter et attendre que les feux cessent","Ralentir à 25 km/h","Klaxonner et dépasser","S'arrêter seulement si des enfants sont visibles"],explain:"Vous devez vous arrêter pour un bus scolaire aux feux rouges clignotants."},
+   de:{q:"Wenn Sie sich einem Schulbus mit blinkenden roten Lichtern nähern, müssen Sie:",a:"Anhalten und warten bis die Lichter aufhören",opts:["Anhalten und warten bis die Lichter aufhören","Auf 25 km/h verlangsamen","Hupen und vorsichtig überholen","Nur anhalten wenn Kinder sichtbar sind"],explain:"Sie müssen bei einem Schulbus mit blinkenden roten Lichtern anhalten."},
+   zh:{q:"接近闪烁红灯的校车时，你必须：",a:"停车等待直到灯光停止闪烁",opts:["停车等待直到灯光停止闪烁","减速至25公里/时","鸣笛小心超车","只有看到孩子才停"],explain:"必须在闪红灯的校车前停车，超车违法。"}},
+
+  {cat:"rules",en:{q:"What is the legal blood alcohol concentration (BAC) limit for drivers 21+ in most US states?",a:"0.08%",opts:["0.08%","0.05%","0.10%","0.02%"],explain:"In most states, 0.08% BAC is the legal limit for drivers 21 and older."},
+   ru:{q:"Каков допустимый уровень алкоголя в крови для водителей 21+ в большинстве штатов?",a:"0.08%",opts:["0.08%","0.05%","0.10%","0.02%"],explain:"В большинстве штатов допустимый предел — 0.08%."},
+   es:{q:"¿Cuál es el límite legal de alcohol en sangre (BAC) para conductores mayores de 21?",a:"0.08%",opts:["0.08%","0.05%","0.10%","0.02%"],explain:"En la mayoría de estados, el límite legal es 0.08%."},
+   fr:{q:"Quelle est la limite légale d'alcoolémie pour les conducteurs de 21 ans et plus ?",a:"0,08%",opts:["0,08%","0,05%","0,10%","0,02%"],explain:"Dans la plupart des États, la limite légale est de 0,08%."},
+   de:{q:"Was ist die gesetzliche Blutalkoholgrenze für Fahrer ab 21?",a:"0,08%",opts:["0,08%","0,05%","0,10%","0,02%"],explain:"In den meisten Bundesstaaten liegt die Grenze bei 0,08%."},
+   zh:{q:"大多数州21岁以上驾驶员的合法血液酒精浓度限制是多少？",a:"0.08%",opts:["0.08%","0.05%","0.10%","0.02%"],explain:"大多数州的法定限制为0.08%。"}},
+
+  {cat:"rules",en:{q:"When making a right turn on red, you must first:",a:"Come to a complete stop and check for traffic",opts:["Come to a complete stop and check for traffic","Slow down and turn","Honk to warn pedestrians","Wait for the green light"],explain:"Right on red is permitted only after a complete stop, unless a sign prohibits it."},
+   ru:{q:"При повороте направо на красный, вы должны сначала:",a:"Полностью остановиться и проверить движение",opts:["Полностью остановиться и проверить движение","Замедлить и повернуть","Посигналить пешеходам","Ждать зелёного"],explain:"Поворот направо на красный разрешён только после полной остановки."},
+   es:{q:"Al girar a la derecha en rojo, primero debe:",a:"Detenerse completamente y verificar el tráfico",opts:["Detenerse completamente y verificar el tráfico","Reducir velocidad y girar","Tocar bocina a peatones","Esperar la luz verde"],explain:"Girar a la derecha en rojo solo está permitido después de una parada completa."},
+   fr:{q:"Pour tourner à droite au feu rouge, vous devez d'abord :",a:"S'arrêter complètement et vérifier la circulation",opts:["S'arrêter complètement et vérifier la circulation","Ralentir et tourner","Klaxonner pour les piétons","Attendre le feu vert"],explain:"Le virage à droite au rouge n'est permis qu'après un arrêt complet."},
+   de:{q:"Beim Rechtsabbiegen bei Rot müssen Sie zuerst:",a:"Vollständig anhalten und Verkehr prüfen",opts:["Vollständig anhalten und Verkehr prüfen","Verlangsamen und abbiegen","Hupen für Fußgänger","Auf Grün warten"],explain:"Rechtsabbiegen bei Rot ist nur nach vollständigem Halt erlaubt."},
+   zh:{q:"红灯右转时，你必须首先：",a:"完全停车并检查交通",opts:["完全停车并检查交通","减速转弯","鸣笛警告行人","等绿灯"],explain:"红灯右转只有在完全停车后才允许。"}},
+
+  {cat:"rules",en:{q:"What is the proper following distance in normal conditions?",a:"At least 3 seconds",opts:["At least 3 seconds","1 car length","2 seconds","5 car lengths"],explain:"The 3-second rule: pick a fixed point and count 3 seconds after the car ahead passes it."},
+   ru:{q:"Какова правильная дистанция следования в нормальных условиях?",a:"Минимум 3 секунды",opts:["Минимум 3 секунды","1 длина автомобиля","2 секунды","5 длин автомобиля"],explain:"Правило 3 секунд: выберите точку и считайте 3 секунды после проезда впереди идущего авто."},
+   es:{q:"¿Cuál es la distancia de seguimiento adecuada en condiciones normales?",a:"Al menos 3 segundos",opts:["Al menos 3 segundos","1 largo de auto","2 segundos","5 largos de auto"],explain:"La regla de 3 segundos: elija un punto fijo y cuente 3 segundos."},
+   fr:{q:"Quelle est la distance de suivi appropriée en conditions normales ?",a:"Au moins 3 secondes",opts:["Au moins 3 secondes","1 longueur de voiture","2 secondes","5 longueurs de voiture"],explain:"La règle des 3 secondes : choisissez un point fixe et comptez 3 secondes."},
+   de:{q:"Was ist der richtige Sicherheitsabstand unter normalen Bedingungen?",a:"Mindestens 3 Sekunden",opts:["Mindestens 3 Sekunden","1 Autolänge","2 Sekunden","5 Autolängen"],explain:"Die 3-Sekunden-Regel: Wählen Sie einen Fixpunkt und zählen Sie 3 Sekunden."},
+   zh:{q:"正常情况下正确的跟车距离是多少？",a:"至少3秒",opts:["至少3秒","1个车长","2秒","5个车长"],explain:"3秒规则：选择一个固定点，前车经过后数3秒。"}},
+
+  // SAFETY
+  {cat:"safety",en:{q:"When should you use your headlights?",a:"From sunset to sunrise and in poor visibility",opts:["From sunset to sunrise and in poor visibility","Only at night","Only in rain","Only on highways"],explain:"Headlights are required from sunset to sunrise, in rain, fog, snow, or when visibility is under 1000 feet."},
+   ru:{q:"Когда нужно включать фары?",a:"От заката до рассвета и при плохой видимости",opts:["От заката до рассвета и при плохой видимости","Только ночью","Только в дождь","Только на шоссе"],explain:"Фары обязательны от заката до рассвета, в дождь, туман, снег или при видимости менее 300 метров."},
+   es:{q:"¿Cuándo debe usar las luces delanteras?",a:"De atardecer a amanecer y con poca visibilidad",opts:["De atardecer a amanecer y con poca visibilidad","Solo de noche","Solo con lluvia","Solo en autopistas"],explain:"Se requieren luces de atardecer a amanecer, en lluvia, niebla, nieve o visibilidad reducida."},
+   fr:{q:"Quand devez-vous utiliser vos phares ?",a:"Du coucher au lever du soleil et en mauvaise visibilité",opts:["Du coucher au lever du soleil et en mauvaise visibilité","Seulement la nuit","Seulement sous la pluie","Seulement sur autoroute"],explain:"Les phares sont requis du coucher au lever du soleil, sous la pluie, le brouillard ou la neige."},
+   de:{q:"Wann sollten Sie Ihre Scheinwerfer benutzen?",a:"Von Sonnenuntergang bis -aufgang und bei schlechter Sicht",opts:["Von Sonnenuntergang bis -aufgang und bei schlechter Sicht","Nur nachts","Nur bei Regen","Nur auf Autobahnen"],explain:"Scheinwerfer sind von Sonnenuntergang bis -aufgang, bei Regen, Nebel oder Schnee erforderlich."},
+   zh:{q:"什么时候应该使用前灯？",a:"日落到日出以及能见度差时",opts:["日落到日出以及能见度差时","只在夜间","只在下雨时","只在高速公路上"],explain:"前灯在日落到日出、雨天、雾天、雪天或能见度低时必须使用。"}},
+
+  {cat:"safety",en:{q:"What should you do if your brakes fail?",a:"Pump brakes, use emergency brake, shift to lower gear",opts:["Pump brakes, use emergency brake, shift to lower gear","Jump out of the car","Turn off the engine immediately","Steer into oncoming traffic"],explain:"Pump the brakes rapidly, use the emergency/parking brake gradually, and downshift to slow down."},
+   ru:{q:"Что делать если отказали тормоза?",a:"Качайте тормоз, используйте ручник, переключитесь на пониженную",opts:["Качайте тормоз, используйте ручник, переключитесь на пониженную","Выпрыгните из машины","Немедленно выключите двигатель","Поверните навстречу движению"],explain:"Качайте педаль тормоза, плавно используйте ручник и переключитесь на пониженную передачу."},
+   es:{q:"¿Qué debe hacer si fallan los frenos?",a:"Bombear frenos, usar freno de mano, reducir marcha",opts:["Bombear frenos, usar freno de mano, reducir marcha","Saltar del auto","Apagar el motor inmediatamente","Dirigirse al tráfico contrario"],explain:"Bombee los frenos, use el freno de emergencia gradualmente y reduzca la marcha."},
+   fr:{q:"Que faire si vos freins lâchent ?",a:"Pomper les freins, utiliser le frein à main, rétrograder",opts:["Pomper les freins, utiliser le frein à main, rétrograder","Sauter de la voiture","Couper le moteur immédiatement","Tourner vers la circulation"],explain:"Pompez les freins, utilisez le frein à main progressivement et rétrogradez."},
+   de:{q:"Was tun wenn die Bremsen versagen?",a:"Bremse pumpen, Handbremse nutzen, herunterschalten",opts:["Bremse pumpen, Handbremse nutzen, herunterschalten","Aus dem Auto springen","Motor sofort abschalten","In Gegenverkehr lenken"],explain:"Pumpen Sie die Bremse, nutzen Sie die Handbremse schrittweise und schalten Sie herunter."},
+   zh:{q:"如果刹车失灵该怎么办？",a:"反复踩刹车、用手刹、降档",opts:["反复踩刹车、用手刹、降档","跳车","立即关闭发动机","转向对面车道"],explain:"快速反复踩刹车，逐渐使用手刹，降档减速。"}},
+
+  // PARKING
+  {cat:"parking",en:{q:"How far must you park from a fire hydrant?",a:"At least 15 feet",opts:["At least 15 feet","At least 5 feet","At least 10 feet","At least 25 feet"],explain:"You must park at least 15 feet from a fire hydrant in most states."},
+   ru:{q:"На каком расстоянии от пожарного гидранта нужно парковаться?",a:"Минимум 5 метров (15 футов)",opts:["Минимум 5 метров (15 футов)","Минимум 1.5 метра","Минимум 3 метра","Минимум 8 метров"],explain:"Парковаться нужно минимум в 15 футах (5 м) от пожарного гидранта."},
+   es:{q:"¿A qué distancia debe estacionarse de una boca de incendios?",a:"Al menos 15 pies (5 metros)",opts:["Al menos 15 pies (5 metros)","Al menos 5 pies","Al menos 10 pies","Al menos 25 pies"],explain:"Debe estacionarse al menos a 15 pies de una boca de incendios."},
+   fr:{q:"À quelle distance devez-vous vous garer d'une bouche d'incendie ?",a:"Au moins 5 mètres (15 pieds)",opts:["Au moins 5 mètres (15 pieds)","Au moins 1.5 mètre","Au moins 3 mètres","Au moins 8 mètres"],explain:"Vous devez vous garer à au moins 15 pieds d'une bouche d'incendie."},
+   de:{q:"Wie weit müssen Sie von einem Hydranten parken?",a:"Mindestens 5 Meter (15 Fuß)",opts:["Mindestens 5 Meter (15 Fuß)","Mindestens 1.5 Meter","Mindestens 3 Meter","Mindestens 8 Meter"],explain:"Sie müssen mindestens 15 Fuß (5 m) von einem Hydranten parken."},
+   zh:{q:"必须距消防栓多远停车？",a:"至少15英尺（5米）",opts:["至少15英尺（5米）","至少5英尺","至少10英尺","至少25英尺"],explain:"大多数州要求距消防栓至少15英尺。"}},
+
+  {cat:"parking",en:{q:"When parking uphill with a curb, turn your wheels:",a:"Away from the curb (left)",opts:["Away from the curb (left)","Toward the curb (right)","Straight ahead","It doesn't matter"],explain:"Uphill with curb: turn wheels left so the car rolls into the curb if brakes fail."},
+   ru:{q:"При парковке на подъёме с бордюром, поверните колёса:",a:"От бордюра (влево)",opts:["От бордюра (влево)","К бордюру (вправо)","Прямо","Не имеет значения"],explain:"На подъёме с бордюром: колёса влево — машина упрётся в бордюр если откатится."},
+   es:{q:"Al estacionar cuesta arriba con bordillo, gire las ruedas:",a:"Lejos del bordillo (izquierda)",opts:["Lejos del bordillo (izquierda)","Hacia el bordillo (derecha)","Recto","No importa"],explain:"Cuesta arriba con bordillo: gire a la izquierda para que el auto ruede al bordillo."},
+   fr:{q:"En stationnant en montée avec un trottoir, tournez vos roues :",a:"Loin du trottoir (gauche)",opts:["Loin du trottoir (gauche)","Vers le trottoir (droite)","Tout droit","Peu importe"],explain:"En montée avec trottoir : roues à gauche pour que la voiture roule vers le trottoir."},
+   de:{q:"Beim Parken bergauf mit Bordstein, drehen Sie die Räder:",a:"Vom Bordstein weg (links)",opts:["Vom Bordstein weg (links)","Zum Bordstein (rechts)","Geradeaus","Egal"],explain:"Bergauf mit Bordstein: Räder nach links — Auto rollt gegen den Bordstein."},
+   zh:{q:"在有路缘的上坡停车时，转动方向盘：",a:"远离路缘（向左）",opts:["远离路缘（向左）","朝向路缘（向右）","保持直行","无所谓"],explain:"上坡有路缘：向左转，这样车辆会滚向路缘。"}},
+];
+
+const CATS={signs:"Signs & Signals",rules:"Rules of the Road",safety:"Safety",parking:"Parking"};
+const LANGS=[
+  {code:'en',label:'🇺🇸 English'},
+  {code:'ru',label:'🇷🇺 Русский'},
+  {code:'es',label:'🇪🇸 Español'},
+  {code:'fr',label:'🇫🇷 Français'},
+  {code:'de',label:'🇩🇪 Deutsch'},
+  {code:'zh',label:'🇨🇳 中文'},
+];
+
+let lang='en', mode='quiz', activeCat='all';
+let deck=[], idx=0, correct=0, wrong=0, answered=false;
+let progress=JSON.parse(localStorage.getItem(LS)||'{}');
+
+// Render language bar
+document.getElementById('langBar').innerHTML=LANGS.map(l=>
+  `<button class="lang-btn ${l.code===lang?'active':''}" data-lang="${l.code}">${l.label}</button>`
+).join('');
+
+document.querySelectorAll('.lang-btn').forEach(b=>b.addEventListener('click',()=>{
+  lang=b.dataset.lang;
+  document.querySelectorAll('.lang-btn').forEach(x=>x.classList.toggle('active',x.dataset.lang===lang));
+  startDeck();
+}));
+
+// Mode toggle
+document.querySelectorAll('.mode-btn').forEach(b=>b.addEventListener('click',()=>{
+  mode=b.dataset.mode;
+  document.querySelectorAll('.mode-btn').forEach(x=>x.classList.toggle('active',x.dataset.mode===mode));
+  startDeck();
+}));
+
+// Category tabs
+function renderCatTabs(){
+  const cats=['all',...Object.keys(CATS)];
+  document.getElementById('catTabs').innerHTML=cats.map(c=>
+    `<button class="cat-tab ${c===activeCat?'active':''}" data-cat="${c}">${c==='all'?'All':CATS[c]}</button>`
+  ).join('');
+  document.querySelectorAll('.cat-tab').forEach(b=>b.addEventListener('click',()=>{
+    activeCat=b.dataset.cat;
+    document.querySelectorAll('.cat-tab').forEach(x=>x.classList.toggle('active',x.dataset.cat===activeCat));
+    startDeck();
+  }));
+}
+
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+
+function startDeck(){
+  let qs=activeCat==='all'?[...QUESTIONS]:QUESTIONS.filter(q=>q.cat===activeCat);
+  deck=shuffle(qs);
+  idx=0;correct=0;wrong=0;answered=false;
+  renderCatTabs();
+  updateStats();
+  renderCard();
+}
+
+function updateStats(){
+  const total=deck.length;
+  const done=correct+wrong;
+  document.getElementById('sCorrect').textContent=correct;
+  document.getElementById('sWrong').textContent=wrong;
+  document.getElementById('sRemaining').textContent=Math.max(0,total-idx);
+  document.getElementById('sPercent').textContent=done?Math.round(correct/done*100)+'%':'0%';
+  document.getElementById('progressFill').style.width=(idx/total*100)+'%';
+}
+
+function renderCard(){
+  const area=document.getElementById('gameArea');
+  if(idx>=deck.length){renderResults();return;}
+  const q=deck[idx];
+  const data=q[lang]||q.en;
+  const catLabel=CATS[q.cat]||q.cat;
+
+  if(mode==='flash'){
+    area.innerHTML=`
+      <div class="card-container">
+        <div class="flashcard" id="fc">
+          <div class="card-face">
+            <span class="card-cat" style="background:var(--blue-bg);color:var(--blue)">${catLabel}</span>
+            <div class="card-q">${data.q}</div>
+            <div class="card-hint">Tap to flip</div>
+            <span class="card-number">${idx+1}/${deck.length}</span>
+          </div>
+          <div class="card-face card-back">
+            <span class="card-cat" style="background:var(--accent-bg);color:var(--accent)">${catLabel}</span>
+            <div class="card-a">${data.a}</div>
+            <div class="card-explain">${data.explain}</div>
+            <span class="card-number">${idx+1}/${deck.length}</span>
+          </div>
+        </div>
+      </div>
+      <div class="nav-row">
+        <button class="nav-btn ghost" id="knewIt">✅ Knew it</button>
+        <button class="nav-btn ghost" id="didntKnow">❌ Didn't know</button>
+      </div>`;
+    document.getElementById('fc').addEventListener('click',()=>document.getElementById('fc').classList.toggle('flipped'));
+    document.getElementById('knewIt').addEventListener('click',()=>{correct++;idx++;updateStats();renderCard();});
+    document.getElementById('didntKnow').addEventListener('click',()=>{wrong++;idx++;updateStats();renderCard();});
+  } else {
+    // Quiz mode
+    const shuffledOpts=shuffle([...data.opts]);
+    area.innerHTML=`
+      <div class="card-container" style="perspective:none">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;text-align:center;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative">
+          <span class="card-cat" style="background:var(--blue-bg);color:var(--blue)">${catLabel}</span>
+          <div class="card-q" style="margin-top:8px">${data.q}</div>
+          <span class="card-number">${idx+1}/${deck.length}</span>
+        </div>
+      </div>
+      <div class="answers" id="answers">
+        ${shuffledOpts.map((o,i)=>`<button class="answer-btn" data-ans="${o}">${o}</button>`).join('')}
+      </div>
+      <div id="feedback" style="display:none;margin-bottom:12px;padding:12px;border-radius:var(--radius);font-size:12px;line-height:1.4"></div>
+      <div class="nav-row">
+        <button class="nav-btn primary" id="nextBtn" style="display:none">Next →</button>
+      </div>`;
+
+    answered=false;
+    document.querySelectorAll('.answer-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        if(answered)return;
+        answered=true;
+        const isCorrect=btn.dataset.ans===data.a;
+        if(isCorrect){correct++;btn.classList.add('correct');}
+        else{wrong++;btn.classList.add('wrong');
+          document.querySelectorAll('.answer-btn').forEach(b=>{if(b.dataset.ans===data.a)b.classList.add('correct');});
+        }
+        document.querySelectorAll('.answer-btn').forEach(b=>b.classList.add('disabled'));
+        const fb=document.getElementById('feedback');
+        fb.style.display='';
+        fb.style.background=isCorrect?'var(--accent-bg)':'var(--red-bg)';
+        fb.style.border=`1px solid ${isCorrect?'hsl(160,30%,20%)':'hsl(0,30%,20%)'}`;
+        fb.style.color=isCorrect?'hsl(160,50%,65%)':'hsl(0,50%,65%)';
+        fb.textContent=data.explain;
+        document.getElementById('nextBtn').style.display='';
+        updateStats();
+      });
+    });
+
+    document.getElementById('nextBtn').addEventListener('click',()=>{idx++;renderCard();});
+  }
+}
+
+function renderResults(){
+  const pct=deck.length?Math.round(correct/deck.length*100):0;
+  const passed=pct>=80;
+  // Save progress
+  if(!progress[lang])progress[lang]={};
+  progress[lang][activeCat]={correct,total:deck.length,pct,date:Date.now()};
+  localStorage.setItem(LS,JSON.stringify(progress));
+
+  document.getElementById('gameArea').innerHTML=`
+    <div class="results">
+      <h2>${passed?'🎉 Passed!':'📚 Keep Studying'}</h2>
+      <div class="big">${pct}%</div>
+      <div class="detail">${correct} of ${deck.length} correct · Need 80% to pass</div>
+      <div class="nav-row" style="justify-content:center;gap:8px">
+        <button class="nav-btn primary" onclick="startDeck()">Try Again</button>
+      </div>
+    </div>`;
+}
+
+// Swipe support for flashcard mode
+let touchX=0;
+document.addEventListener('touchstart',e=>{touchX=e.touches[0].clientX;},{passive:true});
+document.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-touchX;
+  if(Math.abs(dx)>60&&mode==='flash'){
+    const fc=document.getElementById('fc');
+    if(fc&&fc.classList.contains('flipped')){
+      if(dx>0){document.getElementById('knewIt')?.click();}
+      else{document.getElementById('didntKnow')?.click();}
+    }
+  }
+},{passive:true});
+
+startDeck();
+</script>
+  <script src="../shared/help-content.js"></script>
+  <script src="../shared/f1-help-nav.js"></script>
+</body></html>

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tiny Kanban — Clean (No eval · No SW · No deps)</title>
+<style>
+  :root{
+    --bg:#0e1324; --panel:#0f172a; --card:#141b2f; --ink:#e8edf6; --muted:#9aa4b2; --line:#233055;
+    --accent:#7aa2ff; --accent-2:#9bffa6; --danger:#ff6b6b; --warn:#fbbf24;
+    --prio-high:#ef4444; --prio-med:#f97316; --prio-low:#22c55e;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 system-ui,Segoe UI,Roboto,Arial; display:grid; grid-template-rows:auto 1fr auto; height:100vh}
+  /* App bar */
+  .appbar{position:sticky; top:0; z-index:10; background:var(--panel); border-bottom:1px solid var(--line); padding:10px 14px; display:flex; align-items:center; gap:10px}
+  .brand{display:flex; align-items:center; gap:10px; font-weight:800}
+  .logo{width:20px; height:20px; border-radius:6px; background:linear-gradient(135deg,var(--accent),var(--accent-2))}
+  .pill{font-size:12px; padding:2px 8px; border:1px solid var(--line); border-radius:999px; background:var(--panel); color:var(--muted)}
+  .grow{flex:1}
+  .search-wrap{display:flex; align-items:center; gap:8px; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:6px 10px; min-width:220px}
+  .search-wrap input{border:none; outline:none; background:transparent; color:var(--ink); width:220px}
+  .iconbtn{border:1px solid var(--line); background:var(--panel); color:var(--ink); padding:8px 10px; border-radius:10px; cursor:pointer; display:inline-flex; align-items:center; gap:8px}
+  .iconbtn:hover{border-color:var(--accent)}
+  /* Drawer */
+  .drawer{position:fixed; inset:0; display:none; z-index:40}
+  .drawer.open{display:block}
+  .drawer .backdrop{position:absolute; inset:0; background:rgba(0,0,0,.5)}
+  .drawer .panel{position:absolute; left:0; top:0; bottom:0; width:320px; background:var(--panel); color:var(--ink); border-right:1px solid var(--line); display:flex; flex-direction:column}
+  .menu-head{display:flex; align-items:center; justify-content:space-between; padding:14px; border-bottom:1px solid var(--line)}
+  .menu-body{padding:8px; overflow:auto; display:flex; flex-direction:column; gap:8px}
+  .menu-item{display:flex; align-items:center; gap:10px; padding:10px; border-radius:10px; border:1px solid var(--line); cursor:pointer; background:var(--panel)}
+  .menu-item:hover{border-color:var(--accent)}
+  /* Board */
+  main{padding:14px; display:grid; gap:14px; grid-template-columns:repeat(3, 1fr); min-height:0}
+  @media (max-width: 980px){ main{grid-template-columns:1fr} .search-wrap input{width:140px} }
+  .column{background:var(--panel); border:1px solid var(--line); border-radius:14px; display:flex; flex-direction:column; flex:1; min-height:0}
+  .col-head{display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px dashed var(--line)}
+  .col-head h2{margin:0; font-size:18px}
+  .badge{font-weight:700; font-size:12px; padding:3px 10px; border-radius:999px; border:1px solid var(--line); background:var(--card)}
+  .cards{overflow:auto; padding:10px; display:flex; flex-direction:column; gap:10px; flex:1; min-height:100px}
+  .drop-ok{outline:2px dashed var(--accent); outline-offset:3px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px; cursor:grab; user-select:none; -webkit-user-select:none; -webkit-user-drag:element}
+  .card.dragging{opacity:.6}
+  .row{display:flex; gap:8px; align-items:center; justify-content:space-between}
+  .controls{display:flex; gap:6px; align-items:center}
+  .icon{border:1px solid var(--line); background:var(--panel); color:var(--ink); padding:4px 6px; border-radius:8px; cursor:pointer; font-size:12px}
+  .icon:hover{border-color:var(--accent)}
+  .handle{cursor:grab; opacity:.7}
+
+  .title{font-weight:800; font-size:16px}
+  .meta{display:flex; gap:8px; align-items:center; color:var(--muted); font-size:12px; margin-top:6px; flex-wrap:wrap}
+  .chip{padding:2px 8px; border-radius:999px; border:1px solid var(--line); background:transparent}
+  .prio{width:10px; height:10px; border-radius:2px; display:inline-block; transform:translateY(1px)}
+  .prio.high{background:var(--prio-high)}
+  .prio.medium{background:var(--prio-med)}
+  .prio.low{background:var(--prio-low)}
+  footer{padding:10px 14px; border-top:1px solid var(--line); color:var(--muted); display:flex; gap:10px; flex-wrap:wrap}
+  .kbd{font:600 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; padding:2px 6px; border:1px solid var(--line); border-radius:6px; background:var(--panel); color:var(--ink)}
+  /* Modals */
+  .modal{position:fixed; inset:0; display:none; z-index:50}
+  .modal.open{display:grid; place-items:center}
+  .modal .backdrop{position:absolute; inset:0; background:rgba(0,0,0,.5)}
+  .modal .box{position:relative; z-index:1; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; width:min(720px, 92vw)}
+  .box h3{margin:0 0 10px 0}
+  .grid{display:grid; gap:10px; grid-template-columns:1fr 1fr}
+  .grid-1{display:grid; gap:10px}
+  label{font-size:12px; color:var(--muted)}
+  input[type='text'], select{width:100%; padding:10px; border-radius:10px; background:var(--card); color:var(--ink); border:1px solid var(--line)}
+  .btn{display:inline-flex; align-items:center; gap:8px; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:var(--panel); color:var(--ink); cursor:pointer}
+  .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#0b1020; border:none; font-weight:800}
+  .btn.ghost{background:transparent}
+  .btn.warn{border-color:var(--warn); color:var(--warn)}
+  .row-end{display:flex; gap:8px; justify-content:flex-end; margin-top:10px}
+  /* Hidden test panel (open via menu) */
+  .tests{display:none; padding:10px 14px; border-top:1px dashed var(--line)}
+  .tests.open{display:block}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12px; white-space:pre-wrap}
+
+/* Suite nav */
+.suite-nav{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:hsl(222,30%,10%);border-bottom:1px solid hsl(222,15%,20%);font-size:12px;font-family:'DM Sans',system-ui,sans-serif}
+.suite-nav a{color:hsl(215,15%,55%);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .15s}
+.suite-nav a:hover{color:hsl(160,60%,45%)}
+.suite-nav .suite-name{color:hsl(215,10%,40%);font-family:'DM Mono',monospace;font-size:11px}
+</style>
+</head>
+<body data-theme="dark">
+<nav class="suite-nav">
+  <a href="../index.html">← Back to Suite</a>
+  <span class="suite-name">ProSe Pilot</span>
+</nav>
+
+  <header class="appbar" style="
+    height: 71px;
+">
+    <div class="brand"><div class="logo"></div><div>Tiny Kanban <span class="pill">Clean</span></div></div>
+    <div class="grow"></div>
+    <div class="search-wrap"><input id="search" placeholder="Search tasks ( / )" aria-label="Search tasks"></div>
+    <button id="addQuick" class="iconbtn" title="Add (A)">Add</button>
+    <button id="menuBtn" class="iconbtn" title="Menu (M)">Menu</button>
+  </header>
+
+  <aside id="drawer" class="drawer" aria-hidden="true">
+    <div class="backdrop" data-close="drawer"></div>
+    <nav class="panel" aria-label="Main menu">
+      <div class="menu-head"><strong>Commands</strong><button class="iconbtn" data-close="drawer">Close ✕</button></div>
+      <div class="menu-body">
+        <div class="menu-item" id="mi-add">➕ <div><div><strong>New task</strong></div><small>Create a task in Todo</small></div></div>
+        <div class="menu-item" id="mi-import-json">📥 <div><div><strong>Import JSON</strong></div><small>Merge or replace from file</small></div></div>
+        <div class="menu-item" id="mi-export-json">📤 <div><div><strong>Export JSON</strong></div><small>Save tasks.json</small></div></div>
+        <div class="menu-item" id="mi-export-csv">📊 <div><div><strong>Export CSV</strong></div><small>Save tasks.csv</small></div></div>
+        <div class="menu-item" id="mi-settings">⚙️ <div><div><strong>Settings</strong></div><small>WIP limit · Theme · Clear done</small></div></div>
+        <div class="menu-item" id="mi-shortcuts">⌨️ <div><div><strong>Shortcuts</strong></div><small>Tips to move faster</small></div></div>
+        <div class="menu-item" id="mi-tests">🧪 <div><div><strong>Self—tests</strong></div><small>Run quick sanity checks</small></div></div>
+        <div class="menu-item" id="mi-about">ℹ️ <div><div><strong>About</strong></div><small>Local—first, no deps</small></div></div>
+      </div>
+    </nav>
+  </aside>
+
+  <main role="main" aria-label="Kanban board" style="
+    height: 713px;
+">
+    <section class="column" data-status="todo">
+      <div class="col-head"><h2>Todo</h2><span class="badge" id="count-todo">2</span></div>
+      <div class="cards" id="list-todo"><article class="card" draggable="true" data-id="1"><div class="row"><div class="title"><span class="handle" title="Drag to reorder">⋮⋮</span> ship</div><div class="controls"><button class="icon btn-up" title="Move up">↑</button><button class="icon btn-down" title="Move down">↓</button><button class="icon btn-edit" title="Edit">✎</button><button class="icon btn-del" title="Delete">✕</button></div></div><div class="meta"><span class="chip"><span class="prio high"></span> high</span><span class="chip">🌱¤ Gio</span><span class="chip">#1</span></div></article><article class="card" draggable="true" data-id="2"><div class="row"><div class="title"><span class="handle" title="Drag to reorder">⋮⋮</span> remove crazy letters</div><div class="controls"><button class="icon btn-up" title="Move up">↑</button><button class="icon btn-down" title="Move down">↓</button><button class="icon btn-edit" title="Edit">✎</button><button class="icon btn-del" title="Delete">✕</button></div></div><div class="meta"><span class="chip"><span class="prio high"></span> high</span><span class="chip">🌱¤ Gio</span><span class="chip">#2</span></div></article></div>
+    </section>
+    <section class="column" data-status="doing">
+      <div class="col-head"><h2>Doing</h2><span class="badge" id="count-doing">0</span><span class="pill" id="wipWarn" style="display:none">WIP limit reached</span></div>
+      <div class="cards" id="list-doing"></div>
+    </section>
+    <section class="column" data-status="done">
+      <div class="col-head"><h2>Done</h2><span class="badge" id="count-done">0</span></div>
+      <div class="cards" id="list-done"></div>
+    </section>
+  </main>
+
+  
+  <!-- Edit Task Modal -->
+  <div id="modalEdit" class="modal" role="dialog" aria-modal="true" aria-labelledby="edTitle">
+    <div class="backdrop" data-close="modal"></div>
+    <div class="box">
+      <h3 id="edTitle">Edit Task</h3>
+      <div class="grid">
+        <div><label>Title</label><input id="edit_title" type="text"></div>
+        <div><label>Assignee</label><input id="edit_assignee" type="text"></div>
+        <div><label>Priority</label>
+          <select id="edit_priority">
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div class="grid-1" style="align-self:end"><button id="saveEditBtn" class="btn primary">Save changes</button></div>
+      </div>
+      <div class="row-end"><button class="btn ghost" data-close="modal">Close</button></div>
+    </div>
+  </div>
+<footer>
+    <span>WIP limit: <strong id="wipLimitDisplay">3</strong>.</span>
+    <span class="kbd">/</span> search <span class="kbd">A</span> add <span class="kbd">M</span> menu <span class="kbd">T</span> theme
+    <input id="fileImportJson" type="file" accept="application/json,.json" style="display:none">
+  </footer>
+
+  <!-- Add Task Modal -->
+  <div id="modalAdd" class="modal" role="dialog" aria-modal="true" aria-labelledby="addTitle">
+    <div class="backdrop" data-close="modal"></div>
+    <div class="box">
+      <h3 id="addTitle">New Task</h3>
+      <div class="grid">
+        <div><label>Title</label><input id="title" type="text" placeholder="e.g., Ship onboarding"></div>
+        <div><label>Assignee</label><input id="assignee" type="text" placeholder="Name"></div>
+        <div><label>Priority</label>
+          <select id="priority">
+            <option value="high">High</option>
+            <option value="medium" selected="">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div class="grid-1" style="align-self:end"><button id="addBtn" class="btn primary">Add task</button></div>
+      </div>
+      <div class="row-end"><button class="btn ghost" data-close="modal">Close</button></div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="modalSettings" class="modal" role="dialog" aria-modal="true" aria-labelledby="stTitle">
+    <div class="backdrop" data-close="modal"></div>
+    <div class="box">
+      <h3 id="stTitle">Settings</h3>
+      <div class="grid">
+        <div><label>Doing WIP limit</label><input id="wipInput" type="text"></div>
+        <div><label>Theme</label><select id="themeSelect"><option value="dark">Dark</option><option value="light">Light</option></select></div>
+        <div class="grid-1" style="align-self:end"><button id="clearDoneBtn" class="btn warn">Clear all Done tasks</button></div>
+      </div>
+      <div class="row-end"><button class="btn primary" id="saveSettings">Save</button><button class="btn ghost" data-close="modal">Close</button></div>
+    </div>
+  </div>
+
+  <!-- Shortcuts / About -->
+  <div id="modalShort" class="modal"><div class="backdrop" data-close="modal"></div><div class="box"><h3>Shortcuts</h3><ul><li><span class="kbd">/</span> Focus search</li><li><span class="kbd">A</span> New task</li><li><span class="kbd">M</span> Open menu</li><li><span class="kbd">T</span> Toggle theme</li></ul><div class="row-end"><button class="btn ghost" data-close="modal">Close</button></div></div></div>
+  <div id="modalAbout" class="modal"><div class="backdrop" data-close="modal"></div><div class="box"><h3>About</h3><p><strong>Tiny Kanban — Clean</strong><br>No external dependencies. No eval. No Service Worker. LocalStorage persistence with CSV/JSON import/export. Drag &amp; drop with WIP enforcement.</p><div class="row-end"><button class="btn ghost" data-close="modal">Close</button></div></div></div>
+
+  <!-- Self-tests output -->
+  <section id="tests" class="tests">
+    <h3>Self—tests</h3>
+    <button id="runTests" class="btn">Run</button>
+    <div id="testResults" class="mono" aria-live="polite"></div>
+  </section>
+
+<script>
+/* =============== CONFIG (customize here; PR-friendly) =============== */
+const CONFIG = {
+  STORAGE_KEY: 'tiny-kanban-clean.v1',
+  WIP_LIMIT_DEFAULT: 3,
+  THEME_DEFAULT: 'dark'
+};
+
+/* =============== UTILITIES =============== */
+function $(sel){ return document.querySelector(sel); }
+function $all(sel){ return Array.from(document.querySelectorAll(sel)); }
+function escapeHTML(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    '&': '&',
+    '<': '<',
+    '>': '>',
+    '"': '"',
+    "'": '&#39;',
+  })[c]);
+}
+function downloadBlob(blob, filename){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 500);
+}
+function openModal(id){ const m=$(id); if(m) m.classList.add('open'); }
+function closeModalByChild(el){ const m=el.closest('.modal'); if(m) m.classList.remove('open'); }
+function toggleDrawer(on){ const d=$('#drawer'); d.classList.toggle('open', !!on); d.setAttribute('aria-hidden', on?'false':'true'); }
+
+/* =============== SETTINGS (persisted) =============== */
+const SettingsKey = 'tiny-kanban-clean.settings';
+let Settings = { wipLimit: CONFIG.WIP_LIMIT_DEFAULT, theme: CONFIG.THEME_DEFAULT };
+try{ const s=JSON.parse(localStorage.getItem(SettingsKey)||'{}'); if(s&&typeof s==='object'){ if(s.wipLimit) Settings.wipLimit=s.wipLimit; if(s.theme) Settings.theme=s.theme; } }catch(_){}
+document.body.setAttribute('data-theme', Settings.theme);
+
+/* =============== MODEL (LocalStorage only) =============== */
+const Store = {
+  load(){
+    try{ return JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEY) || '[]'); }catch(_){ return []; }
+  },
+  save(rows){ localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(rows)); }
+};
+let rows = Store.load();
+// backfill order if missing, grouped by status
+(function(){ const by = {todo:[], doing:[], done:[]}; for(const r of rows){ if(typeof r.order!=='number') r.order=0; (by[r.status]||by.todo).push(r); } for(const k of Object.keys(by)){ by[k].sort((a,b)=> a.created_at - b.created_at); by[k].forEach((t,i)=> t.order=i); } })();
+let nextId = (rows.reduce((m,r)=>Math.max(m,r.id||0),0) || 0) + 1;
+
+const Model = {
+  queryAll(){
+    return rows.slice().sort((a,b)=> a.status.localeCompare(b.status) || (a.order - b.order));
+  },
+  countByStatus(s){ return rows.reduce((n,r)=> n + (r.status===s), 0); },
+  addTask(title, assignee, priority){
+    const order = rows.filter(x=>x.status==='todo').length; // append at end of Todo
+    rows.push({ id: nextId++, title, assignee: assignee||null, priority: priority||'medium', status: 'todo', order, created_at: Math.floor(Date.now()/1000) });
+    Store.save(rows);
+  },
+  updateTaskStatus(id, status){
+    for (let i=0;i<rows.length;i++) if(rows[i].id===id){ rows[i].status=status; break; }
+    Store.save(rows);
+  },
+  deleteTask(id){
+    rows = rows.filter(r=>r.id!==id); Store.save(rows);
+  },
+  editTask(id, fields){
+    const t = rows.find(x=>x.id===id); if(!t) return;
+    if (t.status==='done'){ return; } // immutable in Done
+    if ('title' in fields) t.title = fields.title;
+    if ('assignee' in fields) t.assignee = fields.assignee;
+    if ('priority' in fields) t.priority = fields.priority;
+    Store.save(rows);
+  },
+  
+  duplicateFromDone(id){
+    const src = rows.find(x=>x.id===id); if(!src || src.status!=='done') return;
+    const order = rows.filter(x=>x.status==='todo').length; // put at end of Todo
+    const parentId = src.parentId || src.id;
+    rows.push({
+      id: nextId++,
+      title: src.title,
+      assignee: src.assignee || null,
+      priority: src.priority || 'medium',
+      status: 'todo',
+      order,
+      parentId,
+      created_at: Math.floor(Date.now()/1000)
+    });
+    Store.save(rows);
+  },
+
+  setStatusAndReindex(id, status, index){
+    const t = rows.find(x=>x.id===id); if(!t) return;
+    const prev = t.status;
+    t.status = status;
+    // insert at index and reindex lane
+    const lane = rows.filter(x=>x.status===status && x.id!==id).sort((a,b)=> a.order - b.order);
+    lane.splice(index, 0, t);
+    lane.forEach((n,i)=> n.order = i);
+    // normalize previous lane as well
+    normalizeOrders(prev);
+    Store.save(rows);
+  },
+
+  importJSON(obj, {replace}){
+    if (!Array.isArray(obj)) throw new Error('Invalid JSON format');
+    if (replace) rows = [];
+    for (const r of obj){
+      rows.push({ id: nextId++, title: r.title, assignee: r.assignee||null, priority: r.priority||'medium', status: r.status||'todo', created_at: r.created_at||Math.floor(Date.now()/1000) });
+    }
+    Store.save(rows);
+  },
+  exportJSON(){
+    return new Blob([JSON.stringify(rows,null,2)], {type:'application/json'});
+  },
+  exportCSV(){
+    const header = 'id,title,assignee,priority,status,created_at\\n';
+    const esc = s=>{const t=String(s??'').replace(/\"/g,'\"\"'); return /[\",\\n]/.test(t)?`\"${t}\"`:t;};
+    const lines = rows.map(r=>[r.id,esc(r.title),esc(r.assignee||''),r.priority,r.status,r.created_at].join(','));
+    return new Blob([header+lines.join('\\n')], {type:'text/csv'});
+  }
+};
+
+
+/* =============== RELATIONS & REORDER HELPERS =============== */
+function siblingsLabel(r){
+  const pid = r.parentId;
+  if (!pid) return '';
+  const sibs = rows.filter(x=> (x.parentId===pid) && x.id!==r.id);
+  return sibs.length ? (sibs.length + ' sibling' + (sibs.length>1?'s':'')) : 'no siblings';
+}
+function reorderRelative(id, delta){
+  const task = rows.find(x=>x.id===id); if(!task) return;
+  const same = rows.filter(x=>x.status===task.status).sort((a,b)=> a.order - b.order);
+  const idx = same.findIndex(x=>x.id===id); if(idx<0) return;
+  const target = idx + delta;
+  if (target<0 || target>=same.length) return;
+  // swap orders
+  const a = same[idx], b = same[target], tmp = a.order; a.order = b.order; b.order = tmp;
+  // normalize
+  normalizeOrders(task.status);
+  Store.save(rows); renderAll();
+}
+function normalizeOrders(status){
+  const lane = rows.filter(x=>x.status===status).sort((a,b)=> a.order - b.order);
+  lane.forEach((t,i)=> t.order = i);
+}
+/* =============== VIEW =============== */
+function renderCard(r){
+  const el = document.createElement('article'); el.className='card'; el.setAttribute('draggable','true'); el.dataset.id = r.id;
+  el.innerHTML = '<div class="row">'
+   + '<div class="title"><span class="handle" title="Drag to reorder">⋮⋮</span> ' + escapeHTML(r.title) + '</div>'
+   + '<div class="controls">'
+   + (r.status!=='done' ? '<button class="icon btn-up" title="Move up">↑</button><button class="icon btn-down" title="Move down">↓</button><button class="icon btn-edit" title="Edit">✎</button>' : '<button class="icon btn-dup" title="Duplicate">⎇</button>')
+   + '<button class="icon btn-del" title="Delete">✕</button>'
+   + '</div>'
+   + '</div>'
+   + '<div class="meta">'
+   + '<span class="chip"><span class="prio '+ r.priority +'"></span> '+ r.priority +'</span>'
+   + (r.assignee?('<span class="chip">🌱¤ '+ escapeHTML(r.assignee) +'</span>'):'')
+   + (r.parentId?('<span class="chip">Parent #'+ r.parentId +'</span>'):'')
+   + (r.parentId?('<span class="chip">'+ siblingsLabel(r) +'</span>'):'')
+   + '<span class="chip">#'+ r.id +'</span>'
+   + '</div>';
+  // wiring
+  el.querySelector('.btn-del').addEventListener('click', e=>{ e.stopPropagation(); Model.deleteTask(r.id); renderAll(); });
+  if (r.status!=='done'){
+    const up = el.querySelector('.btn-up'); const down = el.querySelector('.btn-down'); const edit = el.querySelector('.btn-edit');
+    up.addEventListener('click', e=>{ e.stopPropagation(); reorderRelative(r.id, -1); });
+    down.addEventListener('click', e=>{ e.stopPropagation(); reorderRelative(r.id, +1); });
+    edit.addEventListener('click', e=>{ e.stopPropagation(); openEdit(r); });
+    el.addEventListener('dblclick', ()=> openEdit(r));
+  } else {
+    const dup = el.querySelector('.btn-dup');
+    dup.addEventListener('click', e=>{ e.stopPropagation(); duplicateFromDone(r.id); });
+  }
+  el.addEventListener('dragstart', e=>{ el.classList.add('dragging'); try{ e.dataTransfer.setData('text/plain', String(r.id)); e.dataTransfer.effectAllowed = 'move'; }catch(_){} });
+  el.addEventListener('dragend', ()=> el.classList.remove('dragging'));
+  return el;
+}
+
+function getDragAfterElement(container, y){
+  const els = [...container.querySelectorAll('.card:not(.dragging)')];
+  let closest = {offset: Number.NEGATIVE_INFINITY, element: null};
+  for (const child of els){
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height/2;
+    if (offset < 0 && offset > closest.offset) closest = {offset, element: child};
+  }
+  return closest.element;
+}
+
+function wireDnD(){
+  $all('.column').forEach(col=>{
+    const list = col.querySelector('.cards'); const status = col.dataset.status; list.ondragenter = e=>{ e.preventDefault(); list.classList.add('drop-ok'); };
+    list.ondragover = e=>{ e.preventDefault(); try{ e.dataTransfer.dropEffect = 'move'; }catch(_){} list.classList.add('drop-ok'); };
+    list.ondragleave = ()=> list.classList.remove('drop-ok');
+    list.ondrop = e=>{
+      e.preventDefault(); list.classList.remove('drop-ok');
+      const dragging = document.querySelector('.card.dragging'); if(!dragging) return;
+      const id = +dragging.dataset.id;
+      if (status==='doing'){
+        const c = Model.countByStatus('doing');
+        const from = [...document.querySelectorAll('.column')].find(sec=>sec.querySelector(`[data-id="${id}"]`))?.dataset.status || 'todo';
+        if (from!=='doing' && c >= Settings.wipLimit){
+          $('#wipWarn').style.display='inline';
+          list.animate([{transform:'scale(1)'},{transform:'scale(1.02)'},{transform:'scale(1)'}],{duration:250});
+          return;
+        }
+      }
+      const after = getDragAfterElement(list, e.clientY);
+      const index = after ? [...list.children].indexOf(after) : list.children.length;
+      Model.setStatusAndReindex(id, status, index);
+      renderAll();
+    };
+  });
+}
+
+function renderAll(){
+  const search = $('#search').value.trim().toLowerCase();
+  const lists = { todo: $('#list-todo'), doing: $('#list-doing'), done: $('#list-done') };
+  lists.todo.innerHTML = lists.doing.innerHTML = lists.done.innerHTML = '';
+  const data = Model.queryAll();
+  for (const r of data){
+    const hay = (r.title + ' ' + (r.assignee||'') + ' ' + r.priority + ' ' + r.status).toLowerCase();
+    if (search && hay.indexOf(search) === -1) continue;
+    (r.status==='todo'?lists.todo:r.status==='doing'?lists.doing:lists.done).appendChild(renderCard(r));
+  }
+  $('#count-todo').textContent = Model.countByStatus('todo');
+  $('#count-doing').textContent = Model.countByStatus('doing');
+  $('#count-done').textContent = Model.countByStatus('done');
+  $('#wipLimitDisplay').textContent = String(Settings.wipLimit);
+  $('#wipWarn').style.display = (Model.countByStatus('doing') >= Settings.wipLimit) ? 'inline' : 'none';
+  wireDnD();
+}
+
+/* =============== CONTROLLERS / UI WIRING =============== */
+// Menu
+$('#menuBtn').onclick = ()=> toggleDrawer(true);
+$('#addQuick').onclick = ()=> openModal('#modalAdd');
+$all('[data-close=\"drawer\"]').forEach(btn=> btn.onclick = ()=> toggleDrawer(false));
+$('#mi-add').onclick = ()=> { toggleDrawer(false); openModal('#modalAdd'); };
+$('#mi-import-json').onclick = ()=> { toggleDrawer(false); $('#fileImportJson').click(); };
+$('#mi-export-json').onclick = ()=> { toggleDrawer(false); downloadBlob(Model.exportJSON(), 'tasks.json'); };
+$('#mi-export-csv').onclick = ()=> { toggleDrawer(false); downloadBlob(Model.exportCSV(), 'tasks.csv'); };
+$('#mi-settings').onclick = ()=> { toggleDrawer(false); $('#wipInput').value=String(Settings.wipLimit); $('#themeSelect').value=Settings.theme; openModal('#modalSettings'); };
+$('#mi-shortcuts').onclick = ()=> { toggleDrawer(false); openModal('#modalShort'); };
+$('#mi-about').onclick = ()=> { toggleDrawer(false); openModal('#modalAbout'); };
+$('#mi-tests').onclick = ()=> { toggleDrawer(false); $('#tests').classList.toggle('open'); };
+
+// Modals close
+$all('[data-close=\"modal\"]').forEach(btn=> btn.onclick = function(){ closeModalByChild(this); });
+
+// Add task
+$('#addBtn').addEventListener('click', ()=>{
+  const t = $('#title').value.trim(); if (!t) return;
+  const a = $('#assignee').value.trim(); const p = $('#priority').value;
+  Model.addTask(t, a, p); $('#title').value=''; renderAll();
+});
+
+// Search
+$('#search').addEventListener('input', renderAll);
+
+// Settings
+$('#saveSettings').onclick = ()=>{
+  let n = parseInt($('#wipInput').value||'3',10); if (!(n>0 && n<100)) n = CONFIG.WIP_LIMIT_DEFAULT;
+  Settings.wipLimit = n; Settings.theme = $('#themeSelect').value;
+  document.body.setAttribute('data-theme', Settings.theme);
+  localStorage.setItem(SettingsKey, JSON.stringify(Settings));
+  $('#wipLimitDisplay').textContent = String(Settings.wipLimit);
+  // close
+  const closeBtn = document.querySelector('#modalSettings .btn.ghost'); if (closeBtn) closeBtn.click();
+};
+$('#clearDoneBtn').onclick = ()=>{
+  if (!confirm('Delete all Done tasks?')) return;
+  rows = rows.filter(r=>r.status!=='done'); Store.save(rows); renderAll();
+};
+
+// File import (JSON)
+$('#fileImportJson').addEventListener('change', e=>{
+  const f = e.target.files[0]; if(!f) return; e.target.value='';
+  const replace = confirm('Replace current tasks with JSON import? (Cancel = merge)');
+  f.text().then(text=>{
+    const obj = JSON.parse(text); Model.importJSON(obj, {replace}); renderAll();
+  }).catch(err=> alert('Invalid JSON: ' + err.message));
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e=>{
+  const tag = (e.target.tagName||''); const inert = /^(INPUT|TEXTAREA|SELECT)$/.test(tag);
+  if (e.key==='Escape'){ $all('.modal.open').forEach(m=>m.classList.remove('open')); toggleDrawer(false); }
+  if (e.key==='/' && !inert){ e.preventDefault(); $('#search').focus(); }
+  if ((e.key==='a'||e.key==='A') && !inert){ openModal('#modalAdd'); }
+  if ((e.key==='m'||e.key==='M') && !inert){ toggleDrawer(true); }
+  if ((e.key==='t'||e.key==='T') && !inert){ const next=(document.body.getAttribute('data-theme')==='dark'?'light':'dark'); document.body.setAttribute('data-theme', next); Settings.theme=next; localStorage.setItem(SettingsKey, JSON.stringify(Settings)); }
+});
+
+
+/* ====== EDIT & DUPLICATE CONTROLLERS ====== */
+let _editId = null;
+function openEdit(r){
+  if (r.status==='done'){ return; }
+  _editId = r.id;
+  $('#edit_title').value = r.title || '';
+  $('#edit_assignee').value = r.assignee || '';
+  $('#edit_priority').value = r.priority || 'medium';
+  openModal('#modalEdit');
+}
+$('#saveEditBtn').addEventListener('click', ()=>{
+  if (_editId==null) return;
+  Model.editTask(_editId, {
+    title: $('#edit_title').value.trim(),
+    assignee: $('#edit_assignee').value.trim(),
+    priority: $('#edit_priority').value
+  });
+  _editId = null;
+  renderAll();
+  const closeBtn = document.querySelector('#modalEdit .btn.ghost'); if (closeBtn) closeBtn.click();
+});
+function duplicateFromDone(id){
+  Model.duplicateFromDone(id);
+  renderAll();
+}
+
+/* =============== BOOT =============== */
+(function boot(){
+  // ensure defaults
+  if (!Settings.wipLimit) Settings.wipLimit = CONFIG.WIP_LIMIT_DEFAULT;
+  document.body.setAttribute('data-theme', Settings.theme || CONFIG.THEME_DEFAULT);
+  renderAll();
+})();
+
+/* =============== SELF-TESTS (manual run) =============== */
+$('#runTests').addEventListener('click', runTests);
+function runTests(){
+  const out = []; const ok = m=>'✅ '+m; const fail=m=>'❌ '+m;
+  try{
+    const base = Model.countByStatus('todo');
+    Model.addTask('~~TEST~~ Insert', 'tester', 'low');
+    out.push(Model.countByStatus('todo')===base+1?ok('Add increased Todo count'):fail('Add did not increase Todo count'));
+    const id = Model.queryAll().find(r=>r.title==='~~TEST~~ Insert')?.id;
+    Model.updateTaskStatus(id,'doing');
+    out.push(Model.countByStatus('doing')>0?ok('Move to Doing works'):fail('Move to Doing failed'));
+    // WIP limit: fill
+    const need = Math.max(0, Settings.wipLimit - Model.countByStatus('doing'));
+    for(let i=0;i<need;i++){ Model.addTask('~~TEST~~ WIP '+i,'tester','low'); Model.updateTaskStatus(Model.queryAll()[0].id,'doing'); }
+    out.push(Model.countByStatus('doing')>=Settings.wipLimit?ok('WIP reached'):fail('WIP did not reach limit'));
+    // Delete
+    Model.deleteTask(id);
+    out.push(Model.queryAll().every(r=>r.title!=='~~TEST~~ Insert')?ok('Delete works'):fail('Delete failed'));
+    // CSV/JSON
+    out.push(Model.exportCSV().size>0?ok('CSV export ok'):fail('CSV export empty'));
+    out.push(Model.exportJSON().size>0?ok('JSON export ok'):fail('JSON export empty'));
+    // cleanup test rows
+    for(const r of Model.queryAll().filter(r=>String(r.title).startsWith('~~TEST~~'))) Model.deleteTask(r.id);
+  }catch(err){ out.push(fail('Exception: '+(err?.message||err))); }
+  $('#testResults').textContent = out.join('\\n');
+}
+</script>
+<script src="../shared/components.js"></script>
+  <script src="../shared/help-content.js"></script>
+  <script src="../shared/f1-help-nav.js"></script>
+</body></html>

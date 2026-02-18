@@ -1,0 +1,39 @@
+{
+  "id": "/",
+  "name": "ProSe Pilot Suite",
+  "short_name": "ProSe Pilot",
+  "description": "Offline-ready productivity, education, and field tools.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/shared/icons/suite-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Outdoor Kit",
+      "short_name": "Outdoor",
+      "url": "/outdoor-kit/index.html",
+      "description": "Compass, SOS, calculator, and field tools"
+    },
+    {
+      "name": "Linux Trainer",
+      "short_name": "Linux",
+      "url": "/linux-trainer/index.html",
+      "description": "Terminal command drills and scenarios"
+    },
+    {
+      "name": "Kanban",
+      "short_name": "Kanban",
+      "url": "/kanban/index.html",
+      "description": "Task board with local persistence"
+    }
+  ]
+}

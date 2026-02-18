@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Support Desk</title>
+<style>
+  :root {
+    --bg: #0d1320;
+    --panel: #152035;
+    --line: #314a72;
+    --text: #edf4ff;
+    --muted: #9fb4d4;
+    --ok: #1dc78a;
+    --warn: #eeb34f;
+    --err: #ef6a78;
+    --accent: #64b0ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(950px 420px at 80% -10%, rgba(95, 140, 216, .27), transparent 50%),
+      radial-gradient(900px 420px at 10% -10%, rgba(95, 209, 216, .14), transparent 50%),
+      var(--bg);
+    padding: 16px;
+  }
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    display: grid;
+    gap: 12px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px;
+  }
+  h1 { margin: 0 0 8px; font-size: 1.35rem; }
+  h2 { margin: 0 0 10px; font-size: 1.05rem; }
+  .muted { color: var(--muted); }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+  }
+  label {
+    display: block;
+    color: var(--muted);
+    margin-bottom: 4px;
+    font-size: 0.84rem;
+  }
+  input, select, textarea {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #0d1728;
+    color: var(--text);
+    padding: 9px 10px;
+    font-size: .95rem;
+  }
+  textarea { min-height: 86px; resize: vertical; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .btn {
+    border: 1px solid #3c659a;
+    border-radius: 10px;
+    background: #285081;
+    color: #fff;
+    font-weight: 700;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  .btn.ok { background: #106947; border-color: #21966f; }
+  .btn.warn { background: #735a21; border-color: #c0963d; }
+  .status {
+    margin-top: 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 8px 10px;
+    background: #0b1423;
+    color: var(--muted);
+  }
+  .status.ok { border-color: #1f7d59; color: #9af1cb; }
+  .status.warn { border-color: #967236; color: #ffd79d; }
+  .status.err { border-color: #944b56; color: #ffbdc4; }
+  .list { display: grid; gap: 10px; }
+  .item {
+    border: 1px solid #37527b;
+    border-radius: 10px;
+    padding: 10px;
+    background: #101a2b;
+  }
+  .item-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .badge {
+    border-radius: 999px;
+    border: 1px solid #4b6998;
+    background: #1a2d4b;
+    color: #cde3ff;
+    padding: 2px 8px;
+    font-size: .73rem;
+  }
+  .badge.ok { border-color: #2f8f69; color: #abf6d8; background: #0f3528; }
+  .badge.err { border-color: #99535d; color: #ffc8ce; background: #3a181c; }
+  .meta { color: var(--muted); font-size: .84rem; line-height: 1.45; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Support Desk</h1>
+    <div class="muted">Create support tickets with repro details. Works offline (local queue) and syncs online when endpoint is available.</div>
+  </div>
+
+  <div class="card">
+    <h2>Support Config</h2>
+    <div class="grid">
+      <div>
+        <label for="endpoint">Support Endpoint</label>
+        <input id="endpoint" type="text" placeholder="https://your-domain/api/support/ticket" />
+      </div>
+      <div>
+        <label for="apiKey">API Key (optional)</label>
+        <input id="apiKey" type="password" placeholder="token..." />
+      </div>
+      <div>
+        <label for="deviceId">Device ID</label>
+        <input id="deviceId" type="text" placeholder="device-001" />
+      </div>
+      <div>
+        <label for="contactDefault">Default Contact</label>
+        <input id="contactDefault" type="text" placeholder="email/telegram/phone" />
+      </div>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button id="saveCfgBtn" class="btn" type="button">Save Config</button>
+      <button id="testEndpointBtn" class="btn warn" type="button">Test Endpoint</button>
+      <span id="pulseText" class="muted"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>New Ticket</h2>
+    <div class="grid">
+      <div>
+        <label for="app">App</label>
+        <select id="app">
+          <option>launcher</option>
+          <option>outdoor-kit</option>
+          <option>field-checkin</option>
+          <option>privacy-camera</option>
+          <option>privacy-recorder</option>
+          <option>wishlist</option>
+          <option>music-player</option>
+          <option>audio-notes</option>
+          <option>other</option>
+        </select>
+      </div>
+      <div>
+        <label for="severity">Severity</label>
+        <select id="severity">
+          <option>critical</option>
+          <option selected>major</option>
+          <option>minor</option>
+          <option>question</option>
+        </select>
+      </div>
+      <div>
+        <label for="preferredChannel">Preferred Channel</label>
+        <select id="preferredChannel">
+          <option value="email">email</option>
+          <option value="chat">chat</option>
+          <option value="discord">discord</option>
+          <option value="phone">phone</option>
+        </select>
+      </div>
+      <div>
+        <label for="contact">Contact</label>
+        <input id="contact" type="text" placeholder="your contact" />
+      </div>
+    </div>
+    <div style="margin-top:10px;">
+      <label for="subject">Subject</label>
+      <input id="subject" type="text" placeholder="Short title for the issue/request" />
+    </div>
+    <div style="margin-top:10px;">
+      <label for="description">Description</label>
+      <textarea id="description" placeholder="What happened? When?"></textarea>
+    </div>
+    <div class="grid" style="margin-top:10px;">
+      <div>
+        <label for="reproSteps">Repro Steps</label>
+        <textarea id="reproSteps" placeholder="1) open app ... 2) click ..."></textarea>
+      </div>
+      <div>
+        <label for="expectedBehavior">Expected Behavior</label>
+        <textarea id="expectedBehavior" placeholder="What should happen?"></textarea>
+      </div>
+      <div>
+        <label for="actualBehavior">Actual Behavior</label>
+        <textarea id="actualBehavior" placeholder="What happened instead?"></textarea>
+      </div>
+      <div>
+        <label for="screenshotUrl">Screenshot URL (optional)</label>
+        <input id="screenshotUrl" type="text" placeholder="https://..." />
+        <label for="appVersion" style="margin-top:10px;">App Version</label>
+        <input id="appVersion" type="text" placeholder="v1.0.0" />
+      </div>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button id="saveLocalBtn" class="btn" type="button">Save Local</button>
+      <button id="saveSubmitBtn" class="btn ok" type="button">Save + Submit</button>
+      <button id="clearBtn" class="btn warn" type="button">Clear Draft</button>
+    </div>
+    <div id="status" class="status warn">Ready.</div>
+  </div>
+
+  <div class="card">
+    <h2>Ticket Queue</h2>
+    <div id="ticketList" class="list"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const CFG_KEY = 'support.cfg.v1';
+  const DATA_KEY = 'support.tickets.v1';
+  const state = { tickets: [] };
+  const el = {
+    endpoint: document.getElementById('endpoint'),
+    apiKey: document.getElementById('apiKey'),
+    deviceId: document.getElementById('deviceId'),
+    contactDefault: document.getElementById('contactDefault'),
+    saveCfgBtn: document.getElementById('saveCfgBtn'),
+    testEndpointBtn: document.getElementById('testEndpointBtn'),
+    pulseText: document.getElementById('pulseText'),
+    app: document.getElementById('app'),
+    severity: document.getElementById('severity'),
+    preferredChannel: document.getElementById('preferredChannel'),
+    contact: document.getElementById('contact'),
+    subject: document.getElementById('subject'),
+    description: document.getElementById('description'),
+    reproSteps: document.getElementById('reproSteps'),
+    expectedBehavior: document.getElementById('expectedBehavior'),
+    actualBehavior: document.getElementById('actualBehavior'),
+    screenshotUrl: document.getElementById('screenshotUrl'),
+    appVersion: document.getElementById('appVersion'),
+    saveLocalBtn: document.getElementById('saveLocalBtn'),
+    saveSubmitBtn: document.getElementById('saveSubmitBtn'),
+    clearBtn: document.getElementById('clearBtn'),
+    status: document.getElementById('status'),
+    ticketList: document.getElementById('ticketList')
+  };
+
+  function esc(text) {
+    return String(text || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+  }
+
+  function setStatus(msg, kind) {
+    el.status.textContent = msg;
+    el.status.className = 'status';
+    if (kind) el.status.classList.add(kind);
+  }
+
+  function getOrCreateDeviceId() {
+    const key = 'prosepilot.deviceId';
+    const existing = localStorage.getItem(key);
+    if (existing) return existing;
+    const generated = `device-${Math.random().toString(36).slice(2, 10)}`;
+    localStorage.setItem(key, generated);
+    return generated;
+  }
+
+  function defaultEndpoint() {
+    if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+      return `${window.location.origin}/api/support/ticket`;
+    }
+    return '';
+  }
+
+  function cfg() {
+    return {
+      endpoint: String(el.endpoint.value || '').trim() || defaultEndpoint(),
+      apiKey: String(el.apiKey.value || '').trim(),
+      deviceId: String(el.deviceId.value || '').trim() || getOrCreateDeviceId(),
+      contactDefault: String(el.contactDefault.value || '').trim()
+    };
+  }
+
+  function saveCfg() {
+    const c = cfg();
+    el.endpoint.value = c.endpoint;
+    el.deviceId.value = c.deviceId;
+    localStorage.setItem(CFG_KEY, JSON.stringify(c));
+    setStatus('Support config saved.', 'ok');
+  }
+
+  function loadCfg() {
+    const base = {
+      endpoint: defaultEndpoint(),
+      apiKey: '',
+      deviceId: getOrCreateDeviceId(),
+      contactDefault: ''
+    };
+    let c = base;
+    try {
+      const raw = localStorage.getItem(CFG_KEY);
+      if (raw) c = { ...base, ...JSON.parse(raw) };
+    } catch (_) {}
+    el.endpoint.value = c.endpoint;
+    el.apiKey.value = c.apiKey;
+    el.deviceId.value = c.deviceId;
+    el.contactDefault.value = c.contactDefault;
+    if (!el.contact.value) el.contact.value = c.contactDefault;
+  }
+
+  function authHeaders() {
+    const h = { 'Content-Type': 'application/json' };
+    const key = String(el.apiKey.value || '').trim();
+    if (key) h.Authorization = `Bearer ${key}`;
+    return h;
+  }
+
+  async function testEndpoint() {
+    const c = cfg();
+    if (!c.endpoint) {
+      setStatus('Set endpoint first.', 'warn');
+      return;
+    }
+    try {
+      const u = new URL(c.endpoint, window.location.href);
+      const pulse = `${u.origin}/api/pulse`;
+      const res = await fetch(pulse, { method: 'GET', cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      el.pulseText.textContent = 'Pulse online';
+      setStatus('Endpoint reachable.', 'ok');
+    } catch (e) {
+      el.pulseText.textContent = 'Pulse failed';
+      setStatus(`Endpoint check failed: ${e.message}`, 'err');
+    }
+  }
+
+  function ticketDraft() {
+    return {
+      id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      createdAt: new Date().toISOString(),
+      status: 'local',
+      app: String(el.app.value || '').trim(),
+      severity: String(el.severity.value || '').trim(),
+      preferredChannel: String(el.preferredChannel.value || '').trim(),
+      contact: String(el.contact.value || '').trim() || String(el.contactDefault.value || '').trim(),
+      subject: String(el.subject.value || '').trim(),
+      description: String(el.description.value || '').trim(),
+      reproSteps: String(el.reproSteps.value || '').trim(),
+      expectedBehavior: String(el.expectedBehavior.value || '').trim(),
+      actualBehavior: String(el.actualBehavior.value || '').trim(),
+      screenshotUrl: String(el.screenshotUrl.value || '').trim(),
+      appVersion: String(el.appVersion.value || '').trim(),
+      platformInfo: navigator.userAgent
+    };
+  }
+
+  function saveData() {
+    localStorage.setItem(DATA_KEY, JSON.stringify(state.tickets));
+  }
+
+  function loadData() {
+    try {
+      const raw = localStorage.getItem(DATA_KEY);
+      state.tickets = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(state.tickets)) state.tickets = [];
+    } catch (_) {
+      state.tickets = [];
+    }
+  }
+
+  async function submitTicket(ticket) {
+    const c = cfg();
+    if (!c.endpoint) throw new Error('No support endpoint configured');
+    const payload = {
+      deviceId: c.deviceId,
+      app: ticket.app,
+      subject: ticket.subject,
+      description: ticket.description,
+      severity: ticket.severity,
+      contact: ticket.contact,
+      preferredChannel: ticket.preferredChannel,
+      screenshotUrl: ticket.screenshotUrl,
+      reproSteps: ticket.reproSteps,
+      expectedBehavior: ticket.expectedBehavior,
+      actualBehavior: ticket.actualBehavior,
+      appVersion: ticket.appVersion,
+      platformInfo: ticket.platformInfo
+    };
+    const res = await fetch(c.endpoint, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(payload)
+    });
+    const text = await res.text();
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${text.slice(0, 120)}`);
+  }
+
+  async function addTicket(andSubmit) {
+    const ticket = ticketDraft();
+    if (!ticket.subject) {
+      setStatus('Subject is required.', 'warn');
+      return;
+    }
+    if (!ticket.description) {
+      setStatus('Description is required.', 'warn');
+      return;
+    }
+    state.tickets.unshift(ticket);
+    saveData();
+    renderTickets();
+    if (!andSubmit) {
+      setStatus('Ticket saved locally.', 'ok');
+      return;
+    }
+    try {
+      await submitTicket(ticket);
+      ticket.status = 'submitted';
+      ticket.lastError = '';
+      setStatus('Ticket submitted.', 'ok');
+    } catch (e) {
+      ticket.status = 'submit-error';
+      ticket.lastError = e.message;
+      setStatus(`Saved locally, submit failed: ${e.message}`, 'err');
+    } finally {
+      saveData();
+      renderTickets();
+    }
+  }
+
+  async function resubmitTicket(id) {
+    const ticket = state.tickets.find((x) => x.id === id);
+    if (!ticket) return;
+    try {
+      await submitTicket(ticket);
+      ticket.status = 'submitted';
+      ticket.lastError = '';
+      setStatus('Ticket submitted.', 'ok');
+    } catch (e) {
+      ticket.status = 'submit-error';
+      ticket.lastError = e.message;
+      setStatus(`Submit failed: ${e.message}`, 'err');
+    } finally {
+      saveData();
+      renderTickets();
+    }
+  }
+
+  function deleteTicket(id) {
+    state.tickets = state.tickets.filter((x) => x.id !== id);
+    saveData();
+    renderTickets();
+  }
+
+  function clearDraft() {
+    el.subject.value = '';
+    el.description.value = '';
+    el.reproSteps.value = '';
+    el.expectedBehavior.value = '';
+    el.actualBehavior.value = '';
+    el.screenshotUrl.value = '';
+    el.appVersion.value = '';
+  }
+
+  function renderTickets() {
+    if (!state.tickets.length) {
+      el.ticketList.innerHTML = '<div class="muted">No tickets yet.</div>';
+      return;
+    }
+    el.ticketList.innerHTML = state.tickets.map((t) => {
+      const cls = t.status === 'submitted' ? 'ok' : (t.status === 'submit-error' ? 'err' : '');
+      const err = t.lastError ? `<div class="meta" style="margin-top:5px;color:#ffb7bf;">Last error: ${esc(t.lastError)}</div>` : '';
+      return `
+        <div class="item">
+          <div class="item-head">
+            <strong>${esc(t.subject)}</strong>
+            <span class="badge ${cls}">${esc(t.status)}</span>
+          </div>
+          <div class="meta">App: ${esc(t.app)} | Severity: ${esc(t.severity)} | Created: ${esc(t.createdAt)}</div>
+          <div class="meta" style="margin-top:6px;">${esc(t.description)}</div>
+          <div class="row" style="margin-top:8px;">
+            <button class="btn ok" data-resubmit="${esc(t.id)}" type="button">Submit</button>
+            <button class="btn warn" data-delete="${esc(t.id)}" type="button">Delete</button>
+          </div>
+          ${err}
+        </div>
+      `;
+    }).join('');
+    el.ticketList.querySelectorAll('[data-resubmit]').forEach((btn) => {
+      btn.addEventListener('click', () => resubmitTicket(btn.getAttribute('data-resubmit')));
+    });
+    el.ticketList.querySelectorAll('[data-delete]').forEach((btn) => {
+      btn.addEventListener('click', () => deleteTicket(btn.getAttribute('data-delete')));
+    });
+  }
+
+  function bind() {
+    el.saveCfgBtn.addEventListener('click', saveCfg);
+    el.testEndpointBtn.addEventListener('click', testEndpoint);
+    el.saveLocalBtn.addEventListener('click', () => addTicket(false));
+    el.saveSubmitBtn.addEventListener('click', () => addTicket(true));
+    el.clearBtn.addEventListener('click', clearDraft);
+  }
+
+  function init() {
+    loadCfg();
+    loadData();
+    bind();
+    renderTickets();
+    setStatus('Ready.', 'warn');
+  }
+
+  init();
+})();
+</script>
+<script src="../shared/help-content.js"></script>
+<script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

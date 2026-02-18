@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>First Aid & CPR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a1218;
+    --bg2: #0e1822;
+    --panel: #172735;
+    --line: #35506a;
+    --text: #ecf5ff;
+    --muted: #a4bbcf;
+    --ok: #34d399;
+    --warn: #fbbf24;
+    --danger: #f87171;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --sans: 'Manrope', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    color: var(--text);
+    font-family: var(--sans);
+    background:
+      radial-gradient(900px 420px at 12% -20%, rgba(130, 30, 40, .22), transparent 62%),
+      radial-gradient(900px 420px at 88% -22%, rgba(100, 130, 180, .18), transparent 62%),
+      linear-gradient(160deg, var(--bg), var(--bg2));
+  }
+  .top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding: 11px 14px;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #2a3f53;
+    background: rgba(8, 12, 16, .88);
+    backdrop-filter: blur(6px);
+  }
+  .top a { color: #bdd2e8; text-decoration: none; font: 600 12px/1 var(--mono); }
+  .top span { color: #9ebad6; font: 600 12px/1 var(--mono); }
+  .wrap { max-width: 1100px; margin: 16px auto 28px; padding: 0 14px; display: grid; gap: 12px; }
+  .hero,.card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: linear-gradient(170deg, rgba(18, 31, 43, .95), rgba(12, 22, 31, .95));
+    padding: 12px;
+  }
+  .hero p,.sub { margin-top: 8px; color: var(--muted); line-height: 1.45; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tab {
+    border: 1px solid #3a5470;
+    border-radius: 999px;
+    background: #142c40;
+    color: #ddeefe;
+    padding: 8px 12px;
+    cursor: pointer;
+    font: 700 12px/1 var(--mono);
+  }
+  .tab.active { border-color: #8e4f4f; background: linear-gradient(180deg, #6b2e2e, #522525); }
+  .view { display: none; margin-top: 10px; }
+  .view.active { display: block; }
+  .list { margin-top: 8px; display: grid; gap: 8px; }
+  .item {
+    border: 1px solid #35506a;
+    border-radius: 10px;
+    background: #102435;
+    padding: 8px;
+  }
+  .item h3 { font-size: .98rem; }
+  .item ul { margin: 8px 0 0 18px; color: #d0e5f8; line-height: 1.45; }
+  .status {
+    margin-top: 8px;
+    border: 1px solid #33526f;
+    border-radius: 10px;
+    background: #0f2233;
+    padding: 8px 10px;
+    font: 600 12px/1.35 var(--mono);
+  }
+  .status.ok { border-color: #2d7e64; color: #b1f1d8; }
+  .status.warn { border-color: #8b6830; color: #ffd6a6; }
+  .btn-row { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    border: 1px solid #365574;
+    border-radius: 10px;
+    background: #17344f;
+    color: #e8f3ff;
+    padding: 8px 12px;
+    cursor: pointer;
+    font: 700 13px/1 var(--sans);
+  }
+  .btn.ok { border-color: #2f8b71; background: linear-gradient(180deg, #28715c, #1f5a4a); }
+  .btn.warn { border-color: #9a7535; background: linear-gradient(180deg, #896423, #694b19); }
+  .diagram {
+    margin-top: 8px;
+    border: 1px solid #35506a;
+    border-radius: 10px;
+    background: #0f2335;
+    padding: 8px;
+  }
+  .diagram svg { width: 100%; height: auto; display: block; }
+  .timer {
+    margin-top: 8px;
+    border: 1px solid #365574;
+    border-radius: 10px;
+    background: #10263a;
+    padding: 10px;
+  }
+  .big { font: 800 1.35rem/1 var(--sans); margin-top: 4px; }
+  .warn-box {
+    margin-top: 8px;
+    border: 1px dashed #8d5555;
+    border-radius: 10px;
+    background: #2a1717;
+    color: #ffd0d0;
+    padding: 8px;
+    font: 600 12px/1.45 var(--sans);
+  }
+  @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<nav class="top">
+  <a href="../index.html">&larr; Back to Suite</a>
+  <span>First Aid & CPR</span>
+</nav>
+<main class="wrap">
+  <header class="hero">
+    <h1>First Aid + CPR Quick Guide</h1>
+    <p>Offline emergency reference. Keep this as a field guide. Call emergency services as soon as possible when available.</p>
+    <div class="warn-box">Medical safety note: this app is educational support, not a replacement for certified training or emergency professionals.</div>
+  </header>
+
+  <section class="card">
+    <div class="tabs">
+      <button class="tab active" data-tab="cpr">CPR</button>
+      <button class="tab" data-tab="choking">Choking</button>
+      <button class="tab" data-tab="bleeding">Bleeding</button>
+      <button class="tab" data-tab="burns">Burns</button>
+      <button class="tab" data-tab="recovery">Recovery Position</button>
+    </div>
+
+    <div id="view-cpr" class="view active">
+      <div class="grid">
+        <article class="item">
+          <h3>Adult CPR (BLS Summary)</h3>
+          <ul>
+            <li>Check scene safety. Check responsiveness and breathing.</li>
+            <li>Call emergency services / send someone to call.</li>
+            <li>Begin chest compressions: center of chest, 100-120/min, depth 2 in (5 cm).</li>
+            <li>Allow full chest recoil. Minimize pauses.</li>
+            <li>Compression-to-breath ratio: 30:2 if trained and rescue breaths possible.</li>
+            <li>Use AED ASAP and follow prompts.</li>
+          </ul>
+        </article>
+        <article class="item">
+          <h3>Child / Infant CPR Quick Differences</h3>
+          <ul>
+            <li>Child depth about 2 in (5 cm), infant about 1.5 in (4 cm).</li>
+            <li>Use one/two hands for child; two fingers or encircling technique for infant.</li>
+            <li>Same compression rate: 100-120/min.</li>
+            <li>If alone with child/infant and unwitnessed collapse: ~2 minutes CPR before leaving to call (per training protocols).</li>
+          </ul>
+        </article>
+      </div>
+      <div class="diagram">
+        <svg viewBox="0 0 960 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CPR compression placement diagram">
+          <rect x="0" y="0" width="960" height="300" fill="#102436"/>
+          <ellipse cx="180" cy="150" rx="74" ry="98" fill="#dfecf9"/>
+          <rect x="254" y="90" width="410" height="120" rx="58" fill="#d4e6f6"/>
+          <circle cx="455" cy="150" r="30" fill="#f87171"/>
+          <path d="M455 94 L455 52" stroke="#fbbf24" stroke-width="8"/>
+          <polygon points="455,42 440,62 470,62" fill="#fbbf24"/>
+          <text x="485" y="62" fill="#ffdca8" font-family="IBM Plex Mono" font-size="24">Press Here (Center Chest)</text>
+          <text x="54" y="268" fill="#c9def2" font-family="IBM Plex Mono" font-size="18">Rate: 100-120/min   Depth: ~2 in (adult)</text>
+        </svg>
+      </div>
+      <div class="timer">
+        <div class="sub">CPR Coach</div>
+        <div class="big" id="cprBpmVal">BPM: 110</div>
+        <div class="big" id="cprTimerVal">Cycle: 02:00</div>
+        <div class="btn-row">
+          <button id="cprStartBtn" class="btn ok" type="button">Start CPR Metronome</button>
+          <button id="cprStopBtn" class="btn warn" type="button">Stop</button>
+          <button id="cprResetBtn" class="btn" type="button">Reset 2:00</button>
+          <button id="cprBpmBtn" class="btn" type="button">Toggle 100/110/120</button>
+        </div>
+        <div id="cprStatus" class="status warn">CPR coach idle.</div>
+      </div>
+    </div>
+
+    <div id="view-choking" class="view">
+      <div class="list">
+        <article class="item">
+          <h3>Conscious Adult/Child Choking</h3>
+          <ul>
+            <li>Ask “Are you choking?” If they can cough/speak, encourage coughing.</li>
+            <li>If severe obstruction: 5 back blows + abdominal thrusts (per local protocol).</li>
+            <li>Alternate until object clears or person becomes unresponsive.</li>
+            <li>If unresponsive: begin CPR and call emergency services.</li>
+          </ul>
+        </article>
+        <article class="item">
+          <h3>Infant Choking</h3>
+          <ul>
+            <li>5 back slaps + 5 chest thrusts.</li>
+            <li>No blind finger sweeps.</li>
+            <li>Call emergency services and start CPR if unresponsive.</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+
+    <div id="view-bleeding" class="view">
+      <div class="list">
+        <article class="item">
+          <h3>Severe Bleeding Control</h3>
+          <ul>
+            <li>Apply direct firm pressure with clean cloth/gauze.</li>
+            <li>If soaking through, add layers and continue pressure.</li>
+            <li>Use tourniquet for life-threatening limb bleeding if trained.</li>
+            <li>Do not remove embedded objects; stabilize around them.</li>
+            <li>Treat for shock and get emergency help fast.</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+
+    <div id="view-burns" class="view">
+      <div class="list">
+        <article class="item">
+          <h3>Burn First Aid</h3>
+          <ul>
+            <li>Cool burn with cool running water for 20 minutes (no ice).</li>
+            <li>Remove tight items before swelling.</li>
+            <li>Cover loosely with clean non-stick dressing.</li>
+            <li>Do not pop blisters or apply butter/oils.</li>
+            <li>Seek urgent care for large/deep/face/hands/genitals/airway burns.</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+
+    <div id="view-recovery" class="view">
+      <div class="list">
+        <article class="item">
+          <h3>Recovery Position (Breathing but Unconscious)</h3>
+          <ul>
+            <li>Place nearest arm at right angle, far arm across chest.</li>
+            <li>Bend far knee and roll person onto side toward you.</li>
+            <li>Tilt head back slightly to keep airway open.</li>
+            <li>Monitor breathing continuously until help arrives.</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const el = {
+    tabs: Array.from(document.querySelectorAll('.tab')),
+    views: {
+      cpr: document.getElementById('view-cpr'),
+      choking: document.getElementById('view-choking'),
+      bleeding: document.getElementById('view-bleeding'),
+      burns: document.getElementById('view-burns'),
+      recovery: document.getElementById('view-recovery')
+    },
+    cprBpmVal: document.getElementById('cprBpmVal'),
+    cprTimerVal: document.getElementById('cprTimerVal'),
+    cprStartBtn: document.getElementById('cprStartBtn'),
+    cprStopBtn: document.getElementById('cprStopBtn'),
+    cprResetBtn: document.getElementById('cprResetBtn'),
+    cprBpmBtn: document.getElementById('cprBpmBtn'),
+    cprStatus: document.getElementById('cprStatus')
+  };
+
+  const state = {
+    bpmIdx: 1,
+    bpmValues: [100, 110, 120],
+    remainingSec: 120,
+    timerId: 0,
+    beatId: 0,
+    audioCtx: null,
+    running: false
+  };
+
+  function setTab(tab) {
+    Object.entries(el.views).forEach(([key, node]) => node.classList.toggle('active', key === tab));
+    el.tabs.forEach((btn) => btn.classList.toggle('active', btn.dataset.tab === tab));
+  }
+
+  function status(msg, kind) {
+    el.cprStatus.textContent = msg;
+    el.cprStatus.className = 'status';
+    if (kind) el.cprStatus.classList.add(kind);
+  }
+
+  function fmtTime(total) {
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  function renderCoach() {
+    const bpm = state.bpmValues[state.bpmIdx];
+    el.cprBpmVal.textContent = `BPM: ${bpm}`;
+    el.cprTimerVal.textContent = `Cycle: ${fmtTime(state.remainingSec)}`;
+  }
+
+  function beep() {
+    try {
+      if (!state.audioCtx) state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const ctx = state.audioCtx;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'square';
+      o.frequency.value = 880;
+      g.gain.value = 0.0001;
+      o.connect(g);
+      g.connect(ctx.destination);
+      const t = ctx.currentTime;
+      g.gain.exponentialRampToValueAtTime(0.08, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+      o.start(t);
+      o.stop(t + 0.09);
+    } catch (_) {}
+  }
+
+  function stopCoach() {
+    if (state.timerId) clearInterval(state.timerId);
+    if (state.beatId) clearInterval(state.beatId);
+    state.timerId = 0;
+    state.beatId = 0;
+    state.running = false;
+    status('CPR coach stopped.', 'warn');
+  }
+
+  function startCoach() {
+    if (state.running) return;
+    state.running = true;
+    const bpm = state.bpmValues[state.bpmIdx];
+    const ms = Math.round(60000 / bpm);
+
+    state.beatId = setInterval(beep, ms);
+    state.timerId = setInterval(() => {
+      state.remainingSec = Math.max(0, state.remainingSec - 1);
+      renderCoach();
+      if (state.remainingSec === 0) {
+        stopCoach();
+        status('2-minute cycle complete. Reassess and continue if needed.', 'ok');
+      }
+    }, 1000);
+
+    status('CPR coach running. Follow compressions at beep pace.', 'ok');
+  }
+
+  function toggleBpm() {
+    state.bpmIdx = (state.bpmIdx + 1) % state.bpmValues.length;
+    if (state.running) {
+      stopCoach();
+      startCoach();
+    }
+    renderCoach();
+  }
+
+  function resetTimer() {
+    state.remainingSec = 120;
+    renderCoach();
+    status('Timer reset to 2:00.', 'ok');
+  }
+
+  function bind() {
+    el.tabs.forEach((btn) => btn.addEventListener('click', () => setTab(btn.dataset.tab)));
+    el.cprStartBtn.addEventListener('click', startCoach);
+    el.cprStopBtn.addEventListener('click', stopCoach);
+    el.cprResetBtn.addEventListener('click', resetTimer);
+    el.cprBpmBtn.addEventListener('click', toggleBpm);
+
+    window.addEventListener('beforeunload', stopCoach);
+  }
+
+  function init() {
+    bind();
+    renderCoach();
+    status('CPR coach idle.', 'warn');
+  }
+
+  init();
+})();
+</script>
+<script src="../shared/help-content.js"></script>
+<script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

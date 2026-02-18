@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UI Tweaker</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#121a30; --line:#2a3b62; --text:#e8efff; --muted:#9fb0d4;
+      --accent:#57c7ff; --danger:#ff8aa2; --ok:#52d19d;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:radial-gradient(900px 420px at 10% -20%, rgba(87,199,255,.16), transparent 62%), var(--bg);
+      color:var(--text);
+      min-height:100vh;
+    }
+    .suite-nav{
+      display:flex;align-items:center;justify-content:space-between;padding:8px 16px;
+      background:#0f1629;border-bottom:1px solid #26375a;font-size:12px
+    }
+    .suite-nav a{color:var(--muted);text-decoration:none}
+    .suite-nav a:hover{color:var(--accent)}
+    .suite-name{color:#7f92a6}
+    .wrap{width:min(1200px,100%);margin:0 auto;padding:14px;display:grid;gap:12px}
+    .panel{
+      background:linear-gradient(160deg, rgba(19,28,50,.95), rgba(14,22,40,.96));
+      border:1px solid var(--line);border-radius:14px;padding:12px;
+    }
+    .panel h1,.panel h2{margin-bottom:8px}
+    .muted{color:var(--muted);font-size:12px;line-height:1.45}
+    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+    .field{display:grid;gap:4px}
+    .field label{font-size:12px;color:#c3d2f1}
+    .input,.select{
+      width:100%;border:1px solid #355184;background:#0d1b35;color:var(--text);
+      border-radius:9px;padding:9px 10px;font-size:14px;
+    }
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .btn{
+      border:1px solid #3a5e90;background:#16345a;color:#eaf4ff;
+      border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer;
+    }
+    .btn:hover{background:#1f487a}
+    .btn.secondary{background:#1a2540;border-color:#425d91}
+    .btn.danger{background:#4d2130;border-color:#a45067;color:#ffdce5}
+    .btn.ok{background:#1e4b3b;border-color:#3f9f7b;color:#dbffee}
+    .status{
+      margin-top:8px;border:1px solid #345073;background:#102340;border-radius:10px;padding:9px 10px;
+      font:600 12px/1.35 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    }
+    .rules{display:grid;gap:8px}
+    .rule{
+      border:1px solid #314d78;background:#10213b;border-radius:10px;padding:10px;
+      display:grid;gap:8px;
+    }
+    .rule-head{display:flex;justify-content:space-between;gap:8px;align-items:center}
+    .rule-id{font-size:11px;color:#97add5}
+    .rule-grid{display:grid;grid-template-columns:1.2fr 1.6fr .8fr 1.2fr auto;gap:8px}
+    .chips{display:flex;gap:6px;flex-wrap:wrap}
+    .chip{
+      border:1px solid #3c5b89;background:#13294a;color:#ddedff;border-radius:999px;
+      padding:6px 10px;font-size:12px;cursor:pointer;
+    }
+    .chip:hover{background:#1a3861}
+    code{background:#101b32;border:1px solid #2f466f;padding:1px 5px;border-radius:6px}
+    .widget-rail{
+      position:fixed;right:12px;top:50%;transform:translateY(-50%);
+      display:grid;gap:8px;z-index:60;
+      background:#101934;border:1px solid #29406b;border-radius:12px;padding:8px;
+      box-shadow:0 10px 24px rgba(0,0,0,.4);
+    }
+    .widget-btn{
+      width:42px;height:42px;border-radius:10px;
+      border:1px solid #3a5e90;background:#16345a;color:#eaf4ff;
+      font-weight:800;cursor:pointer;
+    }
+    .widget-btn.active{background:#1f487a;border-color:#63c3ff}
+    .widget-panel{
+      position:fixed;right:70px;top:50%;transform:translateY(-50%);
+      width:min(360px,calc(100vw - 90px));
+      background:#101934;border:1px solid #29406b;border-radius:14px;padding:12px;
+      box-shadow:0 10px 24px rgba(0,0,0,.4);z-index:59;
+      display:grid;gap:8px;
+      transition:opacity .2s ease, transform .2s ease;
+      opacity:1;
+      pointer-events:auto;
+    }
+    .widget-panel.hidden{
+      opacity:0;
+      pointer-events:none;
+      transform:translateY(-50%) translateX(24px);
+    }
+    .widget-panel h3{font-size:1rem}
+    .widget-panel .muted{font-size:12px}
+    .widget-panel-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .widget-close{
+      width:30px;height:30px;border-radius:8px;border:1px solid #3a5e90;background:#16345a;color:#eaf4ff;
+      cursor:pointer;font-weight:800;line-height:1;
+    }
+    .widget-close:hover{background:#1f487a}
+    @media(max-width:980px){
+      .grid{grid-template-columns:1fr 1fr}
+      .rule-grid{grid-template-columns:1fr 1fr}
+      .widget-rail,.widget-panel{display:none}
+    }
+    @media(max-width:620px){
+      .grid{grid-template-columns:1fr}
+      .rule-grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+<nav class="suite-nav">
+  <a href="../index.html">&larr; Back to Suite</a>
+  <span class="suite-name">ProSe Pilot</span>
+</nav>
+
+<main class="wrap">
+  <section id="sec-overview" class="panel">
+    <h1>UI Tweaker</h1>
+    <p class="muted">Save CSS selector/property tweaks and auto-apply them by path next time pages load. This is local-only on your device/browser profile.</p>
+    <div class="status" id="status">Ready.</div>
+  </section>
+
+  <section id="sec-create" class="panel">
+    <h2>Create Rule</h2>
+    <div class="grid">
+      <div class="field">
+        <label for="pathPattern">Path pattern</label>
+        <input id="pathPattern" class="input" value="/index.html" placeholder="/index.html or /kanban/* or *" />
+      </div>
+      <div class="field">
+        <label for="selector">CSS selector</label>
+        <input id="selector" class="input" placeholder=".app-icon[data-app-key=&quot;gigtax&quot;]" />
+      </div>
+      <div class="field">
+        <label for="property">Property</label>
+        <input id="property" class="input" placeholder="border-radius" />
+      </div>
+      <div class="field">
+        <label for="value">Value</label>
+        <input id="value" class="input" placeholder="16px" />
+      </div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label class="muted"><input type="checkbox" id="important" /> use <code>!important</code></label>
+      <button id="addRuleBtn" class="btn ok" type="button">Add Rule</button>
+      <button id="openTargetBtn" class="btn secondary" type="button">Open Target Path</button>
+      <button id="clearAllBtn" class="btn danger" type="button">Clear All Rules</button>
+    </div>
+  </section>
+
+  <section id="sec-presets" class="panel">
+    <h2>Quick Presets</h2>
+    <div class="chips">
+      <button class="chip" type="button" data-preset="launcher-round">Launcher: round icons</button>
+      <button class="chip" type="button" data-preset="launcher-big">Launcher: bigger icons</button>
+      <button class="chip" type="button" data-preset="launcher-neon">Launcher: neon icon style</button>
+      <button class="chip" type="button" data-preset="gigtax-wide">GigTax: wider app frame</button>
+      <button class="chip" type="button" data-preset="kanban-compact">Kanban: compact text</button>
+    </div>
+    <p class="muted" style="margin-top:8px">Tip: App-specific launcher icon selector example: <code>.app-icon[data-app-key="receipt-tracker"]</code></p>
+  </section>
+
+  <section id="sec-rules" class="panel">
+    <h2>Saved Rules</h2>
+    <div id="rules" class="rules"></div>
+  </section>
+
+  <section id="sec-io" class="panel">
+    <h2>Import / Export</h2>
+    <div class="row">
+      <button id="exportBtn" class="btn secondary" type="button">Export JSON</button>
+      <button id="importBtn" class="btn secondary" type="button">Import JSON</button>
+      <input id="importInput" type="file" accept="application/json,.json" hidden />
+    </div>
+  </section>
+</main>
+<aside class="widget-rail" aria-label="UI Tweaker Widgets">
+  <button class="widget-btn active" data-widget="create" title="Create Rule">C</button>
+  <button class="widget-btn" data-widget="presets" title="Presets">P</button>
+  <button class="widget-btn" data-widget="rules" title="Rules">R</button>
+  <button class="widget-btn" data-widget="io" title="Import/Export">I/O</button>
+</aside>
+<aside class="widget-panel" id="widgetPanel" aria-live="polite">
+  <div class="widget-panel-head">
+    <h3 id="widgetTitle">Create Rule</h3>
+    <button class="widget-close" id="widgetCloseBtn" type="button" title="Close panel">x</button>
+  </div>
+  <p id="widgetDesc" class="muted">Define selector/property/value rules and save them for automatic reapply.</p>
+  <div class="row">
+    <button id="widgetJumpBtn" class="btn secondary" type="button">Jump to Section</button>
+    <button id="widgetApplyNowBtn" class="btn" type="button">Apply Now</button>
+  </div>
+</aside>
+
+<script>
+(() => {
+  const STORAGE_KEY = "suite.ui.tweaks.v1";
+  const WIDGET_UI_KEY = "suite.ui.tweaks.widget.v1";
+  const $ = (s) => document.querySelector(s);
+  const uid = () => `r_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+
+  const el = {
+    status: $("#status"),
+    pathPattern: $("#pathPattern"),
+    selector: $("#selector"),
+    property: $("#property"),
+    value: $("#value"),
+    important: $("#important"),
+    addRuleBtn: $("#addRuleBtn"),
+    openTargetBtn: $("#openTargetBtn"),
+    clearAllBtn: $("#clearAllBtn"),
+    rules: $("#rules"),
+    exportBtn: $("#exportBtn"),
+    importBtn: $("#importBtn"),
+    importInput: $("#importInput"),
+    widgetPanel: $("#widgetPanel"),
+    widgetTitle: $("#widgetTitle"),
+    widgetDesc: $("#widgetDesc"),
+    widgetJumpBtn: $("#widgetJumpBtn"),
+    widgetApplyNowBtn: $("#widgetApplyNowBtn"),
+    widgetCloseBtn: $("#widgetCloseBtn")
+  };
+
+  let rules = [];
+  let activeWidget = "create";
+  let panelOpen = true;
+  const WIDGET_META = {
+    create: { title: "Create Rule", desc: "Define selector/property/value rules and save them for automatic reapply.", section: "sec-create" },
+    presets: { title: "Quick Presets", desc: "Apply starter theme/layout tweaks in one click.", section: "sec-presets" },
+    rules: { title: "Saved Rules", desc: "Edit, enable/disable, or delete existing rules.", section: "sec-rules" },
+    io: { title: "Import / Export", desc: "Backup rules or transfer them between devices.", section: "sec-io" }
+  };
+
+  const PRESETS = {
+    "launcher-round": [
+      { pathPattern: "/index.html", selector: ".app-icon", property: "border-radius", value: "14px" }
+    ],
+    "launcher-big": [
+      { pathPattern: "/index.html", selector: ".app-icon", property: "width", value: "54px" },
+      { pathPattern: "/index.html", selector: ".app-icon", property: "height", value: "54px" },
+      { pathPattern: "/index.html", selector: ".app-icon", property: "font-size", value: "1.6em" }
+    ],
+    "launcher-neon": [
+      { pathPattern: "/index.html", selector: ".app-icon", property: "background", value: "linear-gradient(135deg,#34d399,#22d3ee)" },
+      { pathPattern: "/index.html", selector: ".app-icon", property: "box-shadow", value: "0 0 18px rgba(34,211,238,.45)" }
+    ],
+    "gigtax-wide": [
+      { pathPattern: "/gigtax/*", selector: ".app", property: "width", value: "min(1450px,100%)" }
+    ],
+    "kanban-compact": [
+      { pathPattern: "/kanban/*", selector: "body", property: "font-size", value: "14px" }
+    ]
+  };
+
+  function setStatus(msg) {
+    el.status.textContent = msg;
+  }
+
+  function loadRules() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      rules = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      rules = [];
+    }
+  }
+
+  function saveRules(message = "Saved.") {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(rules));
+    if (window.ProSePilotUITweaks && typeof window.ProSePilotUITweaks.applyNow === "function") {
+      window.ProSePilotUITweaks.applyNow();
+    }
+    setStatus(message);
+  }
+
+  function renderRules() {
+    if (!rules.length) {
+      el.rules.innerHTML = `<div class="muted">No rules yet.</div>`;
+      return;
+    }
+
+    el.rules.innerHTML = rules.map((r, i) => `
+      <article class="rule" data-id="${r.id}">
+        <div class="rule-head">
+          <div class="rule-id">Rule ${i + 1} - ${r.id}</div>
+          <div class="row">
+            <label class="muted"><input type="checkbox" data-field="enabled" ${r.enabled !== false ? "checked" : ""} /> enabled</label>
+            <label class="muted"><input type="checkbox" data-field="important" ${r.important ? "checked" : ""} /> !important</label>
+            <button class="btn danger" type="button" data-action="delete">Delete</button>
+          </div>
+        </div>
+        <div class="rule-grid">
+          <input class="input" data-field="pathPattern" value="${escapeAttr(r.pathPattern || "*")}" />
+          <input class="input" data-field="selector" value="${escapeAttr(r.selector || "")}" />
+          <input class="input" data-field="property" value="${escapeAttr(r.property || "")}" />
+          <input class="input" data-field="value" value="${escapeAttr(r.value || "")}" />
+          <button class="btn secondary" type="button" data-action="apply">Apply</button>
+        </div>
+      </article>
+    `).join("");
+
+    el.rules.querySelectorAll(".rule").forEach((node) => {
+      const id = node.getAttribute("data-id");
+      if (!id) return;
+      const rule = rules.find((x) => x.id === id);
+      if (!rule) return;
+
+      node.querySelectorAll("[data-field]").forEach((input) => {
+        input.addEventListener("input", () => {
+          const field = input.getAttribute("data-field");
+          if (!field) return;
+          if (field === "enabled" || field === "important") {
+            rule[field] = Boolean(input.checked);
+          } else {
+            rule[field] = input.value;
+          }
+          saveRules("Rule updated.");
+        });
+      });
+
+      node.querySelector('[data-action="delete"]').addEventListener("click", () => {
+        rules = rules.filter((x) => x.id !== id);
+        saveRules("Rule deleted.");
+        renderRules();
+      });
+      node.querySelector('[data-action="apply"]').addEventListener("click", () => {
+        saveRules("Applied now.");
+      });
+    });
+  }
+
+  function escapeAttr(v) {
+    return String(v || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("\"", "&quot;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;");
+  }
+
+  function addRule(rule) {
+    rules.push({
+      id: uid(),
+      pathPattern: rule.pathPattern || "*",
+      selector: rule.selector || "",
+      property: rule.property || "",
+      value: rule.value == null ? "" : String(rule.value),
+      important: Boolean(rule.important),
+      enabled: rule.enabled !== false,
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  function addFormRule() {
+    const rule = {
+      pathPattern: el.pathPattern.value.trim() || "*",
+      selector: el.selector.value.trim(),
+      property: el.property.value.trim(),
+      value: el.value.value,
+      important: el.important.checked
+    };
+    if (!rule.selector || !rule.property) {
+      setStatus("Selector and property are required.");
+      return;
+    }
+    addRule(rule);
+    saveRules("Rule added.");
+    renderRules();
+  }
+
+  function addPreset(name) {
+    const preset = PRESETS[name];
+    if (!preset) return;
+    preset.forEach((rule) => addRule(rule));
+    saveRules(`Preset applied: ${name}`);
+    renderRules();
+  }
+
+  function exportRules() {
+    const blob = new Blob([JSON.stringify(rules, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "ui-tweaks-rules.json";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    setStatus("Exported rules JSON.");
+  }
+
+  async function importRules(file) {
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    if (!Array.isArray(parsed)) throw new Error("JSON must be an array of rules");
+    rules = parsed
+      .filter((r) => r && typeof r === "object")
+      .map((r) => ({
+        id: r.id || uid(),
+        pathPattern: String(r.pathPattern || "*"),
+        selector: String(r.selector || ""),
+        property: String(r.property || ""),
+        value: r.value == null ? "" : String(r.value),
+        important: Boolean(r.important),
+        enabled: r.enabled !== false,
+        createdAt: r.createdAt || new Date().toISOString()
+      }));
+    saveRules("Imported rules.");
+    renderRules();
+  }
+
+  function bind() {
+    el.addRuleBtn.addEventListener("click", addFormRule);
+    el.openTargetBtn.addEventListener("click", () => {
+      const target = (el.pathPattern.value.trim() || "/index.html").replace(/\*/g, "");
+      const url = new URL(target.startsWith("/") ? target : `/${target}`, location.origin);
+      window.open(url.toString(), "_blank", "noopener,noreferrer");
+    });
+    el.clearAllBtn.addEventListener("click", () => {
+      if (!confirm("Delete all saved UI tweak rules?")) return;
+      rules = [];
+      saveRules("All rules cleared.");
+      renderRules();
+    });
+    document.querySelectorAll("[data-preset]").forEach((btn) => {
+      btn.addEventListener("click", () => addPreset(btn.getAttribute("data-preset")));
+    });
+    el.exportBtn.addEventListener("click", exportRules);
+    el.importBtn.addEventListener("click", () => el.importInput.click());
+    el.importInput.addEventListener("change", async () => {
+      const f = el.importInput.files && el.importInput.files[0];
+      el.importInput.value = "";
+      if (!f) return;
+      try {
+        await importRules(f);
+      } catch (err) {
+        setStatus(`Import failed: ${err && err.message ? err.message : String(err)}`);
+      }
+    });
+
+    document.querySelectorAll("[data-widget]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        activeWidget = btn.getAttribute("data-widget") || "create";
+        panelOpen = true;
+        renderWidgetPanel();
+        saveWidgetUI();
+      });
+    });
+    el.widgetJumpBtn.addEventListener("click", () => {
+      const meta = WIDGET_META[activeWidget] || WIDGET_META.create;
+      const node = document.getElementById(meta.section);
+      if (node && node.scrollIntoView) node.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    el.widgetApplyNowBtn.addEventListener("click", () => {
+      saveRules("Applied now.");
+    });
+    el.widgetCloseBtn.addEventListener("click", () => {
+      panelOpen = false;
+      saveWidgetUI();
+      renderWidgetPanel();
+    });
+  }
+
+  function renderWidgetPanel() {
+    const meta = WIDGET_META[activeWidget] || WIDGET_META.create;
+    el.widgetTitle.textContent = meta.title;
+    el.widgetDesc.textContent = meta.desc;
+    document.querySelectorAll("[data-widget]").forEach((btn) => {
+      btn.classList.toggle("active", btn.getAttribute("data-widget") === activeWidget);
+    });
+    el.widgetPanel.classList.toggle("hidden", !panelOpen);
+  }
+
+  function saveWidgetUI() {
+    localStorage.setItem(WIDGET_UI_KEY, JSON.stringify({
+      activeWidget,
+      panelOpen
+    }));
+  }
+
+  function loadWidgetUI() {
+    try {
+      const raw = localStorage.getItem(WIDGET_UI_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed && WIDGET_META[parsed.activeWidget]) activeWidget = parsed.activeWidget;
+      if (parsed && typeof parsed.panelOpen === "boolean") panelOpen = parsed.panelOpen;
+    } catch {
+      // keep defaults
+    }
+  }
+
+  loadRules();
+  loadWidgetUI();
+  bind();
+  renderWidgetPanel();
+  renderRules();
+})();
+</script>
+<script src="../shared/help-content.js"></script>
+<script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

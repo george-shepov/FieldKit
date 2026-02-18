@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Audio Notes Recorder</title>
+<style>
+  :root {
+    --bg: #0c1120;
+    --panel: #162037;
+    --line: #34537f;
+    --text: #eef5ff;
+    --muted: #9fb7d8;
+    --ok: #20cb8f;
+    --warn: #edb455;
+    --err: #ef6978;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(950px 420px at 78% -10%, rgba(95, 143, 216, .25), transparent 50%),
+      radial-gradient(900px 420px at 8% -10%, rgba(95, 216, 186, .12), transparent 50%),
+      var(--bg);
+    padding: 16px;
+  }
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    display: grid;
+    gap: 12px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px;
+  }
+  h1 { margin: 0 0 8px; font-size: 1.35rem; }
+  h2 { margin: 0 0 10px; font-size: 1.05rem; }
+  .muted { color: var(--muted); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  label { color: var(--muted); font-size: .84rem; display: block; margin-bottom: 4px; }
+  input {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #0e182a;
+    color: var(--text);
+    padding: 9px 10px;
+    font-size: .95rem;
+  }
+  .btn {
+    border: 1px solid #3f689d;
+    border-radius: 10px;
+    background: #285383;
+    color: #fff;
+    font-weight: 700;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  .btn.ok { background: #106b49; border-color: #249770; }
+  .btn.warn { background: #7b5d22; border-color: #c2973d; }
+  .btn.err { background: #7f3340; border-color: #b95664; }
+  .status {
+    margin-top: 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #0c1525;
+    color: var(--muted);
+    padding: 8px 10px;
+  }
+  .status.ok { border-color: #1e7b58; color: #9af2cb; }
+  .status.warn { border-color: #937138; color: #ffd79f; }
+  .status.err { border-color: #8d4b56; color: #ffbdc6; }
+  .list { display: grid; gap: 10px; }
+  .item {
+    border: 1px solid #36547f;
+    border-radius: 10px;
+    background: #0f1a2c;
+    padding: 10px;
+  }
+  .item-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .meta { color: var(--muted); font-size: .84rem; line-height: 1.45; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Audio Notes Recorder</h1>
+    <div class="muted">Capture quick voice notes offline and optionally upload to your server later.</div>
+  </div>
+
+  <div class="card">
+    <h2>Sync Config</h2>
+    <div class="grid">
+      <div>
+        <label for="syncEndpoint">Sync Endpoint</label>
+        <input id="syncEndpoint" type="text" placeholder="https://your-domain/api/media/upload" />
+      </div>
+      <div>
+        <label for="syncApiKey">API Key (optional)</label>
+        <input id="syncApiKey" type="password" placeholder="token..." />
+      </div>
+      <div>
+        <label for="deviceId">Device ID</label>
+        <input id="deviceId" type="text" placeholder="device-001" />
+      </div>
+      <div>
+        <label for="noteTitle">Current Note Title</label>
+        <input id="noteTitle" type="text" placeholder="trail-log-1" />
+      </div>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button id="saveCfgBtn" class="btn" type="button">Save Config</button>
+      <button id="pulseBtn" class="btn warn" type="button">Check Online</button>
+      <span id="pulseText" class="muted">Unknown</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Recorder</h2>
+    <div class="row">
+      <button id="startBtn" class="btn ok" type="button">Start Recording</button>
+      <button id="stopBtn" class="btn err" type="button" disabled>Stop</button>
+      <button id="clearBtn" class="btn warn" type="button">Clear All</button>
+    </div>
+    <div id="status" class="status warn">Recorder idle.</div>
+  </div>
+
+  <div class="card">
+    <h2>Audio Notes</h2>
+    <div id="notes" class="list"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const CFG_KEY = 'audioNotes.cfg.v1';
+  const state = {
+    recorder: null,
+    stream: null,
+    chunks: [],
+    notes: [],
+    startedAt: 0,
+    online: false
+  };
+  const el = {
+    syncEndpoint: document.getElementById('syncEndpoint'),
+    syncApiKey: document.getElementById('syncApiKey'),
+    deviceId: document.getElementById('deviceId'),
+    noteTitle: document.getElementById('noteTitle'),
+    saveCfgBtn: document.getElementById('saveCfgBtn'),
+    pulseBtn: document.getElementById('pulseBtn'),
+    pulseText: document.getElementById('pulseText'),
+    startBtn: document.getElementById('startBtn'),
+    stopBtn: document.getElementById('stopBtn'),
+    clearBtn: document.getElementById('clearBtn'),
+    status: document.getElementById('status'),
+    notes: document.getElementById('notes')
+  };
+
+  function setStatus(msg, kind) {
+    el.status.textContent = msg;
+    el.status.className = 'status';
+    if (kind) el.status.classList.add(kind);
+  }
+
+  function getOrCreateDeviceId() {
+    const key = 'prosepilot.deviceId';
+    const existing = localStorage.getItem(key);
+    if (existing) return existing;
+    const generated = `device-${Math.random().toString(36).slice(2, 10)}`;
+    localStorage.setItem(key, generated);
+    return generated;
+  }
+
+  function defaultSyncEndpoint() {
+    if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+      return `${window.location.origin}/api/media/upload`;
+    }
+    return '';
+  }
+
+  function cfg() {
+    return {
+      endpoint: String(el.syncEndpoint.value || '').trim() || defaultSyncEndpoint(),
+      apiKey: String(el.syncApiKey.value || '').trim(),
+      deviceId: String(el.deviceId.value || '').trim() || getOrCreateDeviceId()
+    };
+  }
+
+  function saveCfg() {
+    const c = cfg();
+    el.syncEndpoint.value = c.endpoint;
+    el.deviceId.value = c.deviceId;
+    localStorage.setItem(CFG_KEY, JSON.stringify(c));
+    setStatus('Config saved.', 'ok');
+  }
+
+  function loadCfg() {
+    const base = {
+      endpoint: defaultSyncEndpoint(),
+      apiKey: '',
+      deviceId: getOrCreateDeviceId()
+    };
+    let c = base;
+    try {
+      const raw = localStorage.getItem(CFG_KEY);
+      if (raw) c = { ...base, ...JSON.parse(raw) };
+    } catch (_) {}
+    el.syncEndpoint.value = c.endpoint;
+    el.syncApiKey.value = c.apiKey;
+    el.deviceId.value = c.deviceId;
+  }
+
+  function bytesText(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  }
+
+  function pulseEndpoint() {
+    const endpoint = String(el.syncEndpoint.value || '').trim() || defaultSyncEndpoint();
+    if (!endpoint) return '';
+    try {
+      const u = new URL(endpoint, window.location.href);
+      return `${u.origin}/api/pulse`;
+    } catch (_) {
+      return '';
+    }
+  }
+
+  async function probeOnline() {
+    if (!navigator.onLine) {
+      state.online = false;
+      el.pulseText.textContent = 'Offline';
+      return false;
+    }
+    try {
+      const pulse = pulseEndpoint();
+      if (pulse) {
+        const res = await fetch(pulse, { method: 'GET', cache: 'no-store' });
+        if (res.ok) {
+          state.online = true;
+          el.pulseText.textContent = 'Online';
+          return true;
+        }
+      }
+      state.online = true;
+      el.pulseText.textContent = 'Online (navigator)';
+      return true;
+    } catch (_) {
+      state.online = false;
+      el.pulseText.textContent = 'Offline';
+      return false;
+    }
+  }
+
+  async function startRecording() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setStatus('MediaDevices API unavailable.', 'err');
+      return;
+    }
+    try {
+      state.stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      state.chunks = [];
+      state.recorder = new MediaRecorder(state.stream, { mimeType: 'audio/webm' });
+      state.startedAt = Date.now();
+      state.recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) state.chunks.push(e.data);
+      };
+      state.recorder.onstop = () => {
+        const blob = new Blob(state.chunks, { type: 'audio/webm' });
+        const duration = Math.max(1, Math.round((Date.now() - state.startedAt) / 1000));
+        const title = String(el.noteTitle.value || '').trim() || `audio-note-${state.notes.length + 1}`;
+        const note = {
+          id: `note-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          title,
+          createdAt: new Date().toISOString(),
+          duration,
+          size: blob.size,
+          blob,
+          url: URL.createObjectURL(blob),
+          synced: false,
+          syncError: ''
+        };
+        state.notes.unshift(note);
+        renderNotes();
+        setStatus(`Saved note "${title}".`, 'ok');
+        stopStream();
+      };
+      state.recorder.start();
+      el.startBtn.disabled = true;
+      el.stopBtn.disabled = false;
+      setStatus('Recording...', 'warn');
+    } catch (e) {
+      setStatus(`Microphone error: ${e.message}`, 'err');
+    }
+  }
+
+  function stopRecording() {
+    if (state.recorder && state.recorder.state !== 'inactive') {
+      state.recorder.stop();
+    }
+    el.startBtn.disabled = false;
+    el.stopBtn.disabled = true;
+  }
+
+  function stopStream() {
+    if (state.stream) state.stream.getTracks().forEach((t) => t.stop());
+    state.stream = null;
+  }
+
+  function clearAll() {
+    state.notes.forEach((n) => URL.revokeObjectURL(n.url));
+    state.notes = [];
+    renderNotes();
+    setStatus('All notes cleared.', 'warn');
+  }
+
+  async function uploadNote(note) {
+    const c = cfg();
+    if (!c.endpoint) throw new Error('No sync endpoint set');
+    const form = new FormData();
+    form.append('file', note.blob, `${note.title || note.id}.webm`);
+    form.append('appId', 'audio-notes');
+    form.append('deviceId', c.deviceId);
+    form.append('capturedAt', note.createdAt);
+    form.append('mediaType', note.blob.type || 'audio/webm');
+    form.append('durationSec', String(note.duration || 0));
+    const headers = {};
+    if (c.apiKey) headers.Authorization = `Bearer ${c.apiKey}`;
+    const res = await fetch(c.endpoint, { method: 'POST', headers, body: form });
+    const t = await res.text();
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${t.slice(0, 120)}`);
+  }
+
+  async function syncNote(id) {
+    const note = state.notes.find((n) => n.id === id);
+    if (!note) return;
+    const online = await probeOnline();
+    if (!online) {
+      setStatus('Offline. Cannot sync now.', 'warn');
+      return;
+    }
+    try {
+      await uploadNote(note);
+      note.synced = true;
+      note.syncError = '';
+      renderNotes();
+      setStatus(`Synced: ${note.title}`, 'ok');
+    } catch (e) {
+      note.syncError = e.message;
+      renderNotes();
+      setStatus(`Sync failed: ${e.message}`, 'err');
+    }
+  }
+
+  function deleteNote(id) {
+    const note = state.notes.find((n) => n.id === id);
+    if (!note) return;
+    URL.revokeObjectURL(note.url);
+    state.notes = state.notes.filter((n) => n.id !== id);
+    renderNotes();
+  }
+
+  function renderNotes() {
+    if (!state.notes.length) {
+      el.notes.innerHTML = '<div class="muted">No notes yet.</div>';
+      return;
+    }
+    el.notes.innerHTML = state.notes.map((n) => {
+      const syncState = n.synced ? 'synced' : (n.syncError ? 'pending/error' : 'pending');
+      const err = n.syncError ? `<div class="meta" style="color:#ffb8c1;">Last sync error: ${n.syncError.replaceAll('<', '&lt;')}</div>` : '';
+      return `
+        <div class="item">
+          <div class="item-head">
+            <strong>${n.title.replaceAll('<', '&lt;')}</strong>
+            <div class="row">
+              <button class="btn ok" data-sync="${n.id}" type="button">Sync</button>
+              <button class="btn warn" data-del="${n.id}" type="button">Delete</button>
+            </div>
+          </div>
+          <div class="meta">${n.createdAt} | ${n.duration}s | ${bytesText(n.size)} | ${syncState}</div>
+          <audio controls src="${n.url}" style="width:100%;margin-top:8px;"></audio>
+          <div class="row" style="margin-top:8px;">
+            <a href="${n.url}" download="${n.title}.webm" class="btn">Download</a>
+          </div>
+          ${err}
+        </div>
+      `;
+    }).join('');
+    el.notes.querySelectorAll('[data-sync]').forEach((b) => {
+      b.addEventListener('click', () => syncNote(b.getAttribute('data-sync')));
+    });
+    el.notes.querySelectorAll('[data-del]').forEach((b) => {
+      b.addEventListener('click', () => deleteNote(b.getAttribute('data-del')));
+    });
+  }
+
+  function bind() {
+    el.saveCfgBtn.addEventListener('click', saveCfg);
+    el.pulseBtn.addEventListener('click', probeOnline);
+    el.startBtn.addEventListener('click', startRecording);
+    el.stopBtn.addEventListener('click', stopRecording);
+    el.clearBtn.addEventListener('click', clearAll);
+    window.addEventListener('beforeunload', () => {
+      stopStream();
+      state.notes.forEach((n) => URL.revokeObjectURL(n.url));
+    });
+  }
+
+  function init() {
+    loadCfg();
+    bind();
+    renderNotes();
+    setStatus('Recorder idle.', 'warn');
+    probeOnline();
+  }
+
+  init();
+})();
+</script>
+<script src="../shared/help-content.js"></script>
+<script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

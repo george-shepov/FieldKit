@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Wishlist Studio</title>
+<style>
+  :root {
+    --bg: #0d121b;
+    --panel: #141d2c;
+    --line: #2c3f61;
+    --text: #edf4ff;
+    --muted: #9eb3d1;
+    --ok: #1fc58c;
+    --warn: #f0b650;
+    --err: #ec6673;
+    --accent: #5ba8ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background:
+      radial-gradient(900px 500px at 85% -20%, rgba(63, 118, 199, .35), transparent 55%),
+      radial-gradient(900px 500px at 0% -20%, rgba(63, 167, 199, .2), transparent 55%),
+      var(--bg);
+    padding: 16px;
+  }
+  .wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: grid;
+    gap: 12px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px;
+  }
+  h1 { margin: 0 0 8px; font-size: 1.4rem; }
+  h2 { margin: 0 0 10px; font-size: 1.03rem; }
+  .muted { color: var(--muted); }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 10px;
+  }
+  label {
+    display: block;
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+  }
+  input, select, textarea {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #0c1422;
+    color: var(--text);
+    padding: 9px 10px;
+    font-size: 0.95rem;
+  }
+  textarea { min-height: 90px; resize: vertical; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .btn {
+    border: 1px solid #3a6297;
+    border-radius: 10px;
+    background: #284a76;
+    color: #fff;
+    font-weight: 700;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  .btn.ok { background: #0f6648; border-color: #20916a; }
+  .btn.warn { background: #6d5723; border-color: #bd9237; }
+  .status {
+    margin-top: 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #0a1320;
+    color: var(--muted);
+    padding: 8px 10px;
+  }
+  .status.ok { border-color: #1e7c58; color: #97f0ca; }
+  .status.warn { border-color: #8f6f34; color: #ffd99b; }
+  .status.err { border-color: #8d4850; color: #ffb8bf; }
+  .price-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  .price {
+    border: 1px solid #3a4f72;
+    border-radius: 10px;
+    padding: 10px;
+    background: #101a29;
+  }
+  .price strong { color: #bbd6ff; display: block; margin-bottom: 6px; }
+  .list { display: grid; gap: 10px; }
+  .item {
+    border: 1px solid #344a6c;
+    border-radius: 10px;
+    background: #0d1727;
+    padding: 10px;
+  }
+  .item-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .badge {
+    border-radius: 999px;
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border: 1px solid #486289;
+    color: #cbe2ff;
+    background: #1b2f4f;
+  }
+  .badge.ok { border-color: #2d8d69; color: #a8f5d5; background: #113426; }
+  .badge.err { border-color: #9a4d57; color: #ffc6cc; background: #38161a; }
+  .meta { color: var(--muted); font-size: 0.84rem; line-height: 1.45; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Wishlist Studio</h1>
+    <div class="muted">Collect app requests, estimate scope quickly, and optionally submit to your server queue.</div>
+  </div>
+
+  <div class="card">
+    <h2>Config</h2>
+    <div class="grid">
+      <div>
+        <label for="endpoint">Submit Endpoint</label>
+        <input id="endpoint" type="text" placeholder="https://your-domain/api/wishlist/submit" />
+      </div>
+      <div>
+        <label for="apiKey">API Key (optional)</label>
+        <input id="apiKey" type="password" placeholder="token..." />
+      </div>
+      <div>
+        <label for="deviceId">Device ID</label>
+        <input id="deviceId" type="text" placeholder="device-001" />
+      </div>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button id="saveCfgBtn" class="btn" type="button">Save Config</button>
+      <button id="testBtn" class="btn warn" type="button">Test Endpoint</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>New Request</h2>
+    <div class="grid">
+      <div>
+        <label for="title">App / Feature Title</label>
+        <input id="title" type="text" placeholder="MIDI note mapper + tutor" />
+      </div>
+      <div>
+        <label for="category">Category</label>
+        <select id="category">
+          <option value="education">Education</option>
+          <option value="productivity">Productivity</option>
+          <option value="outdoor">Outdoor</option>
+          <option value="communication">Communication</option>
+          <option value="media">Media</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div>
+        <label for="priority">Priority</label>
+        <select id="priority">
+          <option value="high">High</option>
+          <option value="medium" selected>Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+      <div>
+        <label for="timeline">Timeline</label>
+        <input id="timeline" type="text" placeholder="1 day / 1 week / 1 month" />
+      </div>
+      <div>
+        <label for="budget">Budget USD</label>
+        <input id="budget" type="number" min="0" step="25" placeholder="750" />
+      </div>
+      <div>
+        <label for="contact">Contact</label>
+        <input id="contact" type="text" placeholder="email / telegram / discord" />
+      </div>
+    </div>
+    <div style="margin-top:10px;">
+      <label for="tags">Tags (comma separated)</label>
+      <input id="tags" type="text" placeholder="midi,music,learning,piano" />
+    </div>
+    <div style="margin-top:10px;">
+      <label for="description">Problem / Scenario</label>
+      <textarea id="description" placeholder="What should this app do? Who uses it? Offline or online?"></textarea>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button id="saveBtn" class="btn" type="button">Save Local</button>
+      <button id="saveSubmitBtn" class="btn ok" type="button">Save + Submit</button>
+      <button id="clearBtn" class="btn warn" type="button">Clear Draft</button>
+    </div>
+    <div id="status" class="status warn">Ready.</div>
+  </div>
+
+  <div class="card">
+    <h2>Quick Pricing Guide</h2>
+    <div class="price-grid">
+      <div class="price">
+        <strong>Micro Upgrade: $99 - $250</strong>
+        1 focused tweak or bug-fix batch, usually same day.
+      </div>
+      <div class="price">
+        <strong>Focused App: $450 - $900</strong>
+        New small app with QA polish in ~2-7 days.
+      </div>
+      <div class="price">
+        <strong>Module Build: $1,200+</strong>
+        Multi-screen feature + backend + deployment.
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Saved Requests</h2>
+    <div id="list" class="list"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const CFG_KEY = 'wishlist.cfg.v1';
+  const DATA_KEY = 'wishlist.items.v1';
+  const el = {
+    endpoint: document.getElementById('endpoint'),
+    apiKey: document.getElementById('apiKey'),
+    deviceId: document.getElementById('deviceId'),
+    saveCfgBtn: document.getElementById('saveCfgBtn'),
+    testBtn: document.getElementById('testBtn'),
+    title: document.getElementById('title'),
+    category: document.getElementById('category'),
+    priority: document.getElementById('priority'),
+    timeline: document.getElementById('timeline'),
+    budget: document.getElementById('budget'),
+    contact: document.getElementById('contact'),
+    tags: document.getElementById('tags'),
+    description: document.getElementById('description'),
+    saveBtn: document.getElementById('saveBtn'),
+    saveSubmitBtn: document.getElementById('saveSubmitBtn'),
+    clearBtn: document.getElementById('clearBtn'),
+    status: document.getElementById('status'),
+    list: document.getElementById('list')
+  };
+
+  const state = {
+    items: []
+  };
+
+  function setStatus(msg, kind) {
+    el.status.textContent = msg;
+    el.status.className = 'status';
+    if (kind) el.status.classList.add(kind);
+  }
+
+  function esc(text) {
+    return String(text || '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;');
+  }
+
+  function getOrCreateDeviceId() {
+    const key = 'prosepilot.deviceId';
+    const existing = localStorage.getItem(key);
+    if (existing) return existing;
+    const generated = `device-${Math.random().toString(36).slice(2, 10)}`;
+    localStorage.setItem(key, generated);
+    return generated;
+  }
+
+  function defaultEndpoint() {
+    if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+      return `${window.location.origin}/api/wishlist/submit`;
+    }
+    return '';
+  }
+
+  function cfg() {
+    return {
+      endpoint: String(el.endpoint.value || '').trim() || defaultEndpoint(),
+      apiKey: String(el.apiKey.value || '').trim(),
+      deviceId: String(el.deviceId.value || '').trim() || getOrCreateDeviceId()
+    };
+  }
+
+  function saveCfg() {
+    const c = cfg();
+    el.endpoint.value = c.endpoint;
+    el.deviceId.value = c.deviceId;
+    localStorage.setItem(CFG_KEY, JSON.stringify(c));
+    setStatus('Config saved.', 'ok');
+  }
+
+  function loadCfg() {
+    const base = {
+      endpoint: defaultEndpoint(),
+      apiKey: '',
+      deviceId: getOrCreateDeviceId()
+    };
+    let out = base;
+    try {
+      const raw = localStorage.getItem(CFG_KEY);
+      if (raw) out = { ...base, ...JSON.parse(raw) };
+    } catch (_) {}
+    el.endpoint.value = out.endpoint;
+    el.apiKey.value = out.apiKey;
+    el.deviceId.value = out.deviceId;
+  }
+
+  function authHeaders() {
+    const h = { 'Content-Type': 'application/json' };
+    const key = String(el.apiKey.value || '').trim();
+    if (key) h.Authorization = `Bearer ${key}`;
+    return h;
+  }
+
+  async function testEndpoint() {
+    const c = cfg();
+    if (!c.endpoint) {
+      setStatus('Set endpoint first.', 'warn');
+      return;
+    }
+    try {
+      const u = new URL(c.endpoint, window.location.href);
+      const pulse = `${u.origin}/api/pulse`;
+      const res = await fetch(pulse, { method: 'GET', cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setStatus('Endpoint reachable.', 'ok');
+    } catch (e) {
+      setStatus(`Endpoint test failed: ${e.message}`, 'err');
+    }
+  }
+
+  function loadData() {
+    try {
+      const raw = localStorage.getItem(DATA_KEY);
+      state.items = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(state.items)) state.items = [];
+    } catch (_) {
+      state.items = [];
+    }
+  }
+
+  function saveData() {
+    localStorage.setItem(DATA_KEY, JSON.stringify(state.items));
+  }
+
+  function draft() {
+    return {
+      id: `wish-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      createdAt: new Date().toISOString(),
+      title: String(el.title.value || '').trim(),
+      category: String(el.category.value || '').trim(),
+      priority: String(el.priority.value || '').trim(),
+      timeline: String(el.timeline.value || '').trim(),
+      budgetUsd: Number(el.budget.value || 0),
+      contact: String(el.contact.value || '').trim(),
+      tags: String(el.tags.value || '').trim(),
+      description: String(el.description.value || '').trim(),
+      status: 'local'
+    };
+  }
+
+  function clearDraft() {
+    el.title.value = '';
+    el.timeline.value = '';
+    el.budget.value = '';
+    el.contact.value = '';
+    el.tags.value = '';
+    el.description.value = '';
+  }
+
+  async function submitItem(item) {
+    const c = cfg();
+    if (!c.endpoint) throw new Error('No endpoint configured');
+    const payload = {
+      deviceId: c.deviceId,
+      title: item.title,
+      description: item.description,
+      category: item.category,
+      priority: item.priority,
+      budgetUsd: item.budgetUsd,
+      timeline: item.timeline,
+      contact: item.contact,
+      tags: item.tags
+    };
+    const res = await fetch(c.endpoint, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(payload)
+    });
+    const text = await res.text();
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${text.slice(0, 120)}`);
+  }
+
+  async function addItem(andSubmit) {
+    const item = draft();
+    if (!item.title) {
+      setStatus('Title is required.', 'warn');
+      return;
+    }
+    state.items.unshift(item);
+    saveData();
+    render();
+    if (!andSubmit) {
+      setStatus('Saved locally.', 'ok');
+      return;
+    }
+    try {
+      await submitItem(item);
+      item.status = 'submitted';
+      item.lastError = '';
+      setStatus('Saved and submitted.', 'ok');
+    } catch (e) {
+      item.status = 'submit-error';
+      item.lastError = e.message;
+      setStatus(`Saved locally, submit failed: ${e.message}`, 'err');
+    } finally {
+      saveData();
+      render();
+    }
+  }
+
+  async function resubmit(id) {
+    const item = state.items.find((x) => x.id === id);
+    if (!item) return;
+    try {
+      await submitItem(item);
+      item.status = 'submitted';
+      item.lastError = '';
+      saveData();
+      render();
+      setStatus('Submitted.', 'ok');
+    } catch (e) {
+      item.status = 'submit-error';
+      item.lastError = e.message;
+      saveData();
+      render();
+      setStatus(`Submit failed: ${e.message}`, 'err');
+    }
+  }
+
+  function removeItem(id) {
+    state.items = state.items.filter((x) => x.id !== id);
+    saveData();
+    render();
+  }
+
+  function render() {
+    if (!state.items.length) {
+      el.list.innerHTML = '<div class="muted">No requests yet.</div>';
+      return;
+    }
+    el.list.innerHTML = state.items.map((item) => {
+      const statusClass = item.status === 'submitted' ? 'ok' : (item.status === 'submit-error' ? 'err' : '');
+      const err = item.lastError ? `<div class="meta" style="margin-top:6px;color:#ffb7bf;">Last error: ${esc(item.lastError)}</div>` : '';
+      return `
+        <div class="item">
+          <div class="item-head">
+            <strong>${esc(item.title)}</strong>
+            <span class="badge ${statusClass}">${esc(item.status)}</span>
+          </div>
+          <div class="meta">Category: ${esc(item.category)} | Priority: ${esc(item.priority)} | Budget: $${Number(item.budgetUsd || 0).toFixed(0)} | Timeline: ${esc(item.timeline || 'n/a')}</div>
+          <div class="meta" style="margin-top:6px;">${esc(item.description || '')}</div>
+          <div class="meta" style="margin-top:6px;">Tags: ${esc(item.tags || '')}</div>
+          <div class="row" style="margin-top:8px;">
+            <button class="btn ok" data-resubmit="${esc(item.id)}" type="button">Submit</button>
+            <button class="btn warn" data-remove="${esc(item.id)}" type="button">Delete</button>
+          </div>
+          ${err}
+        </div>
+      `;
+    }).join('');
+
+    el.list.querySelectorAll('[data-resubmit]').forEach((btn) => {
+      btn.addEventListener('click', () => resubmit(btn.getAttribute('data-resubmit')));
+    });
+    el.list.querySelectorAll('[data-remove]').forEach((btn) => {
+      btn.addEventListener('click', () => removeItem(btn.getAttribute('data-remove')));
+    });
+  }
+
+  function bind() {
+    el.saveCfgBtn.addEventListener('click', saveCfg);
+    el.testBtn.addEventListener('click', testEndpoint);
+    el.saveBtn.addEventListener('click', () => addItem(false));
+    el.saveSubmitBtn.addEventListener('click', () => addItem(true));
+    el.clearBtn.addEventListener('click', clearDraft);
+  }
+
+  function init() {
+    loadCfg();
+    loadData();
+    bind();
+    render();
+    setStatus('Ready.', 'warn');
+  }
+
+  init();
+})();
+</script>
+<script src="../shared/help-content.js"></script>
+<script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Light Messenger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #08111a;
+    --bg2: #0b1722;
+    --panel: #101f2d;
+    --panel-2: #13273a;
+    --line: #24415a;
+    --line-2: #305676;
+    --text: #e7f4ff;
+    --muted: #9fbbd3;
+    --ok: #34d399;
+    --warn: #f59e0b;
+    --danger: #f87171;
+    --brand: #38bdf8;
+    --brand-2: #22d3ee;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --sans: 'Manrope', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    color: var(--text);
+    font-family: var(--sans);
+    background:
+      radial-gradient(900px 420px at 10% -15%, #114065 0%, transparent 65%),
+      radial-gradient(900px 420px at 90% -15%, #0b4f56 0%, transparent 65%),
+      linear-gradient(160deg, var(--bg), #091521 55%, #07111a);
+  }
+
+  .suite-nav {
+    position: sticky;
+    top: 0;
+    z-index: 8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: rgba(7, 15, 24, 0.86);
+    border-bottom: 1px solid #193044;
+    backdrop-filter: blur(6px);
+  }
+  .suite-nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font: 500 12px/1 var(--mono);
+  }
+  .suite-nav a:hover { color: #d3ecff; }
+  .suite-nav span { color: #84a5c0; font: 500 12px/1 var(--mono); }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 18px auto 32px;
+    padding: 0 14px;
+    display: grid;
+    gap: 12px;
+  }
+
+  .hero {
+    border: 1px solid var(--line);
+    background: linear-gradient(165deg, rgba(14, 32, 48, .95), rgba(11, 24, 36, .95));
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .hero h1 {
+    font-size: clamp(1.2rem, 2.8vw, 1.7rem);
+    letter-spacing: 0.2px;
+  }
+  .hero p {
+    color: var(--muted);
+    margin-top: 8px;
+    line-height: 1.45;
+    max-width: 980px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    border: 1px solid var(--line);
+    background: #0d1b28;
+    color: #d8ebfb;
+    border-radius: 999px;
+    padding: 8px 13px;
+    cursor: pointer;
+    font: 600 13px/1 var(--mono);
+  }
+  .tab.active {
+    border-color: #2f6f90;
+    background: linear-gradient(180deg, #17405c, #133348);
+    color: #f4fbff;
+  }
+
+  .view {
+    display: none;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: linear-gradient(165deg, rgba(14, 27, 40, .97), rgba(11, 21, 33, .97));
+    padding: 14px;
+  }
+  .view.active { display: block; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: rgba(14, 29, 44, .86);
+    padding: 12px;
+  }
+  .card h3 {
+    font-size: 0.98rem;
+    margin-bottom: 8px;
+    letter-spacing: 0.2px;
+  }
+
+  .row {
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .line {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  label {
+    color: #a0bdd5;
+    font: 500 12px/1 var(--mono);
+  }
+  textarea, select, input[type='range'], input[type='text'] {
+    width: 100%;
+    border: 1px solid #2c506f;
+    border-radius: 10px;
+    background: #0d1f2f;
+    color: var(--text);
+  }
+  textarea, input[type='text'], select {
+    padding: 10px 11px;
+    font: 500 14px/1.35 var(--sans);
+  }
+  textarea {
+    min-height: 108px;
+    resize: vertical;
+  }
+  input[type='range'] {
+    accent-color: #38bdf8;
+  }
+
+  .btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .btn {
+    border: 1px solid #2d526f;
+    border-radius: 10px;
+    padding: 8px 12px;
+    background: #12314a;
+    color: #e6f5ff;
+    font: 700 13px/1 var(--sans);
+    cursor: pointer;
+  }
+  .btn:hover { background: #194262; }
+  .btn.primary {
+    border-color: #2f8bb2;
+    background: linear-gradient(180deg, #1b7cac, #155f85);
+  }
+  .btn.good {
+    border-color: #2c8a6a;
+    background: linear-gradient(180deg, #227a5f, #1a5f4a);
+  }
+  .btn.danger {
+    border-color: #924b4b;
+    background: linear-gradient(180deg, #7f3f3f, #642f2f);
+  }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+  .chip {
+    border: 1px solid #2b4a62;
+    background: #10283a;
+    color: #d5e9f8;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font: 600 12px/1 var(--mono);
+    cursor: pointer;
+  }
+
+  .sub {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .mono {
+    font: 500 12px/1.45 var(--mono);
+    color: #d7ebfb;
+    background: #0b1c2a;
+    border: 1px solid #28455c;
+    border-radius: 10px;
+    padding: 10px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .status {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid #2f4f68;
+    background: #102335;
+    color: #d2e7f8;
+    font: 600 12px/1.3 var(--mono);
+  }
+  .status.ok { border-color: #2f725d; color: #adf3d8; }
+  .status.warn { border-color: #8d6531; color: #ffd19d; }
+  .status.err { border-color: #8a4848; color: #ffb3b3; }
+
+  .flash-stage {
+    min-height: 170px;
+    border-radius: 12px;
+    border: 1px solid var(--line-2);
+    background: #0b1a29;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.03);
+    transition: background .05s linear, box-shadow .05s linear;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 10px;
+  }
+  .flash-stage.on {
+    background: #f7f9fc;
+    color: #09121c;
+    box-shadow: 0 0 38px rgba(255,255,255,.62), inset 0 0 0 1px rgba(0,0,0,.1);
+  }
+
+  .meter {
+    height: 14px;
+    border: 1px solid #2c4b64;
+    border-radius: 999px;
+    background: #0c1c2b;
+    overflow: hidden;
+  }
+  .meter > span {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #22d3ee, #60a5fa);
+  }
+
+  video {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid #2f526d;
+    background: #05090d;
+    max-height: 320px;
+    object-fit: cover;
+  }
+  canvas { display: none; }
+
+  .log {
+    margin-top: 8px;
+    border: 1px solid #28465d;
+    border-radius: 10px;
+    background: #0c1d2b;
+    max-height: 220px;
+    overflow: auto;
+    padding: 8px;
+    font: 500 12px/1.4 var(--mono);
+  }
+  .log p { margin-bottom: 6px; }
+  .log p:last-child { margin-bottom: 0; }
+
+  @media (max-width: 980px) {
+    .grid { grid-template-columns: 1fr; }
+    .line { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <nav class="suite-nav">
+    <a href="../index.html">&larr; Back to Suite</a>
+    <span>ProSe Pilot</span>
+  </nav>
+
+  <main class="wrap">
+    <header class="hero">
+      <h1>Light Messenger (Offline)</h1>
+      <p>
+        Send short messages by light pulses. Device A transmits Morse-framed flashes, Device B receives via camera and validates checksum.
+        This works best for short emergency text and line-of-sight conditions.
+      </p>
+    </header>
+
+    <section class="tabs" aria-label="Light messenger views">
+      <button type="button" class="tab active" data-tab="tx">Transmit</button>
+      <button type="button" class="tab" data-tab="rx">Receive</button>
+      <button type="button" class="tab" data-tab="guide">Field Guide</button>
+    </section>
+
+    <section class="view active" id="view-tx">
+      <div class="grid">
+        <article class="card">
+          <h3>Message Builder</h3>
+          <div class="row">
+            <label for="txMessage">Message</label>
+            <textarea id="txMessage" maxlength="160" placeholder="I SEE YOU HOLD POSITION HELP ON THE WAY"></textarea>
+          </div>
+          <div class="row">
+            <label>Quick Presets</label>
+            <div class="chips" id="presetChips"></div>
+          </div>
+          <div class="line row">
+            <div>
+              <label for="txUnit">Unit Speed (ms): <span id="txUnitValue">120</span></label>
+              <input id="txUnit" type="range" min="80" max="260" step="5" value="120">
+            </div>
+            <div>
+              <label for="txRepeat">Frame Repeats</label>
+              <select id="txRepeat">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </div>
+          </div>
+          <div class="line row">
+            <div>
+              <label for="txMode">Emitter Mode</label>
+              <select id="txMode">
+                <option value="screen">Screen Flash (recommended)</option>
+                <option value="torch">LED Torch (experimental)</option>
+              </select>
+            </div>
+            <div>
+              <label for="txGap">Gap Between Repeats (units)</label>
+              <input id="txGap" type="range" min="8" max="28" step="1" value="14">
+              <div class="sub">Current: <span id="txGapValue">14</span> units</div>
+            </div>
+          </div>
+          <div class="btn-row row">
+            <button id="txStart" class="btn good" type="button">Start Transmission</button>
+            <button id="txStop" class="btn danger" type="button" disabled>Stop</button>
+            <button id="txPreview" class="btn" type="button">Preview Frame</button>
+          </div>
+          <div id="txStatus" class="status">Idle.</div>
+        </article>
+
+        <article class="card">
+          <h3>Flash Output</h3>
+          <div id="flashStage" class="flash-stage">
+            <div>
+              <div id="flashHeadline" style="font-weight:800; font-size:1.15rem; letter-spacing:.2px;">Stand by</div>
+              <div class="sub" style="margin-top:6px;">Point this side toward receiver camera</div>
+            </div>
+          </div>
+          <div class="row">
+            <label>Encoded Frame</label>
+            <pre id="txFrameText" class="mono">(build preview to inspect frame)</pre>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="view" id="view-rx">
+      <div class="grid">
+        <article class="card">
+          <h3>Receiver Camera</h3>
+          <div class="btn-row row">
+            <button id="rxStart" class="btn good" type="button">Start Camera</button>
+            <button id="rxStop" class="btn danger" type="button" disabled>Stop Camera</button>
+            <button id="rxReset" class="btn" type="button">Reset Decoder</button>
+          </div>
+          <video id="rxVideo" playsinline muted></video>
+          <canvas id="rxCanvas" width="160" height="120"></canvas>
+          <div class="row">
+            <label for="rxUnit">Decode Unit (ms): <span id="rxUnitValue">120</span></label>
+            <input id="rxUnit" type="range" min="80" max="260" step="5" value="120">
+          </div>
+          <div class="row">
+            <label for="rxThreshold">Brightness Threshold: <span id="rxThresholdValue">140</span></label>
+            <input id="rxThreshold" type="range" min="20" max="250" step="1" value="140">
+            <div class="btn-row">
+              <button id="rxAutoThreshold" class="btn" type="button">Auto Threshold</button>
+            </div>
+          </div>
+          <div class="row">
+            <label>Live Brightness: <span id="rxBrightnessValue">0</span></label>
+            <div class="meter"><span id="rxMeterBar"></span></div>
+          </div>
+          <div id="rxStatus" class="status">Camera stopped.</div>
+        </article>
+
+        <article class="card">
+          <h3>Decoded Messages</h3>
+          <div class="row">
+            <label>Current Frame Buffer</label>
+            <pre id="rxCurrent" class="mono">(waiting for start marker)</pre>
+          </div>
+          <div class="row">
+            <label>Validated Frames (repeat counter)</label>
+            <div id="rxLog" class="log"></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="view" id="view-guide">
+      <div class="card">
+        <h3>Field Guide</h3>
+        <p class="sub">Protocol used in this build:</p>
+        <div class="mono" style="margin-top:8px;">
+- Start marker: -.-.-
+- Payload: UPPERCASE MESSAGE + '=' + CRC8 hex
+- End marker: ...-.-
+- Repeat count: configurable (default 3)
+- Dot: 1 unit on, Dash: 3 units on
+- Intra-symbol gap: 1 unit off
+- Letter gap: 3 units off
+- Word gap: 7 units off
+        </div>
+        <p class="sub" style="margin-top:12px;">
+Recommendations:
+- Use short messages under 40 characters.
+- Start with 120-140 ms unit speed.
+- Keep devices steady and line-of-sight.
+- In bright daylight, increase threshold and reduce distance.
+- Torch mode may not be supported by every phone/browser.
+        </p>
+      </div>
+    </section>
+  </main>
+
+<script>
+(() => {
+  const MORSE = {
+    A: '.-', B: '-...', C: '-.-.', D: '-..', E: '.', F: '..-.', G: '--.', H: '....', I: '..', J: '.---',
+    K: '-.-', L: '.-..', M: '--', N: '-.', O: '---', P: '.--.', Q: '--.-', R: '.-.', S: '...', T: '-',
+    U: '..-', V: '...-', W: '.--', X: '-..-', Y: '-.--', Z: '--..',
+    '0': '-----', '1': '.----', '2': '..---', '3': '...--', '4': '....-', '5': '.....',
+    '6': '-....', '7': '--...', '8': '---..', '9': '----.',
+    '.': '.-.-.-', ',': '--..--', '?': '..--..', '!': '-.-.--', '/': '-..-.', '-': '-....-',
+    '=': '-...-'
+  };
+
+  const REVERSE = Object.fromEntries(Object.entries(MORSE).map(([k, v]) => [v, k]));
+  const START_MARKER = '-.-.-';
+  const END_MARKER = '...-.-';
+  const PRESETS = [
+    'SOS',
+    'I SEE YOU',
+    'HOLD POSITION',
+    'HELP ON THE WAY',
+    'NEED WATER',
+    'MOVE TO HIGH GROUND'
+  ];
+
+  const el = {
+    tabs: [...document.querySelectorAll('.tab')],
+    views: [...document.querySelectorAll('.view')],
+
+    txMessage: document.getElementById('txMessage'),
+    txUnit: document.getElementById('txUnit'),
+    txUnitValue: document.getElementById('txUnitValue'),
+    txRepeat: document.getElementById('txRepeat'),
+    txGap: document.getElementById('txGap'),
+    txGapValue: document.getElementById('txGapValue'),
+    txMode: document.getElementById('txMode'),
+    txStart: document.getElementById('txStart'),
+    txStop: document.getElementById('txStop'),
+    txPreview: document.getElementById('txPreview'),
+    txStatus: document.getElementById('txStatus'),
+    txFrameText: document.getElementById('txFrameText'),
+    flashStage: document.getElementById('flashStage'),
+    flashHeadline: document.getElementById('flashHeadline'),
+    presetChips: document.getElementById('presetChips'),
+
+    rxStart: document.getElementById('rxStart'),
+    rxStop: document.getElementById('rxStop'),
+    rxReset: document.getElementById('rxReset'),
+    rxVideo: document.getElementById('rxVideo'),
+    rxCanvas: document.getElementById('rxCanvas'),
+    rxUnit: document.getElementById('rxUnit'),
+    rxUnitValue: document.getElementById('rxUnitValue'),
+    rxThreshold: document.getElementById('rxThreshold'),
+    rxThresholdValue: document.getElementById('rxThresholdValue'),
+    rxAutoThreshold: document.getElementById('rxAutoThreshold'),
+    rxStatus: document.getElementById('rxStatus'),
+    rxCurrent: document.getElementById('rxCurrent'),
+    rxLog: document.getElementById('rxLog'),
+    rxMeterBar: document.getElementById('rxMeterBar'),
+    rxBrightnessValue: document.getElementById('rxBrightnessValue')
+  };
+
+  const txState = {
+    running: false,
+    stopRequested: false,
+    torchTrack: null,
+    torchStream: null,
+    lastFramePayload: ''
+  };
+
+  const rxState = {
+    running: false,
+    stream: null,
+    rafId: 0,
+    currentOn: null,
+    segmentStart: 0,
+    symbol: '',
+    inFrame: false,
+    frameText: '',
+    brightness: 0,
+    validated: new Map(),
+    lastFinalizeAt: 0
+  };
+
+  const rxCtx = el.rxCanvas.getContext('2d', { willReadFrequently: true });
+
+  function setTab(tab) {
+    el.tabs.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
+    el.views.forEach(view => view.classList.toggle('active', view.id === `view-${tab}`));
+  }
+
+  function setStatus(node, message, kind) {
+    node.textContent = message;
+    node.className = 'status';
+    if (kind) node.classList.add(kind);
+  }
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function sanitizeMessage(input) {
+    const upper = (input || '').toUpperCase();
+    const clean = upper
+      .replace(/[^A-Z0-9 .,!?/\-=\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return clean.slice(0, 160);
+  }
+
+  function crc8(text) {
+    let crc = 0x00;
+    for (let i = 0; i < text.length; i += 1) {
+      crc ^= text.charCodeAt(i);
+      for (let j = 0; j < 8; j += 1) {
+        if ((crc & 0x80) !== 0) crc = ((crc << 1) ^ 0x07) & 0xFF;
+        else crc = (crc << 1) & 0xFF;
+      }
+    }
+    return crc;
+  }
+
+  function encodePayload(message) {
+    const msg = sanitizeMessage(message);
+    const checksum = crc8(msg).toString(16).toUpperCase().padStart(2, '0');
+    return `${msg}=${checksum}`;
+  }
+
+  function appendSegment(arr, on, units) {
+    if (units <= 0) return;
+    const last = arr[arr.length - 1];
+    if (last && last.on === on) {
+      last.units += units;
+    } else {
+      arr.push({ on, units });
+    }
+  }
+
+  function appendSymbol(arr, symbol, gapBeforeUnits) {
+    if (gapBeforeUnits > 0) appendSegment(arr, false, gapBeforeUnits);
+    for (let i = 0; i < symbol.length; i += 1) {
+      const part = symbol[i];
+      appendSegment(arr, true, part === '.' ? 1 : 3);
+      if (i < symbol.length - 1) appendSegment(arr, false, 1);
+    }
+  }
+
+  function appendText(arr, text, initialGapUnits) {
+    let prev = 'none';
+    if (initialGapUnits > 0) prev = 'gap-initial';
+
+    for (const ch of text) {
+      if (ch === ' ') {
+        prev = 'space';
+        continue;
+      }
+      const symbol = MORSE[ch];
+      if (!symbol) continue;
+
+      let gap = 0;
+      if (prev === 'char') gap = 3;
+      if (prev === 'space') gap = 7;
+      if (prev === 'gap-initial') gap = initialGapUnits;
+
+      appendSymbol(arr, symbol, gap);
+      prev = 'char';
+    }
+  }
+
+  function buildFrameSegments(payload) {
+    const arr = [];
+
+    for (let i = 0; i < 16; i += 1) {
+      appendSegment(arr, i % 2 === 0, 1);
+    }
+    appendSegment(arr, false, 4);
+
+    appendSymbol(arr, START_MARKER, 0);
+    appendText(arr, payload, 7);
+    appendSymbol(arr, END_MARKER, 7);
+
+    return arr;
+  }
+
+  function buildTransmissionSegments(payload, repeat, repeatGapUnits) {
+    const frame = buildFrameSegments(payload);
+    const out = [];
+    for (let i = 0; i < repeat; i += 1) {
+      for (const seg of frame) appendSegment(out, seg.on, seg.units);
+      if (i < repeat - 1) appendSegment(out, false, repeatGapUnits);
+    }
+    appendSegment(out, false, 10);
+    return out;
+  }
+
+  function framePreview(payload, repeat, gapUnits) {
+    const frame = buildFrameSegments(payload);
+    const chars = payload.length;
+    const units = buildTransmissionSegments(payload, repeat, gapUnits).reduce((s, x) => s + x.units, 0);
+    return [
+      `Payload: ${payload}`,
+      `Chars: ${chars}`,
+      `Segments/frame: ${frame.length}`,
+      `Repeat: ${repeat}`,
+      `Total units: ${units}`,
+      `Markers: START=${START_MARKER} END=${END_MARKER}`
+    ].join('\n');
+  }
+
+  function setFlash(on) {
+    el.flashStage.classList.toggle('on', on);
+    el.flashHeadline.textContent = on ? 'LIGHT ON' : 'LIGHT OFF';
+  }
+
+  async function ensureTorch() {
+    if (txState.torchTrack) return true;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false
+      });
+      const track = stream.getVideoTracks()[0];
+      const caps = track.getCapabilities ? track.getCapabilities() : {};
+      if (!caps.torch) {
+        track.stop();
+        stream.getTracks().forEach(t => t.stop());
+        return false;
+      }
+      txState.torchStream = stream;
+      txState.torchTrack = track;
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  async function setTorch(on) {
+    if (!txState.torchTrack) return false;
+    try {
+      await txState.torchTrack.applyConstraints({ advanced: [{ torch: !!on }] });
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function releaseTorch() {
+    if (txState.torchTrack) txState.torchTrack.stop();
+    if (txState.torchStream) txState.torchStream.getTracks().forEach(t => t.stop());
+    txState.torchTrack = null;
+    txState.torchStream = null;
+  }
+
+  async function setEmitter(on, mode) {
+    setFlash(on);
+    if (mode === 'torch') {
+      const ok = await setTorch(on);
+      if (!ok) {
+        setStatus(el.txStatus, 'Torch mode failed; continuing with screen flash.', 'warn');
+      }
+    }
+  }
+
+  async function startTx() {
+    if (txState.running) return;
+
+    const msg = sanitizeMessage(el.txMessage.value);
+    if (!msg) {
+      setStatus(el.txStatus, 'Type a message first.', 'err');
+      return;
+    }
+
+    el.txMessage.value = msg;
+    const payload = encodePayload(msg);
+    const unitMs = Number(el.txUnit.value);
+    const repeat = Number(el.txRepeat.value);
+    const gap = Number(el.txGap.value);
+    const mode = el.txMode.value;
+
+    if (mode === 'torch') {
+      const torchReady = await ensureTorch();
+      if (!torchReady) {
+        setStatus(el.txStatus, 'Torch unsupported or permission denied. Switched to screen mode.', 'warn');
+        el.txMode.value = 'screen';
+      }
+    }
+
+    const segments = buildTransmissionSegments(payload, repeat, gap);
+
+    txState.running = true;
+    txState.stopRequested = false;
+    txState.lastFramePayload = payload;
+
+    el.txStart.disabled = true;
+    el.txStop.disabled = false;
+
+    setStatus(el.txStatus, `Transmitting ${repeat} frame(s), unit ${unitMs}ms.`, 'ok');
+    el.txFrameText.textContent = framePreview(payload, repeat, gap);
+
+    for (let i = 0; i < segments.length; i += 1) {
+      if (txState.stopRequested) break;
+      const seg = segments[i];
+      await setEmitter(seg.on, el.txMode.value);
+      await sleep(seg.units * unitMs);
+    }
+
+    await setEmitter(false, el.txMode.value);
+    releaseTorch();
+
+    txState.running = false;
+    txState.stopRequested = false;
+    el.txStart.disabled = false;
+    el.txStop.disabled = true;
+
+    if (txState.lastFramePayload) {
+      setStatus(el.txStatus, 'Transmission finished.', 'ok');
+    } else {
+      setStatus(el.txStatus, 'Transmission stopped.', 'warn');
+    }
+  }
+
+  function stopTx() {
+    txState.stopRequested = true;
+    txState.lastFramePayload = '';
+  }
+
+  function setRxLive(message) {
+    el.rxCurrent.textContent = message;
+  }
+
+  function pushRxLog(line, kind) {
+    const p = document.createElement('p');
+    p.textContent = line;
+    if (kind === 'ok') p.style.color = '#adf3d8';
+    if (kind === 'err') p.style.color = '#ffb3b3';
+    if (kind === 'warn') p.style.color = '#ffd19d';
+    el.rxLog.prepend(p);
+    while (el.rxLog.childElementCount > 80) {
+      el.rxLog.removeChild(el.rxLog.lastElementChild);
+    }
+  }
+
+  function flushRxSymbol() {
+    const symbol = rxState.symbol;
+    rxState.symbol = '';
+    if (!symbol) return;
+
+    if (symbol === START_MARKER) {
+      rxState.inFrame = true;
+      rxState.frameText = '';
+      setRxLive('[START]');
+      return;
+    }
+
+    if (symbol === END_MARKER) {
+      finalizeFrame();
+      rxState.inFrame = false;
+      rxState.frameText = '';
+      setRxLive('[END]');
+      return;
+    }
+
+    const char = REVERSE[symbol] || '?';
+    if (rxState.inFrame) {
+      rxState.frameText += char;
+      setRxLive(rxState.frameText || '(in frame)');
+    }
+  }
+
+  function finalizeFrame() {
+    const now = Date.now();
+    if (now - rxState.lastFinalizeAt < 150) return;
+    rxState.lastFinalizeAt = now;
+
+    const raw = rxState.frameText;
+    if (!raw || !raw.includes('=')) {
+      pushRxLog(`Frame rejected (missing checksum): ${raw || '(empty)'}`, 'err');
+      return;
+    }
+
+    const ix = raw.lastIndexOf('=');
+    const msg = raw.slice(0, ix).trimEnd();
+    const got = raw.slice(ix + 1).replace(/\s+/g, '').toUpperCase();
+    const expected = crc8(msg).toString(16).toUpperCase().padStart(2, '0');
+
+    if (got !== expected) {
+      pushRxLog(`CRC fail: "${msg}" got=${got} expected=${expected}`, 'err');
+      return;
+    }
+
+    const key = `${msg}#${expected}`;
+    const count = (rxState.validated.get(key) || 0) + 1;
+    rxState.validated.set(key, count);
+    pushRxLog(`OK x${count}: ${msg}`, 'ok');
+  }
+
+  function processSegment(wasOn, ms) {
+    const unit = Number(el.rxUnit.value);
+    if (ms < unit * 0.45) return;
+
+    if (wasOn) {
+      const units = Math.max(1, Math.round(ms / unit));
+      rxState.symbol += (units >= 2 ? '-' : '.');
+      return;
+    }
+
+    const units = ms / unit;
+    if (units < 2.0) {
+      return;
+    }
+    if (units < 6.0) {
+      flushRxSymbol();
+      return;
+    }
+    flushRxSymbol();
+    if (rxState.inFrame) {
+      rxState.frameText += ' ';
+      setRxLive(rxState.frameText);
+    }
+  }
+
+  function decodeLoop() {
+    if (!rxState.running) return;
+
+    if (el.rxVideo.readyState >= 2) {
+      rxCtx.drawImage(el.rxVideo, 0, 0, el.rxCanvas.width, el.rxCanvas.height);
+      const data = rxCtx.getImageData(0, 0, el.rxCanvas.width, el.rxCanvas.height).data;
+      let sum = 0;
+      let count = 0;
+
+      for (let y = 24; y < 96; y += 2) {
+        for (let x = 30; x < 130; x += 2) {
+          const i = (y * el.rxCanvas.width + x) * 4;
+          const lum = (data[i] * 0.2126) + (data[i + 1] * 0.7152) + (data[i + 2] * 0.0722);
+          sum += lum;
+          count += 1;
+        }
+      }
+
+      const brightness = count ? (sum / count) : 0;
+      rxState.brightness = brightness;
+      const threshold = Number(el.rxThreshold.value);
+      const on = brightness >= threshold;
+
+      el.rxBrightnessValue.textContent = brightness.toFixed(1);
+      el.rxMeterBar.style.width = `${Math.max(0, Math.min(100, (brightness / 255) * 100))}%`;
+
+      const now = performance.now();
+      if (rxState.currentOn === null) {
+        rxState.currentOn = on;
+        rxState.segmentStart = now;
+      } else if (on !== rxState.currentOn) {
+        const elapsed = now - rxState.segmentStart;
+        processSegment(rxState.currentOn, elapsed);
+        rxState.currentOn = on;
+        rxState.segmentStart = now;
+      }
+    }
+
+    rxState.rafId = requestAnimationFrame(decodeLoop);
+  }
+
+  async function startRx() {
+    if (rxState.running) return;
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setStatus(el.rxStatus, 'Camera API unavailable in this browser.', 'err');
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
+        audio: false
+      });
+
+      rxState.stream = stream;
+      el.rxVideo.srcObject = stream;
+      await el.rxVideo.play();
+
+      rxState.running = true;
+      rxState.currentOn = null;
+      rxState.segmentStart = 0;
+      rxState.symbol = '';
+      rxState.inFrame = false;
+      rxState.frameText = '';
+
+      el.rxStart.disabled = true;
+      el.rxStop.disabled = false;
+
+      setStatus(el.rxStatus, 'Receiver running. Point camera at flashing source.', 'ok');
+      decodeLoop();
+    } catch (error) {
+      setStatus(el.rxStatus, `Camera start failed: ${error.message}`, 'err');
+    }
+  }
+
+  function stopRx() {
+    if (!rxState.running) return;
+    rxState.running = false;
+    cancelAnimationFrame(rxState.rafId);
+    rxState.rafId = 0;
+
+    if (rxState.stream) {
+      rxState.stream.getTracks().forEach(t => t.stop());
+    }
+    rxState.stream = null;
+    el.rxVideo.srcObject = null;
+
+    el.rxStart.disabled = false;
+    el.rxStop.disabled = true;
+
+    setStatus(el.rxStatus, 'Receiver stopped.', 'warn');
+  }
+
+  function resetRxDecoder() {
+    rxState.symbol = '';
+    rxState.inFrame = false;
+    rxState.frameText = '';
+    rxState.validated.clear();
+    el.rxLog.innerHTML = '';
+    setRxLive('(waiting for start marker)');
+    setStatus(el.rxStatus, 'Decoder state reset.', 'ok');
+  }
+
+  function autoThreshold() {
+    const t = Math.round(Math.max(20, Math.min(245, rxState.brightness + 28)));
+    el.rxThreshold.value = String(t);
+    el.rxThresholdValue.textContent = String(t);
+    setStatus(el.rxStatus, `Threshold auto-set to ${t}.`, 'ok');
+  }
+
+  function previewFrame() {
+    const msg = sanitizeMessage(el.txMessage.value);
+    if (!msg) {
+      setStatus(el.txStatus, 'Enter a message to preview.', 'warn');
+      return;
+    }
+    const payload = encodePayload(msg);
+    const repeat = Number(el.txRepeat.value);
+    const gap = Number(el.txGap.value);
+    el.txFrameText.textContent = framePreview(payload, repeat, gap);
+    setStatus(el.txStatus, 'Frame preview updated.', 'ok');
+  }
+
+  function bind() {
+    el.tabs.forEach(btn => btn.addEventListener('click', () => setTab(btn.dataset.tab)));
+
+    PRESETS.forEach(text => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'chip';
+      chip.textContent = text;
+      chip.addEventListener('click', () => {
+        const current = sanitizeMessage(el.txMessage.value);
+        el.txMessage.value = current ? `${current} ${text}`.slice(0, 160) : text;
+      });
+      el.presetChips.appendChild(chip);
+    });
+
+    el.txUnit.addEventListener('input', () => {
+      el.txUnitValue.textContent = el.txUnit.value;
+      el.rxUnit.value = el.txUnit.value;
+      el.rxUnitValue.textContent = el.rxUnit.value;
+    });
+
+    el.rxUnit.addEventListener('input', () => {
+      el.rxUnitValue.textContent = el.rxUnit.value;
+    });
+
+    el.txGap.addEventListener('input', () => {
+      el.txGapValue.textContent = el.txGap.value;
+    });
+
+    el.rxThreshold.addEventListener('input', () => {
+      el.rxThresholdValue.textContent = el.rxThreshold.value;
+    });
+
+    el.txStart.addEventListener('click', startTx);
+    el.txStop.addEventListener('click', stopTx);
+    el.txPreview.addEventListener('click', previewFrame);
+
+    el.rxStart.addEventListener('click', startRx);
+    el.rxStop.addEventListener('click', stopRx);
+    el.rxReset.addEventListener('click', resetRxDecoder);
+    el.rxAutoThreshold.addEventListener('click', autoThreshold);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && txState.running) stopTx();
+      if (document.hidden && rxState.running) stopRx();
+    });
+
+    window.addEventListener('beforeunload', () => {
+      stopTx();
+      stopRx();
+      releaseTorch();
+    });
+  }
+
+  function init() {
+    bind();
+    setRxLive('(waiting for start marker)');
+    el.txUnitValue.textContent = el.txUnit.value;
+    el.txGapValue.textContent = el.txGap.value;
+    el.rxUnitValue.textContent = el.rxUnit.value;
+    el.rxThresholdValue.textContent = el.rxThreshold.value;
+    setStatus(el.txStatus, 'Idle. Build preview before transmitting.', 'warn');
+    setStatus(el.rxStatus, 'Camera stopped.', 'warn');
+  }
+
+  init();
+})();
+</script>
+  <script src="../shared/help-content.js"></script>
+  <script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

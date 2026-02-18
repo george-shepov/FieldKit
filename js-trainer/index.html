@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>JavaScript Pocket Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e14;--bg2:#111820;--bg3:#1a2130;
+  --border:#1e2a3a;--border2:#2d3f54;
+  --amber:#f0c040;--amber2:#d4a017;
+  --green:#7ec699;--red:#f07178;--blue:#5ccfe6;--purple:#d4bfff;--cyan:#95e6cb;--orange:#ffae57;
+  --text:#bfccd6;--text2:#6e7f91;--text3:#3d4e5f;--white:#e6f1ff;
+  --mono:'DM Mono','Courier New',monospace;
+}
+html{font-family:var(--mono);background:var(--bg);color:var(--amber);font-size:14px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+body{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+.sn{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:11px;flex-shrink:0}
+.sn a{color:var(--text2);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .15s}
+.sn a:hover{color:var(--amber)}
+.sn span{color:var(--text3);font-size:10px}
+#T{flex:1;padding:10px 12px;overflow-y:auto;font-size:13px;line-height:1.6;-webkit-overflow-scrolling:touch;word-wrap:break-word}
+#T::-webkit-scrollbar{width:6px}
+#T::-webkit-scrollbar-track{background:var(--bg)}
+#T::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.g{color:var(--green)}.r{color:var(--red)}.b{color:var(--blue)}.y{color:var(--amber)}.p{color:var(--purple)}.o{color:var(--orange)}.c{color:var(--cyan)}
+.d{color:var(--text2)}.dd{color:var(--text3)}.w{color:var(--white)}
+.bld{font-weight:500}
+.echo{color:var(--text3)}
+.res{color:var(--cyan);padding-left:14px}
+.err{color:var(--red);padding-left:14px}
+#qk{display:flex;background:var(--bg2);padding:5px 3px;overflow-x:auto;border-top:1px solid var(--border);flex-shrink:0;gap:3px}
+.qk{background:var(--bg3);color:var(--text);border:1px solid var(--border);padding:6px 10px;border-radius:4px;font-family:var(--mono);font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;user-select:none}
+.qk:active{background:var(--border);transform:translateY(1px)}
+.pr{display:flex;padding:8px 12px;background:var(--bg2);border-top:1px solid var(--border);align-items:center;flex-shrink:0}
+.pr label{color:var(--amber);margin-right:6px;font-weight:500;flex-shrink:0;font-size:13px}
+.pr input{flex:1;background:transparent;border:none;color:var(--white);font-family:var(--mono);font-size:15px;outline:none;min-width:0}
+@media(max-width:480px){#T{font-size:12px;padding:8px}.pr input{font-size:14px}.qk{padding:5px 8px;font-size:11px}}
+</style>
+</head>
+<body>
+<nav class="sn"><a href="../index.html">← Suite</a><span>ProSe Pilot</span></nav>
+<div id="T"></div>
+<div id="qk">
+<button class="qk" onclick="ty('=')">= </button>
+<button class="qk" onclick="ty('=>')">⇒</button>
+<button class="qk" onclick="ty('===')">===</button>
+<button class="qk" onclick="ty('`')">` </button>
+<button class="qk" onclick="ty('${')">${ </button>
+<button class="qk" onclick="ty('...')">..</button>
+<button class="qk" onclick="ty('[]')">[]</button>
+<button class="qk" onclick="ty('{}')">{ }</button>
+<button class="qk" onclick="ty('()')">( )</button>
+<button class="qk" onclick="ty('const ')">const</button>
+<button class="qk" onclick="ty('let ')">let</button>
+<button class="qk" onclick="ty('typeof ')">typeof</button>
+<button class="qk" onclick="ty('function ')">fn</button>
+<button class="qk" onclick="ty('class ')">class</button>
+<button class="qk" onclick="go()">⏎</button>
+</div>
+<div class="pr"><label id="pL">&gt;</label><input type="text" id="I" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+
+<script>
+const LS='jpt1',T=document.getElementById('T'),I=document.getElementById('I');
+let hist=[],hIdx=-1;
+
+/* ═══════════════════════════════════════
+   LIVE JAVASCRIPT REPL — real eval()
+   This is not simulated.
+   ═══════════════════════════════════════ */
+const _ctx={};// persistent context for REPL variables
+
+function evalJS(code){
+  try{
+    // Execute in a context that preserves variables across lines
+    const fn=new Function('ctx',`with(ctx){
+      try{ const __r=${code}; if(__r!==undefined) ctx.__last=__r; return __r; }
+      catch(e){
+        ${code};
+        return undefined;
+      }
+    }`);
+    const r=fn(_ctx);
+    return{ok:true,val:r};
+  }catch(e){
+    return{ok:false,val:e.message};
+  }
+}
+
+function fmtVal(v){
+  if(v===undefined) return 'undefined';
+  if(v===null) return 'null';
+  if(typeof v==='string') return `'${v}'`;
+  if(typeof v==='symbol') return v.toString();
+  if(typeof v==='function') return `[Function: ${v.name||'anonymous'}]`;
+  try{return JSON.stringify(v,null,2);}catch(e){return String(v);}
+}
+
+/* ═══════════════════════════════════════
+   CURRICULUM — Exploring JavaScript ES2025
+   Dr. Axel Rauschmayer · 31 chapters
+   ═══════════════════════════════════════ */
+const M={
+// ── PART II: FIRST STEPS ──
+'syntax':{p:2,t:'Syntax Basics (Ch 9)',q:[
+{q:'Write a single-line comment',a:['// comment','//','// single-line comment']},
+{q:'Declare an immutable variable x with value 8',a:['const x = 8;','const x = 8']},
+{q:'Declare a mutable variable y with no value',a:['let y;']},
+{q:'Print "Hello!" to the console',a:['console.log("Hello!");',"console.log('Hello!');","console.log('Hello!')","console.log(`Hello!`)"]},
+{q:'Print an error message to stderr',a:['console.error("Something went wrong!");',"console.error('Something went wrong!');","console.error('error')"]},
+{q:'Write a template literal with the value of 2+3 interpolated',a:['`${2+3}`','`result: ${2+3}`','`${2 + 3}`']},
+{q:'Use strict equality to compare 1 and 1',a:['1 === 1']},
+{q:'Write the logical AND of true and false',a:['true && false']},
+{q:'Write the logical OR of true and false',a:['true || false']},
+]},
+
+// ── PART III: VARIABLES & VALUES ──
+'vars':{p:3,t:'Variables & Assignment (Ch 13)',q:[
+{q:'Declare a constant PI with value 3.14',a:['const PI = 3.14;','const PI = 3.14']},
+{q:'Declare mutable variable count starting at 0',a:['let count = 0;','let count = 0']},
+{q:'Why does const obj = {}; obj.x = 1; work?',a:['const protects the binding, not the value','binding not value','const protects binding not value']},
+{q:'What keyword cannot be reassigned after declaration?',a:['const']},
+{q:'What keyword allows reassignment?',a:['let']},
+{q:'What is the scope of let and const?',a:['block','block scope']},
+{q:'What is the temporal dead zone (TDZ)?',a:['accessing let/const before declaration throws ReferenceError','period before declaration where variable exists but cannot be accessed']},
+]},
+
+'values':{p:3,t:'Values & Types (Ch 14)',q:[
+{q:'What operator checks the type of a value?',a:['typeof']},
+{q:'typeof undefined returns what string?',a:["'undefined'",'undefined','"undefined"']},
+{q:'typeof null returns what? (famous bug)',a:["'object'",'object','"object"']},
+{q:'typeof 42 returns what?',a:["'number'",'number','"number"']},
+{q:'typeof "hello" returns what?',a:["'string'",'string','"string"']},
+{q:'typeof true returns what?',a:["'boolean'",'boolean','"boolean"']},
+{q:'typeof Symbol() returns what?',a:["'symbol'",'symbol','"symbol"']},
+{q:'typeof 42n returns what?',a:["'bigint'",'bigint','"bigint"']},
+{q:'typeof {} returns what?',a:["'object'",'object','"object"']},
+{q:'typeof function(){} returns what?',a:["'function'",'function','"function"']},
+{q:'Are primitives mutable or immutable?',a:['immutable']},
+{q:'Are objects mutable or immutable?',a:['mutable']},
+{q:'How are primitives compared: by value or identity?',a:['by value','value']},
+{q:'How are objects compared: by value or identity?',a:['by identity','identity','by reference','reference']},
+]},
+
+'ops':{p:3,t:'Operators (Ch 15)',q:[
+{q:'What does "7" * "3" return? (type coercion)',a:['21']},
+{q:'What does [1,2,3] + [4,5,6] return?',a:["'1,2,34,5,6'",'"1,2,34,5,6"','1,2,34,5,6']},
+{q:'Strict equality operator (no coercion)',a:['===']},
+{q:'Loose equality operator (with coercion)',a:['==']},
+{q:'What does typeof NaN return?',a:["'number'",'number','"number"']},
+{q:'What does NaN === NaN return?',a:['false']},
+{q:'Nullish coalescing: x ?? defaultValue — when does it use default?',a:['when x is null or undefined','null or undefined']},
+{q:'Optional chaining operator',a:['?.']},
+{q:'Spread/rest operator (three dots)',a:['...']},
+{q:'What does 4 + true return?',a:['5']},
+{q:'What does "3" + 1 return?',a:["'31'",'"31"','31']},
+{q:'What does "3" - 1 return?',a:['2']},
+{q:'Exponentiation operator (ES2016)',a:['**']},
+]},
+
+// ── PART IV: PRIMITIVES ──
+'undef':{p:4,t:'undefined & null (Ch 16)',q:[
+{q:'Default value of an uninitialized let variable',a:['undefined']},
+{q:'What does a function return if there is no return statement?',a:['undefined']},
+{q:'Missing function parameter value is what?',a:['undefined']},
+{q:'What does void 0 return?',a:['undefined']},
+{q:'typeof undefined',a:["'undefined'",'undefined']},
+{q:'typeof null',a:["'object'",'object']},
+{q:'Does undefined == null return true or false?',a:['true']},
+{q:'Does undefined === null return true or false?',a:['false']},
+]},
+
+'bools':{p:4,t:'Booleans (Ch 17)',q:[
+{q:'Name the 8 falsy values',a:['undefined, null, false, 0, -0, 0n, NaN, ""','false, 0, -0, 0n, NaN, "", null, undefined']},
+{q:'Boolean("") returns what?',a:['false']},
+{q:'Boolean(0) returns what?',a:['false']},
+{q:'Boolean("hello") returns what?',a:['true']},
+{q:'Boolean({}) returns what? (empty object)',a:['true']},
+{q:'Boolean([]) returns what? (empty array)',a:['true']},
+{q:'What does !! do? (double negation)',a:['converts to boolean','coerces to boolean','Boolean conversion']},
+{q:'What does x && y return if x is falsy?',a:['x','the falsy value','returns x']},
+{q:'What does x || y return if x is falsy?',a:['y','returns y']},
+]},
+
+'nums':{p:4,t:'Numbers (Ch 18-19)',q:[
+{q:'Write binary literal for 3',a:['0b11']},
+{q:'Write octal literal for 8',a:['0o10']},
+{q:'Write hex literal for 255',a:['0xFF','0xff']},
+{q:'What does 0.1 + 0.2 === 0.3 return?',a:['false']},
+{q:'Special value for "not a number"',a:['NaN']},
+{q:'How to check if a value is NaN',a:['Number.isNaN(x)','Number.isNaN()','isNaN()']},
+{q:'Positive infinity literal',a:['Infinity']},
+{q:'What does 1/0 return?',a:['Infinity']},
+{q:'What does Number.isInteger(1.0) return?',a:['true']},
+{q:'Parse string "100" to integer',a:['Number.parseInt("100")','parseInt("100")','Number("100")']},
+{q:'Parse string "3.14" to float',a:['Number.parseFloat("3.14")','parseFloat("3.14")','Number("3.14")']},
+{q:'ES2021: numeric separator for one million',a:['1_000_000']},
+{q:'Max safe integer constant',a:['Number.MAX_SAFE_INTEGER']},
+{q:'Math.floor(2.9) returns what?',a:['2']},
+{q:'Math.ceil(2.1) returns what?',a:['3']},
+{q:'Math.round(2.5) returns what?',a:['3']},
+{q:'Math.trunc(2.9) returns what?',a:['2']},
+{q:'Math.random() returns a number in what range?',a:['0 to 1','[0, 1)','0 inclusive to 1 exclusive']},
+]},
+
+'strings':{p:4,t:'Strings (Ch 22-23)',q:[
+{q:'Get the length of string "hello"',a:['"hello".length',"'hello'.length"]},
+{q:'Access the character at index 2 of "abc"',a:['"abc"[2]',"'abc'[2]"]},
+{q:'Check if "abc" includes "b"',a:['"abc".includes("b")',"'abc'.includes('b')"]},
+{q:'Check if "hello" starts with "he"',a:['"hello".startsWith("he")',"'hello'.startsWith('he')"]},
+{q:'Find index of "l" in "hello"',a:['"hello".indexOf("l")',"'hello'.indexOf('l')"]},
+{q:'Extract characters 1 to 3 from "abcde"',a:['"abcde".slice(1,3)',"'abcde'.slice(1,3)"]},
+{q:'Convert "hello" to uppercase',a:['"hello".toUpperCase()',"'hello'.toUpperCase()"]},
+{q:'Remove whitespace from both ends of " hi "',a:['" hi ".trim()',"' hi '.trim()"]},
+{q:'Repeat "*" five times',a:['"*".repeat(5)',"'*'.repeat(5)"]},
+{q:'Pad "7" to length 3 with leading zeros',a:['"7".padStart(3,"0")',"'7'.padStart(3,'0')","'7'.padStart(3, '0')"]},
+{q:'Split "a,b,c" by comma',a:['"a,b,c".split(",")',"'a,b,c'.split(',')"]},
+{q:'Join array ["a","b","c"] with "-"',a:['["a","b","c"].join("-")','[\'a\',\'b\',\'c\'].join(\'-\')']},
+{q:'Replace first "o" with "0" in "foo"',a:['"foo".replace("o","0")',"'foo'.replace('o','0')"]},
+{q:'Replace ALL "o" with "0" in "foo"',a:['"foo".replaceAll("o","0")',"'foo'.replaceAll('o','0')","'foo'.replace(/o/g,'0')"]},
+{q:'Template literal: embed name variable in greeting',a:['`Hello ${name}`','`Hello, ${name}!`']},
+{q:'Tagged template for raw strings (no escape processing)',a:['String.raw`\\n`',"String.raw`\\n\\t`"]},
+{q:'Convert number 123 to string',a:['String(123)','(123).toString()','123 + ""','`${123}`']},
+]},
+
+'symbols':{p:4,t:'Symbols (Ch 24)',q:[
+{q:'Create a new symbol with description "id"',a:["Symbol('id')","Symbol('id');","Symbol(\"id\")"]},
+{q:'Are two Symbol() calls ever equal?',a:['no','false','never']},
+{q:'Access Symbol.iterator (well-known symbol)',a:['Symbol.iterator']},
+{q:'What is the typeof a Symbol?',a:["'symbol'",'symbol']},
+]},
+
+// ── PART V: CONTROL FLOW ──
+'flow':{p:5,t:'Control Flow (Ch 25)',q:[
+{q:'If-else syntax: check if x > 0',a:['if (x > 0) { } else { }','if (x > 0) {}','if(x > 0){}']},
+{q:'Ternary operator: return "yes" if true, "no" if false',a:['true ? "yes" : "no"',"true ? 'yes' : 'no'"]},
+{q:'For-of loop over array [1,2,3]',a:['for (const x of [1,2,3]) {}','for(const x of [1,2,3]){}']},
+{q:'For-of loop to iterate over a string "abc"',a:['for (const ch of "abc") {}','for(const ch of "abc"){}','for (const c of \'abc\') {}']},
+{q:'While loop syntax',a:['while (condition) {}','while(condition){}']},
+{q:'Switch statement keyword',a:['switch']},
+{q:'Break out of a loop or switch',a:['break','break;']},
+{q:'Skip to next loop iteration',a:['continue','continue;']},
+{q:'For loop: classic C-style, i from 0 to 9',a:['for (let i = 0; i < 10; i++) {}','for(let i=0;i<10;i++){}']},
+{q:'Loop over object keys with for-in',a:['for (const key in obj) {}','for(const key in obj){}']},
+]},
+
+'errors':{p:5,t:'Exceptions (Ch 26)',q:[
+{q:'Throw a new error with message "oops"',a:['throw new Error("oops");','throw new Error("oops")','throw new Error(\'oops\')']},
+{q:'Try-catch syntax',a:['try { } catch (e) { }','try{}catch(e){}']},
+{q:'Try-catch-finally syntax',a:['try { } catch (e) { } finally { }','try{}catch(e){}finally{}']},
+{q:'Name 3 built-in error types',a:['TypeError, RangeError, ReferenceError','SyntaxError, TypeError, RangeError','Error, TypeError, SyntaxError']},
+{q:'Check if err is an instance of TypeError',a:['err instanceof TypeError']},
+{q:'Access the error message property',a:['err.message','error.message']},
+]},
+
+// ── FUNCTIONS ──
+'funcs':{p:5,t:'Functions & Arrow Functions (Ch 27)',q:[
+{q:'Declare function "add" with params a, b that returns their sum',a:['function add(a, b) { return a + b; }','function add(a,b){return a+b}','function add(a,b){return a+b;}']},
+{q:'Arrow function equivalent of add(a,b)',a:['const add = (a, b) => a + b;','const add = (a,b) => a+b','const add=(a,b)=>a+b']},
+{q:'Arrow function with one parameter (no parens needed)',a:['x => x * 2','(x) => x * 2','x=>x*2']},
+{q:'Arrow function with a block body',a:['(a, b) => { return a + b; }','(a,b)=>{return a+b}','(a,b)=>{return a+b;}']},
+{q:'Default parameter: greet(name = "world")',a:['function greet(name = "world") {}','function greet(name="world"){}','function greet(name = \'world\') {}']},
+{q:'Rest parameters: collect all args into array',a:['function f(...args) {}','(...args) => {}','function f(...args){}']},
+{q:'Spread array [1,2,3] into function call',a:['f(...[1,2,3])','Math.max(...[1,2,3])']},
+{q:'What does an arrow function NOT have that regular functions do?',a:['this','its own this','arguments','this binding']},
+{q:'IIFE syntax (immediately invoked)',a:['(() => {})()','(function(){})()','(function() {})()']},
+{q:'Destructuring parameters: function({name, age})',a:['function f({name, age}) {}','({name, age}) => {}']},
+]},
+
+// ── PART VI: MODULARITY ──
+'modules':{p:6,t:'Modules / import & export (Ch 29)',q:[
+{q:'Named export of a const',a:['export const x = 1;','export const x = 1']},
+{q:'Named export of a function',a:['export function f() {}','export function myFunc() {}']},
+{q:'Named import of x and y from module',a:["import { x, y } from './mod.js';","import {x,y} from './mod.js'"]},
+{q:'Import and rename: import x as myX',a:["import { x as myX } from './mod.js';","import {x as myX} from './mod.js'"]},
+{q:'Namespace import: all exports as obj',a:["import * as mod from './mod.js';","import * as lib from './lib.js'"]},
+{q:'Default export of a function',a:['export default function f() {}','export default function() {}']},
+{q:'Default import',a:["import myDefault from './mod.js';","import f from './mod.js'"]},
+{q:'Dynamic import (returns a Promise)',a:["import('./mod.js')","await import('./mod.js')"]},
+{q:'What file extension is used for ES modules?',a:['.mjs','.js','.mjs or .js']},
+]},
+
+'objects':{p:6,t:'Objects (Ch 30)',q:[
+{q:'Create object with properties first:"Jane" and last:"Doe"',a:['{ first: "Jane", last: "Doe" }','const obj = { first: "Jane", last: "Doe" }','{first:"Jane",last:"Doe"}']},
+{q:'Property value shorthand: {x, y} when variables exist',a:['{x, y}','{ x, y }','{x,y}']},
+{q:'Computed property name using variable key',a:['{ [key]: value }','const obj = { [key]: value }','{[key]:value}']},
+{q:'Method shorthand in object literal',a:['{ myMethod() { } }','{ f() {} }','{method(){}}']},
+{q:'Access property "name" with dot notation',a:['obj.name']},
+{q:'Access property with bracket notation using variable',a:['obj[key]','obj["name"]']},
+{q:'Optional chaining: safely access nested prop',a:['obj?.nested?.prop','obj?.a?.b']},
+{q:'Check if obj has own property "x" (modern)',a:['Object.hasOwn(obj, "x")','Object.hasOwn(obj,"x")','Object.hasOwn(obj, \'x\')']},
+{q:'Get array of object\'s own keys',a:['Object.keys(obj)']},
+{q:'Get array of object\'s own values',a:['Object.values(obj)']},
+{q:'Get array of [key, value] pairs',a:['Object.entries(obj)']},
+{q:'Create object from [key, value] pairs',a:['Object.fromEntries(entries)','Object.fromEntries(pairs)']},
+{q:'Spread/copy object into new one',a:['{ ...obj }','const copy = { ...obj }','{...obj}']},
+{q:'Destructure name and age from object',a:['const { name, age } = obj;','const {name, age} = obj','const {name,age} = obj']},
+{q:'Destructure with rename: name as n',a:['const { name: n } = obj;','const {name: n} = obj']},
+{q:'Freeze an object (make fully immutable)',a:['Object.freeze(obj)']},
+{q:'Deep clone an object (modern)',a:['structuredClone(obj)']},
+]},
+
+'classes':{p:6,t:'Classes (Ch 31)',q:[
+{q:'Declare class Person with constructor taking firstName',a:['class Person { constructor(firstName) { this.firstName = firstName; } }','class Person { constructor(firstName) {} }']},
+{q:'Create instance of Person',a:["new Person('Jane')","new Person('Jane');","new Person(\"Jane\")"]},
+{q:'Add an instance method describe() to a class',a:['describe() { return this.firstName; }','describe() {}']},
+{q:'Add a static method to a class',a:['static create() {}','static myMethod() {}']},
+{q:'Class inheritance: Employee extends Person',a:['class Employee extends Person {}','class Employee extends Person { }']},
+{q:'Call parent constructor from subclass',a:['super(firstName)','super()']},
+{q:'Declare a private field (ES2022)',a:['#myField','#name','#field;']},
+{q:'Getter syntax in a class',a:['get name() { return this.#name; }','get prop() {}']},
+{q:'Setter syntax in a class',a:['set name(val) { this.#name = val; }','set prop(val) {}']},
+{q:'Check if obj is an instance of Person',a:['obj instanceof Person']},
+{q:'Public class field with default value',a:['count = 0;','name = "";','field = value;']},
+]},
+
+// ── ARRAYS (from book + essential JS) ──
+'arrays':{p:6,t:'Arrays (Essential JS)',q:[
+{q:'Create array with 3 elements',a:['[1, 2, 3]','const arr = [1,2,3]','[1,2,3]']},
+{q:'Get length of array',a:['arr.length']},
+{q:'Check if value is an array',a:['Array.isArray(arr)','Array.isArray(x)']},
+{q:'Add element to END of array',a:['arr.push(x)','arr.push(item)']},
+{q:'Remove and return LAST element',a:['arr.pop()']},
+{q:'Add element to START of array',a:['arr.unshift(x)','arr.unshift(item)']},
+{q:'Remove and return FIRST element',a:['arr.shift()']},
+{q:'Check if array includes a value',a:['arr.includes(x)','arr.includes(value)']},
+{q:'Find index of element',a:['arr.indexOf(x)','arr.indexOf(value)']},
+{q:'Find first element matching condition',a:['arr.find(x => x > 5)','arr.find(fn)']},
+{q:'Map: double every element',a:['arr.map(x => x * 2)']},
+{q:'Filter: keep only elements > 5',a:['arr.filter(x => x > 5)']},
+{q:'Reduce: sum all elements',a:['arr.reduce((sum, x) => sum + x, 0)','arr.reduce((a,b)=>a+b,0)']},
+{q:'Check if EVERY element passes test',a:['arr.every(x => x > 0)','arr.every(fn)']},
+{q:'Check if SOME element passes test',a:['arr.some(x => x > 0)','arr.some(fn)']},
+{q:'Sort array of numbers ascending',a:['arr.sort((a, b) => a - b)','arr.sort((a,b)=>a-b)']},
+{q:'Flatten nested array one level',a:['arr.flat()']},
+{q:'Spread array into another: [0, ...arr, 4]',a:['[0, ...arr, 4]','[0,...arr,4]']},
+{q:'Destructure first two elements from array',a:['const [a, b] = arr;','const [a,b] = arr']},
+{q:'Create array from iterable',a:['Array.from(iterable)','[...iterable]']},
+]},
+
+// ── ASYNC (essential modern JS) ──
+'async':{p:6,t:'Promises & async/await',q:[
+{q:'Create a resolved promise with value 42',a:['Promise.resolve(42)']},
+{q:'Create a rejected promise with error',a:['Promise.reject(new Error("fail"))','Promise.reject("fail")']},
+{q:'Chain a .then() handler to a promise',a:['promise.then(val => { })','promise.then(fn)','p.then(val => {})']},
+{q:'Chain a .catch() for error handling',a:['promise.catch(err => { })','promise.catch(fn)','p.catch(err => {})']},
+{q:'Declare an async function',a:['async function f() {}','const f = async () => {}']},
+{q:'Await a promise inside async function',a:['const result = await promise;','await promise','const val = await p']},
+{q:'Wait for ALL promises to resolve',a:['Promise.all([p1, p2])','await Promise.all(promises)','Promise.all(arr)']},
+{q:'Wait for first promise to settle (resolve or reject)',a:['Promise.race([p1, p2])','Promise.race(promises)']},
+{q:'Promise.allSettled — what does it wait for?',a:['all promises to settle regardless of outcome','all to settle','all settled']},
+{q:'try/catch an awaited promise',a:['try { await p; } catch (e) { }','try { const r = await p; } catch(e) {}']},
+]},
+
+// ── ITERATORS / DESTRUCTURING ──
+'destruct':{p:6,t:'Destructuring & Spread (ES6)',q:[
+{q:'Object destructuring: extract name from obj',a:['const { name } = obj;','const {name} = obj']},
+{q:'Array destructuring: get first and second',a:['const [first, second] = arr;','const [a,b] = arr']},
+{q:'Skip elements: get 1st and 3rd',a:['const [first, , third] = arr;','const [a,,c] = arr']},
+{q:'Default value in destructuring',a:['const { x = 0 } = obj;','const {x = 0} = obj']},
+{q:'Nested destructuring',a:['const { a: { b } } = obj;','const {a:{b}} = obj']},
+{q:'Rest in array destructuring: first + rest',a:['const [first, ...rest] = arr;','const [head,...tail] = arr']},
+{q:'Rest in object destructuring',a:['const { a, ...rest } = obj;','const {x,...rest} = obj']},
+{q:'Spread object properties into new object',a:['{ ...obj, newProp: 1 }','{...obj, x: 1}']},
+{q:'Spread array into new array',a:['[...arr1, ...arr2]','[...a,...b]']},
+]},
+};
+
+/* ── STATE ── */
+let S={mod:null,qi:0,sc:0,comp:{},miss:{},best:{}};
+function load(){try{const d=JSON.parse(localStorage.getItem(LS));if(d){S.comp=d.c||{};S.miss=d.m||{};S.best=d.b||{};}}catch(e){}}
+function save(){localStorage.setItem(LS,JSON.stringify({c:S.comp,m:S.miss,b:S.best}));}
+
+/* ── IO ── */
+function pr(t,c){const d=document.createElement('div');if(c)d.className=c;d.textContent=t;T.appendChild(d);T.scrollTop=T.scrollHeight;}
+function prM(s){s.split('\n').forEach(l=>pr(l));}
+function ty(t){I.value+=t;I.focus();}
+function go(){run(I.value);I.value='';I.focus();}
+I.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault();go();}
+  if(e.key==='ArrowUp'){e.preventDefault();if(hist.length){hIdx=Math.min(hIdx+1,hist.length-1);I.value=hist[hIdx];}}
+  if(e.key==='ArrowDown'){e.preventDefault();hIdx>0?(hIdx--,I.value=hist[hIdx]):(hIdx=-1,I.value='');}
+});
+
+/* ── MAIN ROUTER ── */
+function run(raw){
+  let cmd=raw.trim();
+  if(!cmd)return;
+  pr(`> ${raw}`,'echo');
+  hist.unshift(raw);hIdx=-1;if(hist.length>100)hist.length=100;
+
+  if(cmd==='clear'){T.innerHTML='';return;}
+
+  // Review mode
+  if(S.mod==='__review'){reviewAns(cmd);return;}
+
+  // Quiz mode
+  if(S.mod){
+    if(cmd==='exit'||cmd==='quit'){pr('Exited module.','o');S.mod=null;return;}
+    if(cmd==='hint'){doHint();return;}
+    if(cmd==='skip'){doSkip();return;}
+    checkAns(cmd);return;
+  }
+
+  // Trainer commands
+  if(cmd==='help'||cmd==='h'){showHelp();return;}
+  if(cmd==='status'||cmd==='progress'){showStatus();return;}
+  if(cmd==='review'){startReview();return;}
+  if(cmd==='toc'||cmd==='chapters'){showTOC();return;}
+  if(cmd==='reset'){localStorage.removeItem(LS);S={mod:null,qi:0,sc:0,comp:{},miss:{},best:{}};pr('Progress reset.','r');return;}
+  if(cmd.startsWith('start ')){
+    const t=cmd.split(' ')[1];let fid=null;
+    if(M[t])fid=t;else{const k=Object.keys(M),n=parseInt(t);if(n>0&&n<=k.length)fid=k[n-1];}
+    if(fid)startMod(fid);else pr(`Module "${t}" not found.`,'r');
+    return;
+  }
+
+  // ── LIVE REPL ──
+  const r=evalJS(cmd);
+  if(r.ok){if(r.val!==undefined)pr(fmtVal(r.val),'res');}
+  else pr(`Error: ${r.val}`,'err');
+}
+
+/* ── HELP ── */
+function showHelp(){
+  const keys=Object.keys(M),tQ=keys.reduce((s,k)=>s+M[k].q.length,0);
+  pr('');
+  pr('╔════════════════════════════════════════════════════╗','b');
+  pr('║  JavaScript Pocket Trainer                         ║','b');
+  pr('║  Source: "Exploring JavaScript" ES2025 Edition     ║','b');
+  pr(`║  ${keys.length} modules · ${tQ} questions · Live JS REPL            ║`,'b');
+  pr('╚════════════════════════════════════════════════════╝','b');
+  pr('');
+  pr('  help          This menu','w');
+  pr('  toc           Book structure','w');
+  pr('  start <id|#>  Start a module','w');
+  pr('  status        Progress dashboard','w');
+  pr('  review        Replay missed questions','w');
+  pr('  hint / skip   During quizzes','w');
+  pr('  exit          Leave module','w');
+  pr('  clear         Clear screen','w');
+  pr('  reset         Wipe progress','w');
+  pr('');
+  const parts=[
+    {n:'First Steps',p:2},{n:'Variables & Values',p:3},{n:'Primitives',p:4},
+    {n:'Control Flow & Functions',p:5},{n:'Objects, Classes & More',p:6}
+  ];
+  parts.forEach(part=>{
+    pr(`── ${part.n} ──`,'b');
+    keys.forEach((k,i)=>{
+      if(M[k].p!==part.p)return;
+      const m=M[k],done=S.comp[k],b=S.best[k];
+      pr(`  ${(i+1+'').padStart(2)}. start ${k.padEnd(9)} ${done?'✔':'○'} ${m.t} [${m.q.length}q]${b!==undefined?' best:'+b+'/'+m.q.length:''}`);
+    });
+  });
+  pr('');
+  pr('💡 Live REPL: try typeof null, 0.1+0.2, [1,2]+[3,4]','d');
+}
+
+function showTOC(){
+  pr('');pr('"Exploring JavaScript" ES2025 — Module Map','b');pr('─'.repeat(48),'b');
+  [['First Steps','syntax'],
+   ['Variables & Values','vars values ops'],
+   ['Primitives','undef bools nums strings symbols'],
+   ['Control Flow & Functions','flow errors funcs'],
+   ['Modules & Objects','modules objects classes arrays'],
+   ['Async & Patterns','async destruct']
+  ].forEach(([nm,ids])=>{
+    const ms=ids.split(' '),dn=ms.filter(id=>S.comp[id]).length;
+    pr(`\n  ${nm} (${dn}/${ms.length})`,'b');
+    ms.forEach(id=>{if(M[id])pr(`    ${S.comp[id]?'✔':'○'} ${M[id].t} [${M[id].q.length}]`);});
+  });
+}
+
+function showStatus(){
+  const keys=Object.keys(M),total=keys.length,done=Object.keys(S.comp).length;
+  const tQ=keys.reduce((s,k)=>s+M[k].q.length,0);
+  const missQ=Object.keys(S.miss).reduce((s,k)=>s+(S.miss[k]||[]).length,0);
+  const pct=Math.round(done/total*100),bL=30,f=Math.round(pct/100*bL);
+  pr('');pr(`═══ ${done}/${total} modules mastered ═══`,'b');
+  pr(`[${'█'.repeat(f)}${'░'.repeat(bL-f)}] ${pct}%`,'g');
+  pr(`${tQ} total questions`,'d');
+  if(missQ)pr(`📝 ${missQ} missed — type "review"`,'o');
+  pr('');
+  keys.forEach(k=>{
+    const m=M[k],c=S.comp[k],b=S.best[k];
+    pr(`  ${c?'✔':'○'} ${m.t}${b!==undefined?' — best:'+b+'/'+m.q.length:''}`,c?'g':'d');
+  });
+}
+
+/* ── QUIZ ── */
+function startMod(id){
+  S.mod=id;S.qi=0;S.sc=0;
+  const m=M[id];
+  pr(`\n┌── ${m.t} ──┐`,'b');
+  pr(`│ ${m.q.length} questions · hint · skip · exit │`,'d');
+  askQ();
+}
+function askQ(){
+  const m=M[S.mod];
+  if(S.qi>=m.q.length){finishMod();return;}
+  pr(`\n[${S.qi+1}/${m.q.length}] ${m.q[S.qi].q}`,'o');
+}
+function doHint(){
+  const a=M[S.mod].q[S.qi].a[0],show=a.substring(0,Math.ceil(a.length*0.4));
+  pr(`  💡 "${show}…"`,'d');
+}
+function doSkip(){
+  const q=M[S.mod].q[S.qi];
+  pr(`  ⏭ ${q.a[0]}`,'d');
+  trackMiss(S.mod,S.qi);S.qi++;askQ();
+}
+function normalize(s){return s.replace(/\s+/g,' ').replace(/;\s*$/,'').trim();}
+
+function checkAns(cmd){
+  const q=M[S.mod].q[S.qi];
+  const nc=normalize(cmd);
+  const ok=q.a.some(a=>normalize(a)===nc);
+  if(ok){pr('  ✔ Correct!','g bld');S.sc++;}
+  else{
+    // Check case-insensitive for conceptual answers
+    const close=q.a.some(a=>normalize(a).toLowerCase()===nc.toLowerCase());
+    if(close){pr('  ✔ Close enough!','g');S.sc++;}
+    else{
+      pr(`  ✘ Expected: ${q.a[0]}`,'r');
+      if(q.a.length>1)pr(`    Also: ${q.a.slice(1).join(', ')}`,'dd');
+      trackMiss(S.mod,S.qi);
+    }
+  }
+  S.qi++;askQ();
+}
+function trackMiss(mid,qi){if(!S.miss[mid])S.miss[mid]=[];if(!S.miss[mid].includes(qi))S.miss[mid].push(qi);save();}
+function finishMod(){
+  const m=M[S.mod],t=m.q.length,p=Math.round(S.sc/t*100);
+  pr(`\n  Score: ${S.sc}/${t} (${p}%)`,'b bld');
+  if(!S.best[S.mod]||S.sc>S.best[S.mod])S.best[S.mod]=S.sc;
+  if(S.sc===t){pr('  ★ MASTERED ★','g bld');S.comp[S.mod]=true;delete S.miss[S.mod];}
+  else if(p>=80)pr('  Good! 100% to master.','o');
+  else pr('  Keep going. Try "review".','d');
+  save();S.mod=null;
+}
+
+/* ── REVIEW ── */
+let _rP=[],_ri=0,_rc=0;
+function startReview(){
+  _rP=[];
+  Object.keys(S.miss).forEach(mid=>{(S.miss[mid]||[]).forEach(qi=>{if(M[mid]&&M[mid].q[qi])_rP.push({mid,qi,q:M[mid].q[qi]});});});
+  if(!_rP.length){pr('No missed questions! 🎉','g');return;}
+  for(let i=_rP.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[_rP[i],_rP[j]]=[_rP[j],_rP[i]];}
+  _ri=0;_rc=0;S.mod='__review';
+  pr(`\n═══ Review: ${_rP.length} missed ═══`,'p');
+  pr(`[1/${_rP.length}] ${_rP[0].q.q}`,'p');
+}
+function reviewAns(cmd){
+  if(cmd==='exit'||cmd==='quit'){pr(`Review: ${_rc}/${_rP.length} fixed.`,'p');S.mod=null;return;}
+  if(cmd==='hint'){const a=_rP[_ri].q.a[0];pr(`  💡 "${a.substring(0,Math.ceil(a.length*0.4))}…"`,'d');return;}
+  if(cmd==='skip'){pr(`  ⏭ ${_rP[_ri].q.a[0]}`,'d');_ri++;if(_ri>=_rP.length){pr(`Done. ${_rc}/${_rP.length}`,'p');S.mod=null;return;}pr(`\n[${_ri+1}/${_rP.length}] ${_rP[_ri].q.q}`,'p');return;}
+  const q=_rP[_ri].q;const nc=normalize(cmd);
+  if(q.a.some(a=>normalize(a)===nc)||q.a.some(a=>normalize(a).toLowerCase()===nc.toLowerCase())){
+    pr('  ✔ Fixed!','g bld');_rc++;
+    const ma=S.miss[_rP[_ri].mid];if(ma){const x=ma.indexOf(_rP[_ri].qi);if(x>-1)ma.splice(x,1);if(!ma.length)delete S.miss[_rP[_ri].mid];}save();
+  }else pr(`  ✘ Expected: ${q.a[0]}`,'r');
+  _ri++;
+  if(_ri>=_rP.length){pr(`\nReview done. ${_rc}/${_rP.length} fixed.`,'p');S.mod=null;save();return;}
+  pr(`\n[${_ri+1}/${_rP.length}] ${_rP[_ri].q.q}`,'p');
+}
+
+/* ── WELCOME ── */
+load();
+const _k=Object.keys(M),_tQ=_k.reduce((s,k)=>s+M[k].q.length,0),_dn=Object.keys(S.comp).length;
+pr('╔════════════════════════════════════════════════════╗','b');
+pr('║     JavaScript Pocket Trainer                      ║','b');
+pr('║  "Exploring JavaScript" ES2025 — Rauschmayer        ║','b');
+pr(`║  ${_k.length} modules · ${_tQ} questions · Live REPL                 ║`,'b');
+pr('╚════════════════════════════════════════════════════╝','b');
+pr('');
+if(_dn)pr(`Welcome back. ${_dn}/${_k.length} mastered.`,'g');
+pr('Type "help" for modules. This is a live JS REPL — try it:','o');
+pr('');
+pr('  typeof null            // → ?','d');
+pr('  0.1 + 0.2              // → ?','d');
+pr('  [1,2,3] + [4,5,6]     // → ?','d');
+pr('  "hello".split("")      // → ?','d');
+pr('');
+window.onload=()=>I.focus();
+document.addEventListener('click',()=>{if(!window.getSelection().toString())I.focus();});
+</script>
+  <script src="../shared/help-content.js"></script>
+  <script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

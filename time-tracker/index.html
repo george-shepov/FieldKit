@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tiny Time Tracker - Punch In/Out</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --muted:#8b95a7; --text:#e6e9ef;
+    --accent:#5eead4; --accent2:#93c5fd; --danger:#fda4af; --ok:#86efac;
+    --warn:#fde68a; --border:#2a2f3a;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font:14px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+    color:var(--text); background:linear-gradient(180deg, #0c0e13 0%, #111319 100%);
+  }
+  header{
+    padding:16px 20px; border-bottom:1px solid var(--border); background:#0e1117;
+    display:flex; gap:12px; align-items:center; flex-wrap:wrap; position:sticky; top:0; z-index:5;
+  }
+  header h1{font-size:16px; margin:0; letter-spacing:.3px; color:#e9eef6}
+  header .state{margin-left:auto; font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid var(--border); color:var(--muted)}
+  .container{max-width:1100px; margin:0 auto; padding:16px}
+  .controls{
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:12px;
+  }
+  .controls input, .controls select{
+    background:var(--panel); border:1px solid var(--border); color:var(--text);
+    padding:8px 10px; border-radius:8px; outline:none; min-width:140px;
+  }
+  .controls input[type="text"]{min-width:220px}
+  .controls .grow{flex:1 1 240px}
+  button{
+    border:1px solid var(--border); background:#141823; color:var(--text);
+    padding:10px 14px; border-radius:10px; cursor:pointer; transition:.15s transform, .15s opacity, .15s background;
+  }
+  button:hover{transform:translateY(-1px)}
+  button.primary{border-color:transparent; background:linear-gradient(180deg, #1c2433, #171e2b); box-shadow:inset 0 0 0 1px #263043}
+  button.accent{background:linear-gradient(180deg, #153a37, #112f2c); border-color:#1f4b46; color:#d8fff7}
+  button.warn{background:linear-gradient(180deg, #3a3315, #2f2a11); border-color:#4b431f; color:#fff5d8}
+  button.danger{background:linear-gradient(180deg, #3a1518, #2c1112); border-color:#4b1f24; color:#ffe6ea}
+  button.ghost{background:transparent}
+  .timer{
+    display:flex; align-items:center; gap:12px; padding:14px; border:1px dashed var(--border);
+    border-radius:12px; background:rgba(20,22,30,.5); margin:14px 0;
+  }
+  .timer .big{font-variant-numeric:tabular-nums; font-size:28px; letter-spacing:.5px}
+  .pill{padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--border); color:var(--muted)}
+  .grid{
+    border:1px solid var(--border); border-radius:12px; overflow:hidden; background:rgba(16,18,25,.7)
+  }
+  table{width:100%; border-collapse:collapse}
+  thead th{
+    text-align:left; font-size:12px; color:#9aa6b2; background:#0f1320; padding:10px; border-bottom:1px solid var(--border);
+    position:sticky; top:60px; z-index:4;
+  }
+  tbody td{padding:10px; border-bottom:1px solid #1c2230; vertical-align:top}
+  tbody tr:hover{background:rgba(255,255,255,.02)}
+  td .meta{color:var(--muted); font-size:12px}
+  td input.inline{
+    width:100%; border:1px dotted transparent; background:transparent; color:var(--text);
+  }
+  td input.inline:focus{border-color:var(--border); background:#0f1522; border-radius:6px; outline:none}
+  .totals{
+    display:flex; gap:10px; flex-wrap:wrap; margin:14px 0 6px;
+  }
+  .totals .card{
+    padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:#121723; font-variant-numeric:tabular-nums;
+  }
+  .footer-notes{color:var(--muted); font-size:12px; margin-top:10px}
+  .kbd{font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",Menlo,monospace; border:1px solid var(--border); border-bottom-width:2px; border-radius:6px; padding:2px 6px; background:#0c0f15; color:#dbeafe}
+  .sep{height:1px; background:var(--border); margin:16px 0}
+  .bad{color:var(--danger)} .good{color:var(--ok)} .accentText{color:var(--accent)}
+  .hidden{display:none !important}
+  @media (max-width:700px){ .controls{flex-direction:column; align-items:stretch} header {gap:8px} }
+
+/* Suite nav */
+.suite-nav{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:hsl(222,30%,10%);border-bottom:1px solid hsl(222,15%,20%);font-size:12px;font-family:'DM Sans',system-ui,sans-serif}
+.suite-nav a{color:hsl(215,15%,55%);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .15s}
+.suite-nav a:hover{color:hsl(160,60%,45%)}
+.suite-nav .suite-name{color:hsl(215,10%,40%);font-family:'DM Mono',monospace;font-size:11px}
+
+/* Mobile responsive fixes */
+@media(max-width:480px){
+  table{font-size:12px}
+  th,td{padding:4px 6px!important}
+}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+</style>
+</head>
+<body>
+<nav class="suite-nav">
+  <a href="../index.html">← Back to Suite</a>
+  <span class="suite-name">ProSe Pilot</span>
+</nav>
+
+  <header>
+    <h1>Tiny Time Tracker</h1>
+    <div class="state" id="stateBadge">Idle</div>
+  </header>
+
+  <div class="container">
+    <div class="controls" id="ctl">
+      <input id="project" class="grow" type="text" placeholder="Project / Client (e.g., GiOSS)" />
+      <input id="task" class="grow" type="text" placeholder="Task (e.g., Legal brief research)" />
+      <input id="note" class="grow" type="text" placeholder="Optional note..." />
+      <button id="btnStart" class="accent">Start (S)</button>
+      <button id="btnBreak" class="warn" disabled>Break (B)</button>
+      <button id="btnResume" class="primary" disabled>Resume (R)</button>
+      <button id="btnEnd" class="danger" disabled>End (E)</button>
+      <button id="btnQuick" class="ghost" title="Quick add 15-min block">+15m</button>
+    </div>
+
+    <div class="timer" id="timerBox" aria-live="polite">
+      <div class="pill" id="modePill">Idle</div>
+      <div class="big" id="clock">00:00:00</div>
+      <div class="pill">Started: <span id="startedAt">-</span></div>
+      <div class="pill">Breaks: <span id="breakTotal">00:00</span></div>
+    </div>
+
+    <div class="totals" id="totals">
+      <div class="card">Today: <strong id="todayTotal">00:00</strong></div>
+      <div class="card">This Week: <strong id="weekTotal">00:00</strong></div>
+      <div class="card">Sessions: <strong id="countTotal">0</strong></div>
+    </div>
+
+    <div class="controls">
+      <button id="btnExportCsv">Export CSV</button>
+      <button id="btnExportJson">Export JSON</button>
+      <button id="btnImportJson" class="ghost">Import JSON</button>
+      <button id="btnClearAll" class="ghost bad" title="Deletes all data">Clear All</button>
+      <span class="footer-notes">Autosaves to localStorage. Edit cells inline. Ctrl+F to search the page.</span>
+    </div>
+
+    <div class="grid">
+      <table id="tbl">
+        <thead>
+          <tr>
+            <th style="width:160px">Date</th>
+            <th style="width:160px">Project</th>
+            <th style="width:220px">Task</th>
+            <th>Note</th>
+            <th style="width:120px">Start</th>
+            <th style="width:120px">End</th>
+            <th style="width:100px">Duration</th>
+            <th style="width:90px">Break</th>
+            <th style="width:90px">Net</th>
+            <th style="width:110px">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <!-- rows injected -->
+        </tbody>
+      </table>
+    </div>
+
+    <div class="footer-notes" style="margin-top:10px">
+      Shortcuts: <span class="kbd">S</span> Start, <span class="kbd">B</span> Break, <span class="kbd">R</span> Resume, <span class="kbd">E</span> End, <span class="kbd">Del</span> delete row.
+    </div>
+
+    <div class="sep"></div>
+
+    <details>
+      <summary>Integrations & Hooks</summary>
+      <div class="footer-notes">
+        Use the JSON export for downstream systems. For live integrations, poll from <span class="kbd">localStorage["tt.sessions"]</span>.
+        Each session has: <span class="kbd">{id, project, task, note, start, end, breaks:[{start,end}], createdAt, updatedAt}</span>.
+      </div>
+    </details>
+  </div>
+
+<script>
+(function(){
+  // ===== Utilities =====
+  const $ = (id) => document.getElementById(id);
+  const fmtTime = (d) => d ? new Date(d).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}) : '-';
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString() : '-';
+  const pad = (n)=> String(n).padStart(2,'0');
+  const dhms = (ms)=>{
+    if (ms < 0) ms = 0;
+    const s = Math.floor(ms/1000);
+    const h = Math.floor(s/3600);
+    const m = Math.floor((s%3600)/60);
+    const ss = s%60;
+    return `${pad(h)}:${pad(m)}:${pad(ss)}`;
+  };
+  const mmss = (ms)=>{
+    if (ms < 0) ms = 0;
+    const s = Math.floor(ms/1000);
+    const m = Math.floor(s/60);
+    const ss = s%60;
+    return `${pad(m)}:${pad(ss)}`;
+  };
+  const todayKey = ()=>{
+    const d=new Date();
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  };
+  const weekNumber = (dts)=>{
+    // ISO week number
+    const d = new Date(dts);
+    d.setHours(0,0,0,0);
+    d.setDate(d.getDate() + 3 - ((d.getDay()+6)%7));
+    const week1 = new Date(d.getFullYear(),0,4);
+    return 1 + Math.round(((d - week1)/86400000 - 3 + ((week1.getDay()+6)%7))/7);
+  };
+
+  // ===== Persistence =====
+  const LS_KEY = "tt.sessions";
+  const LS_STATE = "tt.state";
+  const load = () => JSON.parse(localStorage.getItem(LS_KEY)||"[]");
+  const save = (arr) => localStorage.setItem(LS_KEY, JSON.stringify(arr));
+  const loadState = () => JSON.parse(localStorage.getItem(LS_STATE)||"{}");
+  const saveState = (obj) => localStorage.setItem(LS_STATE, JSON.stringify(obj));
+
+  // ===== In-memory =====
+  let sessions = load(); // array of {id, project, task, note, start, end, breaks[], createdAt, updatedAt}
+  let state = Object.assign({mode:'idle', currentId:null, currentBreakStart:null}, loadState());
+  let tickHandle = null;
+
+  // ===== Elements =====
+  const el = {
+    stateBadge: $("stateBadge"),
+    project: $("project"),
+    task: $("task"),
+    note: $("note"),
+    btnStart: $("btnStart"),
+    btnBreak: $("btnBreak"),
+    btnResume: $("btnResume"),
+    btnEnd: $("btnEnd"),
+    btnQuick: $("btnQuick"),
+    timerBox: $("timerBox"),
+    modePill: $("modePill"),
+    clock: $("clock"),
+    startedAt: $("startedAt"),
+    breakTotal: $("breakTotal"),
+    tbody: $("tbody"),
+    todayTotal: $("todayTotal"),
+    weekTotal: $("weekTotal"),
+    countTotal: $("countTotal"),
+    btnExportCsv: $("btnExportCsv"),
+    btnExportJson: $("btnExportJson"),
+    btnImportJson: $("btnImportJson"),
+    btnClearAll: $("btnClearAll"),
+  };
+
+  // ===== Core calculations =====
+  function calcBreakMs(sess){
+    let total=0;
+    for(const b of (sess.breaks||[])){
+      if (b.end) total += (new Date(b.end) - new Date(b.start));
+      else total += (Date.now() - new Date(b.start));
+    }
+    return total;
+  }
+  function calcDurationMs(sess){
+    const end = sess.end ? new Date(sess.end).getTime() : Date.now();
+    return end - new Date(sess.start).getTime();
+  }
+  function calcNetMs(sess){
+    return calcDurationMs(sess) - calcBreakMs(sess);
+  }
+
+  // ===== Render =====
+  function renderHeader(){
+    const mode = state.mode||'idle';
+    el.stateBadge.textContent = mode.charAt(0).toUpperCase()+mode.slice(1);
+    el.modePill.textContent = el.stateBadge.textContent;
+    const current = sessions.find(s => s.id===state.currentId);
+    el.startedAt.textContent = current ? (fmtDate(current.start)+" "+fmtTime(current.start)) : "-";
+    el.breakTotal.textContent = current ? mmss(calcBreakMs(current)) : "00:00";
+    // buttons
+    el.btnStart.disabled = !(mode==='idle');
+    el.btnBreak.disabled = !(mode==='working');
+    el.btnResume.disabled = !(mode==='break');
+    el.btnEnd.disabled = !(mode==='working' || mode==='break');
+  }
+
+  function renderClock(){
+    const mode = state.mode;
+    const current = sessions.find(s => s.id===state.currentId);
+    if (!current){ el.clock.textContent="00:00:00"; return; }
+    const showMs = (mode==='break') ? calcDurationMs(current) : calcNetMs(current);
+    el.clock.textContent = dhms(showMs);
+  }
+
+  function renderTotals(){
+    const today = todayKey();
+    let todayMs=0, weekMs=0, count=0;
+    const now = new Date();
+    const currWeek = weekNumber(now);
+    for(const s of sessions){
+      const d = new Date(s.start);
+      const net = calcNetMs(s);
+      if (fmtDate(d)===fmtDate(new Date(today))) todayMs += net;
+      if (weekNumber(d)===currWeek && d.getFullYear()===now.getFullYear()) weekMs += net;
+      if (s.end) count++;
+    }
+    // If active, include current net time too (already included via calcNetMs above)
+    el.todayTotal.textContent = mmss(todayMs);
+    const wkM = Math.floor(weekMs/60000);
+    const wkH = Math.floor(wkM/60);
+    const wkMin = wkM%60;
+    el.weekTotal.textContent = `${pad(wkH)}:${pad(wkMin)}`;
+    el.countTotal.textContent = String(count);
+  }
+
+  function rowHtml(s){
+    const date = fmtDate(s.start);
+    const startT = fmtTime(s.start);
+    const endT = s.end ? fmtTime(s.end) : '-';
+    const dur = dhms(calcDurationMs(s));
+    const br = mmss(calcBreakMs(s));
+    const net = dhms(calcNetMs(s));
+    const id = s.id;
+    return `
+      <tr data-id="${id}">
+        <td><span class="meta">${date}</span></td>
+        <td><input class="inline" data-field="project" value="${escapeHtml(s.project||'')}" /></td>
+        <td><input class="inline" data-field="task" value="${escapeHtml(s.task||'')}" /></td>
+        <td><input class="inline" data-field="note" value="${escapeHtml(s.note||'')}" /></td>
+        <td><span class="meta">${startT}</span></td>
+        <td><span class="meta">${endT}</span></td>
+        <td><span class="meta">${dur}</span></td>
+        <td><span class="meta">${br}</span></td>
+        <td><strong>${net}</strong></td>
+        <td>
+          <button data-act="split">Split</button>
+          <button data-act="dup">Dup</button>
+          <button data-act="del" class="danger">Del</button>
+        </td>
+      </tr>`;
+  }
+  function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+  function renderTable(){
+    // newest first
+    const rows = [...sessions].sort((a,b)=> new Date(b.start)-new Date(a.start)).map(rowHtml).join("");
+    el.tbody.innerHTML = rows || `<tr><td colspan="10" class="meta" style="padding:14px">No entries yet. Hit <span class="kbd">S</span> to start a session.</td></tr>`;
+  }
+
+  function renderAll(){
+    renderHeader();
+    renderClock();
+    renderTotals();
+    renderTable();
+  }
+
+  // ===== Actions =====
+  function startSession(){
+    if (state.mode!=='idle') return;
+    const s = {
+      id: crypto.randomUUID(),
+      project: el.project.value.trim(),
+      task: el.task.value.trim(),
+      note: el.note.value.trim(),
+      start: new Date().toISOString(),
+      end: null,
+      breaks: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    sessions.push(s); save(sessions);
+    state.mode='working'; state.currentId=s.id; state.currentBreakStart=null; saveState(state);
+    ensureTicker(); renderAll();
+  }
+
+  function beginBreak(){
+    if (state.mode!=='working') return;
+    const s = sessions.find(x=>x.id===state.currentId); if (!s) return;
+    const b = {start: new Date().toISOString(), end:null};
+    s.breaks.push(b); s.updatedAt=new Date().toISOString(); save(sessions);
+    state.mode='break'; state.currentBreakStart=b.start; saveState(state);
+    renderAll();
+  }
+
+  function resumeWork(){
+    if (state.mode!=='break') return;
+    const s = sessions.find(x=>x.id===state.currentId); if (!s) return;
+    const b = s.breaks.find(b=>!b.end); if (!b) return;
+    b.end = new Date().toISOString();
+    s.updatedAt=new Date().toISOString(); save(sessions);
+    state.mode='working'; state.currentBreakStart=null; saveState(state);
+    renderAll();
+  }
+
+  function endSession(){
+    if (!(state.mode==='working' || state.mode==='break')) return;
+    const s = sessions.find(x=>x.id===state.currentId); if (!s) return;
+    // Close any open break
+    if (state.mode==='break'){
+      const b = s.breaks.find(b=>!b.end);
+      if (b) b.end = new Date().toISOString();
+    }
+    s.end = new Date().toISOString();
+    s.updatedAt=new Date().toISOString(); save(sessions);
+    state.mode='idle'; state.currentId=null; state.currentBreakStart=null; saveState(state);
+    renderAll();
+  }
+
+  function quickAdd15m(){
+    const now = new Date();
+    const start = new Date(now.getTime()-15*60*1000);
+    const s = {
+      id: crypto.randomUUID(),
+      project: el.project.value.trim(),
+      task: el.task.value.trim() || 'Quick block',
+      note: el.note.value.trim(),
+      start: start.toISOString(),
+      end: now.toISOString(),
+      breaks: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    sessions.push(s); save(sessions);
+    renderAll();
+  }
+
+  // ===== Table interactions =====
+  el.tbody.addEventListener('input', (e)=>{
+    const tr = e.target.closest('tr'); if (!tr) return;
+    const id = tr.dataset.id;
+    const s = sessions.find(x=>x.id===id); if (!s) return;
+    const field = e.target.dataset.field;
+    if (['project','task','note'].includes(field)){
+      s[field] = e.target.value;
+      s.updatedAt = new Date().toISOString(); save(sessions);
+      renderTotals(); // durations unchanged
+    }
+  });
+
+  el.tbody.addEventListener('click',(e)=>{
+    const btn = e.target.closest('button'); if (!btn) return;
+    const tr = e.target.closest('tr'); if (!tr) return;
+    const id = tr.dataset.id;
+    const sIdx = sessions.findIndex(x=>x.id===id); if (sIdx<0) return;
+    const s = sessions[sIdx];
+
+    const act = btn.dataset.act;
+    if (act==='del'){
+      if (confirm('Delete this entry?')) {
+        if (state.currentId===id){ state.mode='idle'; state.currentId=null; saveState(state); }
+        sessions.splice(sIdx,1); save(sessions); renderAll();
+      }
+    }
+    else if (act==='dup'){
+      const copy = JSON.parse(JSON.stringify(s));
+      copy.id = crypto.randomUUID();
+      copy.createdAt = new Date().toISOString();
+      copy.updatedAt = copy.createdAt;
+      // Reset times to a zero-length placeholder ending now (editable)
+      const now = new Date();
+      copy.start = now.toISOString();
+      copy.end = now.toISOString();
+      copy.breaks = [];
+      sessions.push(copy); save(sessions); renderAll();
+    }
+    else if (act==='split'){
+      if (!s.end){ alert('End the session before splitting.'); return; }
+      const mid = new Date((new Date(s.start).getTime()+new Date(s.end).getTime())/2);
+      const first = JSON.parse(JSON.stringify(s));
+      const second = JSON.parse(JSON.stringify(s));
+      first.end = mid.toISOString();
+      second.start = mid.toISOString();
+      first.id = crypto.randomUUID();
+      second.id = crypto.randomUUID();
+      // Breaks are naive-copied; for precision you'd apportion, but we keep it simple.
+      sessions.splice(sIdx,1, first, second); save(sessions); renderAll();
+    }
+  });
+
+  // Delete row with Delete key
+  document.addEventListener('keydown',(e)=>{
+    if (e.key==='Delete'){
+      const sel = document.activeElement;
+      const tr = sel && sel.closest ? sel.closest('tr') : null;
+      if (tr && tr.dataset.id){
+        const id=tr.dataset.id, idx=sessions.findIndex(s=>s.id===id);
+        if (idx>=0 && confirm('Delete this entry?')){
+          if (state.currentId===id){ state.mode='idle'; state.currentId=null; saveState(state); }
+          sessions.splice(idx,1); save(sessions); renderAll();
+        }
+      }
+    }
+  });
+
+  // ===== Export / Import =====
+  function toCsv(){
+    const cols = ["Date","Project","Task","Note","Start","End","Duration(hh:mm:ss)","Break(mm:ss)","Net(hh:mm:ss)","Id"];
+    const lines = [cols.join(",")];
+    for (const s of sessions){
+      const row = [
+        fmtDate(s.start),
+        csvEscape(s.project||""),
+        csvEscape(s.task||""),
+        csvEscape(s.note||""),
+        fmtTime(s.start),
+        s.end ? fmtTime(s.end) : "",
+        dhms(calcDurationMs(s)),
+        mmss(calcBreakMs(s)),
+        dhms(calcNetMs(s)),
+        s.id
+      ];
+      lines.push(row.join(","));
+    }
+    return lines.join("\n");
+  }
+  function csvEscape(v){
+    const needs = /[",\n]/.test(v);
+    if (!needs) return v;
+    return `"${v.replace(/"/g,'""')}"`;
+  }
+  function download(filename, text, mime="text/plain"){
+    const blob = new Blob([text], {type:mime});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+  }
+
+  el.btnExportCsv.addEventListener('click',()=> download(`time-tracker-${new Date().toISOString().slice(0,10)}.csv`, toCsv(), "text/csv"));
+  el.btnExportJson.addEventListener('click',()=> download(`time-tracker-${new Date().toISOString().slice(0,10)}.json`, JSON.stringify(sessions, null, 2), "application/json"));
+  el.btnImportJson.addEventListener('click', async ()=>{
+    const input = document.createElement('input'); input.type='file'; input.accept='.json,application/json';
+    input.onchange = async ()=>{
+      const file = input.files[0]; if (!file) return;
+      try{
+        const text = await file.text();
+        const arr = JSON.parse(text);
+        if (!Array.isArray(arr)) throw new Error('Invalid JSON shape');
+        // Basic normalize:
+        for (const s of arr){
+          s.id = s.id || crypto.randomUUID();
+          s.breaks = Array.isArray(s.breaks)?s.breaks:[];
+          s.createdAt = s.createdAt||new Date().toISOString();
+          s.updatedAt = new Date().toISOString();
+        }
+        sessions = arr; save(sessions); renderAll();
+        alert('Import complete.');
+      }catch(err){ alert('Import failed: '+err.message); }
+    };
+    input.click();
+  });
+
+  el.btnClearAll.addEventListener('click', ()=>{
+    if (!confirm('Delete ALL sessions? This cannot be undone.')) return;
+    sessions = []; save(sessions);
+    state = {mode:'idle', currentId:null, currentBreakStart:null}; saveState(state);
+    renderAll();
+  });
+
+  // ===== Buttons / Shortcuts =====
+  el.btnStart.addEventListener('click', startSession);
+  el.btnBreak.addEventListener('click', beginBreak);
+  el.btnResume.addEventListener('click', resumeWork);
+  el.btnEnd.addEventListener('click', endSession);
+  el.btnQuick.addEventListener('click', quickAdd15m);
+
+  document.addEventListener('keydown',(e)=>{
+    if (e.target && (e.target.tagName==='INPUT' || e.target.tagName==='TEXTAREA' || e.target.isContentEditable)) return;
+    if (e.key.toLowerCase()==='s'){ e.preventDefault(); startSession(); }
+    else if (e.key.toLowerCase()==='b'){ e.preventDefault(); beginBreak(); }
+    else if (e.key.toLowerCase()==='r'){ e.preventDefault(); resumeWork(); }
+    else if (e.key.toLowerCase()==='e'){ e.preventDefault(); endSession(); }
+  });
+
+  // ===== Ticker =====
+  function ensureTicker(){
+    if (tickHandle) return;
+    tickHandle = setInterval(()=>{
+      renderClock();
+      renderTotals();
+    }, 1000);
+  }
+  function stopTicker(){
+    if (tickHandle){ clearInterval(tickHandle); tickHandle=null; }
+  }
+
+  // ===== Init =====
+  renderAll();
+  if (state.mode!=='idle') ensureTicker();
+
+})();
+</script>
+  <script src="../shared/help-content.js"></script>
+  <script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

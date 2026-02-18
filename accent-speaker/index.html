@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Accent Voice Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #071019;
+    --bg2: #0b1724;
+    --line: #304d69;
+    --text: #e8f3ff;
+    --muted: #9fb7cc;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --sans: 'Manrope', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    color: var(--text);
+    font-family: var(--sans);
+    background:
+      radial-gradient(900px 420px at 10% -20%, rgba(145, 60, 80, .24), transparent 62%),
+      radial-gradient(900px 420px at 90% -24%, rgba(50, 110, 160, .2), transparent 62%),
+      linear-gradient(160deg, var(--bg), var(--bg2));
+  }
+  .top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding: 11px 14px;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #243a4f;
+    background: rgba(8, 12, 18, .88);
+  }
+  .top a { color: #bed2e7; text-decoration: none; font: 600 12px/1 var(--mono); }
+  .top span { color: #9cb7d2; font: 600 12px/1 var(--mono); }
+  .wrap { max-width: 920px; margin: 16px auto 28px; padding: 0 14px; display: grid; gap: 12px; }
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: linear-gradient(170deg, rgba(16, 28, 42, .95), rgba(11, 21, 33, .95));
+    padding: 12px;
+  }
+  .sub { margin-top: 8px; color: var(--muted); line-height: 1.45; }
+  label {
+    display: block;
+    margin: 8px 0 6px;
+    color: #aac1d8;
+    font: 600 12px/1 var(--mono);
+  }
+  textarea, select, input[type='range'] {
+    width: 100%;
+    border: 1px solid #355472;
+    border-radius: 10px;
+    background: #102337;
+    color: var(--text);
+    padding: 9px 10px;
+    font: 500 14px/1.35 var(--sans);
+  }
+  textarea { min-height: 110px; resize: vertical; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .btn-row { margin-top: 10px; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; }
+  .btn {
+    border: 1px solid #355472;
+    border-radius: 10px;
+    background: #17344f;
+    color: #e8f3ff;
+    padding: 12px 14px;
+    min-height: 52px;
+    cursor: pointer;
+    font: 700 15px/1 var(--sans);
+  }
+  .btn:hover { background: #204666; }
+  .btn-primary {
+    min-height: 70px;
+    font-size: 24px;
+    border-color: #1f8d57;
+    background: linear-gradient(180deg, #1eb36e, #14814f);
+    color: #04130a;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  .btn-primary:hover { background: linear-gradient(180deg, #27c579, #178b56); }
+  .status {
+    margin-top: 8px;
+    border: 1px solid #345270;
+    border-radius: 10px;
+    background: #102438;
+    padding: 8px 10px;
+    font: 600 12px/1.35 var(--mono);
+  }
+  .samples { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    border: 1px solid #365473;
+    border-radius: 999px;
+    padding: 6px 10px;
+    background: #122b42;
+    cursor: pointer;
+    font: 600 12px/1 var(--mono);
+    color: #dbeeff;
+  }
+  .chip:hover { background: #1a3c5a; }
+  @media (max-width: 860px) {
+    .grid { grid-template-columns: 1fr; }
+    .btn-row { grid-template-columns: 1fr; }
+    .btn-primary { min-height: 84px; font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+<nav class="top">
+  <a href="../index.html">&larr; Back to Suite</a>
+  <span>Accent Voice Lab</span>
+</nav>
+<main class="wrap">
+  <section class="card">
+    <h1>Accent Voice Lab</h1>
+    <p class="sub">Choose a style preset and speak any phrase. Result quality depends on voices installed in browser/OS.</p>
+
+    <label for="phraseInput">Phrase</label>
+    <textarea id="phraseInput">I see you. Stay calm. Help is on the way.</textarea>
+
+    <div class="samples" id="samples"></div>
+
+    <div class="grid">
+      <div>
+        <label for="styleSelect">Accent Style</label>
+        <select id="styleSelect"></select>
+      </div>
+      <div>
+        <label for="voiceSelect">Detected Voice</label>
+        <select id="voiceSelect"></select>
+      </div>
+      <div>
+        <label for="rateInput">Rate <span id="rateVal">1.00</span></label>
+        <input id="rateInput" type="range" min="0.6" max="1.4" step="0.05" value="1" />
+      </div>
+      <div>
+        <label for="pitchInput">Pitch <span id="pitchVal">1.00</span></label>
+        <input id="pitchInput" type="range" min="0.6" max="1.6" step="0.05" value="1" />
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button id="speakBtn" class="btn btn-primary" type="button">SPEAK</button>
+      <button id="stopBtn" class="btn" type="button">Stop</button>
+      <button id="refreshVoicesBtn" class="btn" type="button">Refresh Voices</button>
+    </div>
+
+    <div id="status" class="status">Voice lab idle.</div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const PRESETS = [
+    { id: 'neutral', label: 'Neutral English', localeHints: ['en-US', 'en-GB'], rate: 1, pitch: 1 },
+    { id: 'ru-heavy', label: 'Heavy Russian Accent', localeHints: ['ru-RU', 'en-US', 'en-GB'], rate: 0.9, pitch: 0.9 },
+    { id: 'es-warm', label: 'Warm Hispanic Accent', localeHints: ['es-US', 'es-MX', 'es-ES', 'en-US'], rate: 0.95, pitch: 1.05 },
+    { id: 'fr-romantic', label: 'French Romantic', localeHints: ['fr-FR', 'fr-CA', 'en-GB'], rate: 0.9, pitch: 1.05 },
+    { id: 'cn-crisp', label: 'Chinese Crisp', localeHints: ['zh-CN', 'zh-TW', 'en-US'], rate: 0.92, pitch: 1 },
+    { id: 'drunk-theater', label: 'Comedy Drunk Theater', localeHints: ['en-US', 'en-GB'], rate: 0.8, pitch: 0.85 }
+  ];
+
+  const SAMPLES = [
+    'I see you. Hold on. Help is on the way.',
+    'Sir, let us be calm and keep distance.',
+    'You are magnificent tonight.',
+    'Please leave me alone. Thank you.',
+    'Emergency. Need assistance at my location.'
+  ];
+
+  const el = {
+    phraseInput: document.getElementById('phraseInput'),
+    styleSelect: document.getElementById('styleSelect'),
+    voiceSelect: document.getElementById('voiceSelect'),
+    rateInput: document.getElementById('rateInput'),
+    pitchInput: document.getElementById('pitchInput'),
+    rateVal: document.getElementById('rateVal'),
+    pitchVal: document.getElementById('pitchVal'),
+    speakBtn: document.getElementById('speakBtn'),
+    stopBtn: document.getElementById('stopBtn'),
+    refreshVoicesBtn: document.getElementById('refreshVoicesBtn'),
+    status: document.getElementById('status'),
+    samples: document.getElementById('samples')
+  };
+
+  const state = {
+    voices: [],
+    selectedVoiceName: ''
+  };
+
+  function setStatus(text) { el.status.textContent = text; }
+
+  function populateStyles() {
+    el.styleSelect.innerHTML = PRESETS.map((p) => `<option value="${p.id}">${p.label}</option>`).join('');
+  }
+
+  function findBestVoice(preset) {
+    if (!state.voices.length) return null;
+    for (const hint of preset.localeHints) {
+      const exact = state.voices.find((v) => (v.lang || '').toLowerCase() === hint.toLowerCase());
+      if (exact) return exact;
+      const prefix = hint.split('-')[0].toLowerCase();
+      const starts = state.voices.find((v) => (v.lang || '').toLowerCase().startsWith(prefix));
+      if (starts) return starts;
+    }
+    return state.voices[0] || null;
+  }
+
+  function renderVoiceSelect(preferred) {
+    if (!state.voices.length) {
+      el.voiceSelect.innerHTML = '<option value="">No voices detected</option>';
+      return;
+    }
+    el.voiceSelect.innerHTML = state.voices.map((v, i) => `<option value="${i}">${v.name} (${v.lang})</option>`).join('');
+    if (preferred) {
+      const idx = state.voices.findIndex((v) => v.name === preferred.name);
+      if (idx >= 0) el.voiceSelect.value = String(idx);
+    }
+  }
+
+  function updateSliders(rate, pitch) {
+    el.rateInput.value = String(rate);
+    el.pitchInput.value = String(pitch);
+    el.rateVal.textContent = Number(rate).toFixed(2);
+    el.pitchVal.textContent = Number(pitch).toFixed(2);
+  }
+
+  function applyPreset() {
+    const preset = PRESETS.find((p) => p.id === el.styleSelect.value) || PRESETS[0];
+    const voice = findBestVoice(preset);
+    updateSliders(preset.rate, preset.pitch);
+    renderVoiceSelect(voice);
+    if (voice) {
+      state.selectedVoiceName = voice.name;
+      setStatus(`Preset loaded: ${preset.label} using ${voice.name}.`);
+    } else {
+      setStatus(`Preset loaded: ${preset.label}. No compatible voice found yet.`);
+    }
+  }
+
+  function loadVoices() {
+    const voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+    state.voices = voices;
+    applyPreset();
+    if (!voices.length) setStatus('No system voices detected. Browser may load voices after first interaction.');
+  }
+
+  function selectedVoice() {
+    const idx = Number(el.voiceSelect.value);
+    if (!Number.isFinite(idx) || idx < 0 || idx >= state.voices.length) return null;
+    return state.voices[idx];
+  }
+
+  function speak() {
+    if (!('speechSynthesis' in window)) {
+      setStatus('Speech synthesis is not supported in this browser.');
+      return;
+    }
+    const text = el.phraseInput.value.trim();
+    if (!text) {
+      setStatus('Enter a phrase first.');
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    const voice = selectedVoice();
+    if (voice) {
+      u.voice = voice;
+      u.lang = voice.lang || 'en-US';
+    }
+    u.rate = Number(el.rateInput.value || 1);
+    u.pitch = Number(el.pitchInput.value || 1);
+
+    u.onstart = () => setStatus(`Speaking with ${voice ? `${voice.name} (${voice.lang})` : 'default voice'}...`);
+    u.onend = () => setStatus('Done.');
+    u.onerror = (e) => setStatus(`Speech error: ${e.error || 'unknown'}`);
+
+    window.speechSynthesis.speak(u);
+  }
+
+  function stop() {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    setStatus('Stopped.');
+  }
+
+  function bind() {
+    PRESETS.forEach(() => {});
+    el.styleSelect.addEventListener('change', applyPreset);
+    el.voiceSelect.addEventListener('change', () => {
+      const voice = selectedVoice();
+      if (voice) setStatus(`Voice selected: ${voice.name} (${voice.lang})`);
+    });
+    el.rateInput.addEventListener('input', () => { el.rateVal.textContent = Number(el.rateInput.value).toFixed(2); });
+    el.pitchInput.addEventListener('input', () => { el.pitchVal.textContent = Number(el.pitchInput.value).toFixed(2); });
+    el.speakBtn.addEventListener('click', speak);
+    el.stopBtn.addEventListener('click', stop);
+    el.refreshVoicesBtn.addEventListener('click', loadVoices);
+
+    el.samples.innerHTML = '';
+    SAMPLES.forEach((s) => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'chip';
+      chip.textContent = s.length > 40 ? `${s.slice(0, 40)}...` : s;
+      chip.addEventListener('click', () => {
+        el.phraseInput.value = s;
+        setStatus('Sample phrase loaded.');
+      });
+      el.samples.appendChild(chip);
+    });
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    window.addEventListener('beforeunload', stop);
+  }
+
+  function init() {
+    populateStyles();
+    bind();
+    loadVoices();
+    setStatus('Voice lab ready.');
+  }
+
+  init();
+})();
+</script>
+<script src="../shared/help-content.js"></script>
+<script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

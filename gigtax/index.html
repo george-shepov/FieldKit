@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GigTax Quick — 2025</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#050505;--bg2:#0d0d0d;--bg3:#111111;
+  --border:#1e1e1e;--border2:#2a2a2a;
+  --text:#f0f0f0;--text2:#7f8790;--text3:#4f555d;
+  --accent:#10b981;--accent2:rgba(16,185,129,0.3);--accent-bg:rgba(16,185,129,0.12);
+  --red:hsl(0,65%,55%);--red-bg:hsl(0,40%,12%);
+  --amber:hsl(38,75%,55%);--amber-bg:hsl(38,40%,12%);
+  --blue:hsl(210,65%,55%);--blue-bg:hsl(210,40%,12%);
+  --radius:8px;--radius-lg:12px;
+  --font:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--mono:'JetBrains Mono','SF Mono',Consolas,monospace;
+  --shadow:0 1px 3px rgba(0,0,0,.3),0 1px 2px rgba(0,0,0,.2);
+  --shadow-lg:0 4px 12px rgba(0,0,0,.4);
+}
+html{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+body{min-height:100vh;overflow-y:auto}
+input,select,button,textarea{font-family:inherit;font-size:inherit}
+.app{width:min(1280px,100%);max-width:none;margin:0 auto;padding:clamp(12px,2vw,24px)}
+/* Header */
+.header{display:flex;align-items:center;justify-content:space-between;padding:8px 0 14px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#0f9b6d);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#031810}
+.logo-text{font-size:20px;font-weight:750;letter-spacing:-0.3px}
+.logo-tag{font-size:10px;color:var(--text3);font-weight:600;letter-spacing:1px}
+.header-right{display:flex;align-items:center;gap:8px}
+.ty-badge{font:600 11px/1 var(--mono);color:var(--text2)}
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:12px;overflow:hidden}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600}
+.card-head .badge{font-size:12px;font-weight:600}
+.card-body{padding:16px}
+/* Summary strip */
+.summary-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.summary-item{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px 10px;text-align:center}
+.summary-item .label{font-size:10px;color:var(--text3);font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+.summary-item .value{margin-top:4px;font-family:var(--mono);font-size:18px;font-weight:700}
+.quick-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.quick-actions .btn{width:100%;justify-content:center}
+/* Tabs */
+.tabs{display:flex;gap:4px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.tab{padding:8px 10px;border-radius:var(--radius);font-size:11px;font-weight:650;background:var(--bg2);color:var(--text2);border:1px solid var(--border);cursor:pointer;white-space:nowrap;transition:all .15s;text-align:center;min-width:98px;display:grid;place-items:center;gap:2px}
+.tab:hover{background:var(--bg3);color:var(--text)}
+.tab.active{background:var(--bg3);color:var(--accent);border-color:var(--accent);box-shadow:0 0 0 1px var(--accent-bg) inset}
+.tab .tab-icon{font-size:16px;line-height:1}
+.tab .count{opacity:.7}
+/* Form elements */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-grid .span-2{grid-column:span 2}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+.input,.select{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;color:var(--text);font-size:13px;transition:border-color .15s;width:100%}
+.input:focus,.select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent2)}
+.select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23666' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;border-radius:var(--radius);font-size:13px;font-weight:600;border:none;cursor:pointer;transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{filter:brightness(1.1)}
+.btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{background:var(--border)}
+.btn-danger{background:var(--red);color:#fff}.btn-danger:hover{filter:brightness(1.1)}
+.btn-ghost{background:var(--bg2);color:var(--text2);padding:6px 10px;border:1px solid var(--border)}.btn-ghost:hover{color:var(--text);background:var(--bg3)}
+.btn-full{width:100%;margin-top:10px}
+/* List items */
+.item{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:var(--radius);padding:8px 12px;margin-bottom:6px}
+.item:last-child{margin-bottom:0}
+.item-left{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.item-main{font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.item-sub{font-size:11px;color:var(--text3)}
+.item-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.item .del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:4px}.item .del:hover{color:var(--red);background:var(--red-bg)}
+.tag{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.3px}
+.tag-green{color:var(--accent);background:var(--accent-bg)}
+.tag-amber{color:var(--amber);background:var(--amber-bg)}
+.tag-blue{color:var(--blue);background:var(--blue-bg)}
+.tag-red{color:var(--red);background:var(--red-bg)}
+/* Tax summary rows */
+.row{display:flex;justify-content:space-between;padding:3px 0;font-size:13px}
+.row.bold{font-weight:600}
+.row.big{font-size:15px;padding:6px 0}
+.row .val{font-weight:500;text-align:right}
+.divider{border-top:1px solid var(--border);margin:6px 0}
+/* Suggestions */
+.suggestion{background:var(--accent-bg);border:1px solid hsl(160,30%,20%);border-radius:var(--radius);padding:8px 12px;font-size:12px;color:hsl(160,50%,65%);margin-bottom:6px}
+/* Alerts */
+.alert{border-radius:var(--radius);padding:10px 12px;font-size:12px;margin-top:8px}
+.alert-amber{background:var(--amber-bg);border:1px solid hsl(38,30%,22%);color:hsl(38,60%,65%)}
+.alert-green{background:var(--accent-bg);border:1px solid hsl(160,30%,20%);color:hsl(160,50%,65%)}
+/* Pin screen */
+.pin-screen{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.pin-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;width:100%;max-width:360px;box-shadow:var(--shadow-lg)}
+.pin-box h1{text-align:center;font-size:22px;color:var(--accent);margin-bottom:4px}
+.pin-box .subtitle{text-align:center;font-size:12px;color:var(--text3);margin-bottom:20px}
+.pin-box .icon{text-align:center;font-size:36px;margin-bottom:8px}
+.error{color:var(--red);font-size:12px;margin-top:6px}
+/* Scrollable list */
+.list-scroll{max-height:280px;overflow-y:auto;padding-right:4px}
+.list-scroll::-webkit-scrollbar{width:4px}
+.list-scroll::-webkit-scrollbar-track{background:transparent}
+.list-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+/* Export */
+.export-pre{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-family:var(--mono);font-size:11px;color:var(--text2);white-space:pre-wrap;max-height:400px;overflow-y:auto;line-height:1.6}
+/* Footer */
+.footer{text-align:center;font-size:10px;color:var(--text3);padding:16px 0 24px;line-height:1.6}
+/* Responsive */
+@media(max-width:760px){
+  .summary-strip{grid-template-columns:1fr 1fr}
+}
+@media(max-width:500px){
+  .form-grid{grid-template-columns:1fr}
+  .form-grid .span-2{grid-column:span 1}
+  .summary-strip{grid-template-columns:1fr}
+  .quick-actions{grid-template-columns:1fr}
+}
+/* Animation */
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.card{animation:fadeIn .2s ease}
+/* Suite nav */
+.suite-nav{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:12px}
+.suite-nav a{color:var(--text2);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .15s}
+.suite-nav a:hover{color:var(--accent)}
+.suite-nav .suite-name{color:var(--text3);font-family:var(--mono);font-size:11px}
+</style>
+</head>
+<body>
+<nav class="suite-nav">
+  <a href="../index.html">← Back to Suite</a>
+  <span class="suite-name">ProSe Pilot</span>
+</nav>
+<div id="app"></div>
+<script>
+const PLATFORMS=[
+  "Rover","Wag","TaskRabbit","Thumbtack","Care.com","Instacart Shipt",
+  "DoorDash","Uber","Lyft","Uber Eats","Grubhub",
+  "Amazon Flex","Spark Driver","Roadie",
+  "Facebook Marketplace","eBay","Mercari","Etsy","Poshmark","Depop",
+  "Craigslist","OfferUp","Shopify",
+  "Fiverr","Upwork","Freelancer","Guru",
+  "YouTube","TikTok","Patreon","Substack",
+  "Airbnb","VRBO","Turo","Other"
+];
+const EXPENSE_CATS=[
+  {code:"advertising",label:"Advertising",line:"Line 8"},
+  {code:"car_expense",label:"Car & Truck (non-mileage)",line:"Line 9"},
+  {code:"commissions",label:"Commissions & Fees",line:"Line 10"},
+  {code:"platform_fees",label:"Platform/Seller Fees",line:"Line 10"},
+  {code:"equipment",label:"Equipment/Tools",line:"Line 13"},
+  {code:"depreciation",label:"Depreciation",line:"Line 13"},
+  {code:"interest_mortgage",label:"Mortgage Interest",line:"Line 16a"},
+  {code:"interest_other",label:"Other Interest",line:"Line 16b"},
+  {code:"insurance",label:"Insurance",line:"Line 15"},
+  {code:"legal_professional",label:"Legal & Professional",line:"Line 17"},
+  {code:"office",label:"Office Expense",line:"Line 18"},
+  {code:"rent_lease_vehicle",label:"Rent/Lease Vehicle",line:"Line 20a"},
+  {code:"rent_lease_other",label:"Rent/Lease Other",line:"Line 20b"},
+  {code:"repairs_maintenance",label:"Repairs & Maintenance",line:"Line 21"},
+  {code:"supplies",label:"Supplies",line:"Line 22"},
+  {code:"taxes_licenses",label:"Taxes & Licenses",line:"Line 23"},
+  {code:"travel",label:"Travel",line:"Line 24a"},
+  {code:"meals",label:"Meals (50%)",line:"Line 24b"},
+  {code:"phone",label:"Phone/Internet",line:"Line 25"},
+  {code:"utilities",label:"Utilities",line:"Line 25"},
+  {code:"wages",label:"Wages (Employees)",line:"Line 26"},
+  {code:"software",label:"Software/Subscriptions",line:"Line 27a"},
+  {code:"shipping",label:"Shipping & Postage",line:"Line 27a"},
+  {code:"home_office",label:"Home Office",line:"Line 30"},
+  {code:"cogs",label:"Cost of Goods Sold",line:"Line 4"},
+  {code:"other",label:"Other Expense",line:"Line 27a"}
+];
+const MILEAGE_RATE=0.67;
+const SE_TAX_RATE=0.153;
+const SE_NET_FACTOR=0.9235;
+const STD_DED={single:14600,married:29200,hoh:21900};
+const FED_BRACKETS={
+  single:[[11600,.10],[47150,.12],[100525,.22],[191950,.24],[243725,.32],[609350,.35],[1e15,.37]],
+  married:[[23200,.10],[94300,.12],[201050,.22],[383900,.24],[487450,.32],[731200,.35],[1e15,.37]],
+  hoh:[[16550,.10],[63100,.12],[100500,.22],[191950,.24],[243700,.32],[609350,.35],[1e15,.37]]
+};
+const OHIO_BRACKETS=[[26050,0],[46100,.02765],[92150,.03226],[115300,.03688],[1e15,.03990]];
+const LS_DATA="gigtax_data";
+const LS_PIN="gigtax_pin";
+
+const uid=()=>Math.random().toString(36).slice(2,10);
+const fmt=n=>"$"+Number(n||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtN=n=>Number(n||0).toLocaleString("en-US",{maximumFractionDigits:0});
+const $=s=>document.querySelector(s);
+const $$=s=>document.querySelectorAll(s);
+
+const emptyData=()=>({income:[],expenses:[],mileage:[],profile:{filing_status:"single",other_w2_income:0,dependents:0,custom_platforms:[]}});
+
+let DATA=emptyData();
+let TAB="income";
+
+function load(){try{const d=localStorage.getItem(LS_DATA);return d?JSON.parse(d):null}catch(e){return null}}
+function save(){localStorage.setItem(LS_DATA,JSON.stringify(DATA))}
+function getPin(){return localStorage.getItem(LS_PIN)}
+function setPin(p){localStorage.setItem(LS_PIN,p)}
+
+function calcTax(){
+  const d=DATA;
+  const gross=d.income.reduce((s,i)=>s+Number(i.amount||0),0);
+  const totalExp=d.expenses.reduce((s,e)=>{
+    const amt=Number(e.amount||0)*(e.category==="meals"?.5:1)*(Number(e.deductible_pct||100)/100);
+    return s+amt;
+  },0);
+  const totalMiles=d.mileage.reduce((s,m)=>s+Number(m.miles||0),0);
+  const mileDed=totalMiles*MILEAGE_RATE;
+  const net=gross-totalExp-mileDed;
+  const seBase=net>400?net*SE_NET_FACTOR:0;
+  const seTax=seBase*SE_TAX_RATE;
+  const seDed=seTax/2;
+  const w2=Number(d.profile.other_w2_income)||0;
+  const agi=w2+net-seDed;
+  const sd=STD_DED[d.profile.filing_status]||STD_DED.single;
+  const taxable=Math.max(0,agi-sd);
+  const brackets=FED_BRACKETS[d.profile.filing_status]||FED_BRACKETS.single;
+  let fed=0,prev=0;
+  for(const[limit,rate]of brackets){if(taxable<=prev)break;fed+=(Math.min(taxable,limit)-prev)*rate;prev=limit}
+  let ohio=0,oPrev=0;
+  const oTaxable=Math.max(0,agi-2400*(1+(Number(d.profile.dependents)||0)));
+  for(const[limit,rate]of OHIO_BRACKETS){if(oTaxable<=oPrev)break;ohio+=(Math.min(oTaxable,limit)-oPrev)*rate;oPrev=limit}
+  const total=fed+seTax+ohio;
+  const bySrc={};d.income.forEach(i=>{bySrc[i.platform]=(bySrc[i.platform]||0)+Number(i.amount)});
+  const byCat={};d.expenses.forEach(e=>{const c=EXPENSE_CATS.find(x=>x.code===e.category);const l=c?c.label:e.category;const a=Number(e.amount)*(e.category==="meals"?.5:1)*(Number(e.deductible_pct||100)/100);byCat[l]=(byCat[l]||0)+a});
+  return{gross,totalExp,totalMiles,mileDed,net,seBase,seTax,seDed,w2,agi,sd,taxable,fed,ohio,total,bySrc,byCat};
+}
+
+function genReport(){
+  const t=calcTax();
+  let r=`GIGTAX QUICK — 2025 TAX SUMMARY\nGenerated: ${new Date().toLocaleDateString()}\n${"=".repeat(50)}\n\n`;
+  r+=`FILING STATUS: ${DATA.profile.filing_status.toUpperCase()}\n`;
+  if(t.w2>0)r+=`W-2 INCOME: ${fmt(t.w2)}\n`;
+  r+=`\n--- INCOME BY PLATFORM ---\n`;
+  Object.entries(t.bySrc).forEach(([k,v])=>{r+=`  ${k}: ${fmt(v)}\n`});
+  r+=`  GROSS TOTAL: ${fmt(t.gross)}\n`;
+  r+=`\n--- DEDUCTIONS ---\n`;
+  Object.entries(t.byCat).forEach(([k,v])=>{r+=`  ${k}: ${fmt(v)}\n`});
+  if(t.mileDed>0)r+=`  Mileage (${fmtN(t.totalMiles)} mi): ${fmt(t.mileDed)}\n`;
+  r+=`  TOTAL DEDUCTIONS: ${fmt(t.totalExp+t.mileDed)}\n`;
+  r+=`\n--- SCHEDULE C ---\n  Gross: ${fmt(t.gross)}\n  Expenses: ${fmt(t.totalExp+t.mileDed)}\n  Net Profit: ${fmt(t.net)}\n`;
+  r+=`\n--- TAX ESTIMATE ---\n  Federal: ${fmt(t.fed)}\n  SE Tax: ${fmt(t.seTax)}\n  Ohio: ${fmt(t.ohio)}\n  TOTAL: ${fmt(t.total)}\n`;
+  r+=`\n--- INCOME DETAIL ---\n`;
+  DATA.income.forEach(i=>{r+=`  ${i.date} | ${i.platform} | ${fmt(i.amount)} | ${i.form_type} | ${i.description||""}\n`});
+  r+=`\n--- EXPENSE DETAIL ---\n`;
+  DATA.expenses.forEach(e=>{const c=EXPENSE_CATS.find(x=>x.code===e.category);r+=`  ${e.date} | ${c?.label||e.category} | ${fmt(e.amount)} | ${e.deductible_pct}% | ${e.description||""}\n`});
+  r+=`\n--- MILEAGE DETAIL ---\n`;
+  DATA.mileage.forEach(m=>{r+=`  ${m.date} | ${m.miles} mi | ${fmt(m.miles*MILEAGE_RATE)} | ${m.description||""}\n`});
+  r+=`\n${"=".repeat(50)}\nESTIMATE ONLY. Not tax advice. Consult a professional.\n`;
+  return r;
+}
+
+function normalizeDateInput(v){
+  const raw=String(v||"").trim();
+  if(!raw) return new Date().toISOString().slice(0,10);
+  if(/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const d=new Date(raw);
+  if(!Number.isNaN(d.getTime())) return d.toISOString().slice(0,10);
+  return new Date().toISOString().slice(0,10);
+}
+
+function parseCsvRows(text){
+  const rows=[];let row=[];let cell="";let inQuotes=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i],next=text[i+1];
+    if(ch==='"'){
+      if(inQuotes&&next==='"'){cell+='"';i++;continue;}
+      inQuotes=!inQuotes;continue;
+    }
+    if(ch===','&&!inQuotes){row.push(cell);cell="";continue;}
+    if((ch==='\n'||ch==='\r')&&!inQuotes){
+      if(ch==='\r'&&next==='\n') i++;
+      row.push(cell);
+      rows.push(row);
+      row=[];cell="";
+      continue;
+    }
+    cell+=ch;
+  }
+  if(cell.length||row.length){row.push(cell);rows.push(row);}
+  if(!rows.length) return [];
+  const headers=rows[0].map(h=>String(h||"").trim().toLowerCase());
+  return rows.slice(1).filter(r=>r.some(x=>String(x||"").trim())).map(r=>{
+    const out={};
+    headers.forEach((h,idx)=>{out[h]=String(r[idx]||"").trim();});
+    return out;
+  });
+}
+
+function mapReceiptCategory(raw){
+  const s=String(raw||"").toLowerCase();
+  if(/platform fee|processing fee|commission|marketplace fee|seller fee/.test(s)) return "platform_fees";
+  if(/cost of goods|inventory|resale item|cogs/.test(s)) return "cogs";
+  if(/meal|restaurant|coffee|cafe|diner|food/.test(s)) return "meals";
+  if(/travel|airfare|hotel|lodging|uber|lyft|taxi|flight|train/.test(s)) return "travel";
+  if(/shipping|postage|label|usps|ups|fedex/.test(s)) return "shipping";
+  if(/software|subscription|saas|app|cloud|openai|microsoft|google|aws/.test(s)) return "software";
+  if(/office|printer|paper|ink/.test(s)) return "office";
+  if(/supply|tool|material|equipment/.test(s)) return "supplies";
+  if(/insurance/.test(s)) return "insurance";
+  if(/phone|internet|mobile|cell/.test(s)) return "phone";
+  if(/utility|electric|water|gas/.test(s)) return "utilities";
+  if(/tax|license|permit|registration/.test(s)) return "taxes_licenses";
+  if(/legal|attorney|lawyer|accounting|bookkeep|tax prep|cpa/.test(s)) return "legal_professional";
+  if(/rent|lease/.test(s)) return "rent_lease_other";
+  if(/repair|maintenance/.test(s)) return "repairs_maintenance";
+  if(/interest|apr|finance charge/.test(s)) return "interest_other";
+  if(/advertis|promo|marketing/.test(s)) return "advertising";
+  return "other";
+}
+
+async function importReceiptTrackerCsv(file){
+  const text=await file.text();
+  const rows=parseCsvRows(text);
+  if(!rows.length) throw new Error("CSV has no rows.");
+  const expenseKeys=new Set(DATA.expenses.map(e=>[
+    normalizeDateInput(e.date),Number(e.amount||0).toFixed(2),e.category||"",String(e.description||"").trim().toLowerCase()
+  ].join("|")));
+  const incomeKeys=new Set(DATA.income.map(i=>[
+    normalizeDateInput(i.date),Number(i.amount||0).toFixed(2),i.platform||"",String(i.description||"").trim().toLowerCase()
+  ].join("|")));
+
+  let addedExpenses=0,addedIncome=0,skipped=0;
+  for(const rec of rows){
+    const rawAmount=String(rec.amount||"").replace(/[^0-9.-]/g,"");
+    const amount=Number(rawAmount);
+    if(!Number.isFinite(amount)||amount===0){skipped++;continue;}
+
+    const date=normalizeDateInput(rec.date);
+    const vendor=(rec.vendor||"Imported").trim()||"Imported";
+    const categoryText=String(rec.category||"");
+    const notes=[rec.notes,rec.payment_method?`pay:${rec.payment_method}`:"",rec.file_name?`file:${rec.file_name}`:""]
+      .filter(Boolean).join(" | ");
+    const description=[vendor,notes].filter(Boolean).join(" — ");
+    const isIncome=/income|revenue|sale|sales/.test(categoryText.toLowerCase())&&amount>0;
+    const absAmount=Math.abs(amount);
+
+    if(isIncome){
+      if(!PLATFORMS.includes(vendor)&&!DATA.profile.custom_platforms.includes(vendor)) DATA.profile.custom_platforms.push(vendor);
+      const key=[date,absAmount.toFixed(2),vendor,description.toLowerCase()].join("|");
+      if(incomeKeys.has(key)){skipped++;continue;}
+      incomeKeys.add(key);
+      DATA.income.push({
+        id:uid(),
+        platform:vendor,
+        form_type:"no_form",
+        amount:absAmount,
+        date,
+        description:description||"Imported from Receipt Tracker CSV"
+      });
+      addedIncome++;
+      continue;
+    }
+
+    const category=mapReceiptCategory(`${categoryText} ${vendor} ${notes}`);
+    const eKey=[date,absAmount.toFixed(2),category,description.toLowerCase()].join("|");
+    if(expenseKeys.has(eKey)){skipped++;continue;}
+    expenseKeys.add(eKey);
+    DATA.expenses.push({
+      id:uid(),
+      category,
+      amount:absAmount,
+      date,
+      deductible_pct:100,
+      description:description||"Imported from Receipt Tracker CSV"
+    });
+    addedExpenses++;
+  }
+  save();
+  return {addedExpenses,addedIncome,skipped,total:rows.length};
+}
+
+async function runReceiptImportFlow(file){
+  if(!file){alert("Choose a CSV file first.");return false;}
+  try{
+    const out=await importReceiptTrackerCsv(file);
+    alert(`Imported ${out.addedExpenses} expenses and ${out.addedIncome} income entries. Skipped ${out.skipped}.`);
+    TAB=out.addedIncome>0?"income":"expenses";
+    renderApp();
+    return true;
+  }catch(err){
+    alert(`Import failed: ${err&&err.message?err.message:String(err)}`);
+    return false;
+  }
+}
+
+function renderPin(){
+  const isNew=!getPin();
+  const app=$("#app");
+  app.innerHTML=`
+    <div class="pin-screen">
+      <div class="pin-box">
+        <div class="icon">💰</div>
+        <h1>GigTax Quick</h1>
+        <p class="subtitle">${isNew?"Set a PIN to protect your data":"Enter PIN to unlock"}</p>
+        <div class="form-group" style="margin-bottom:10px">
+          <label>PIN</label>
+          <input class="input" type="password" id="pin1" maxlength="8" placeholder="Enter PIN" autofocus>
+        </div>
+        ${isNew?`<div class="form-group" style="margin-bottom:10px"><label>Confirm PIN</label><input class="input" type="password" id="pin2" maxlength="8" placeholder="Confirm PIN"></div>`:""}
+        <div id="pin-error" class="error" style="display:none"></div>
+        <button class="btn btn-primary btn-full" id="pin-btn">${isNew?"Set PIN & Start":"Unlock"}</button>
+      </div>
+    </div>`;
+  const showErr=msg=>{const e=$("#pin-error");e.textContent=msg;e.style.display="block"};
+  const submit=()=>{
+    const p1=$("#pin1").value.replace(/\D/g,"");
+    if(isNew){
+      const p2=$("#pin2").value.replace(/\D/g,"");
+      if(p1.length<4)return showErr("PIN must be at least 4 digits");
+      if(p1!==p2)return showErr("PINs don't match");
+      setPin(p1);
+    }else{
+      if(p1!==getPin())return showErr("Wrong PIN");
+    }
+    const saved=load();
+    if(saved)DATA={...emptyData(),...saved,profile:{...emptyData().profile,...(saved.profile||{})}};
+    renderApp();
+  };
+  $("#pin-btn").onclick=submit;
+  app.querySelectorAll("input").forEach(el=>el.addEventListener("keydown",e=>{if(e.key==="Enter")submit()}));
+  // filter non-digits
+  app.querySelectorAll("input[type=password]").forEach(el=>el.addEventListener("input",()=>{el.value=el.value.replace(/\D/g,"")}));
+}
+
+function renderApp(){
+  const t=calcTax();
+  const totalDeductions=t.totalExp+t.mileDed;
+  const qEst=t.total/4;
+  const counts={income:DATA.income.length,expenses:DATA.expenses.length,mileage:DATA.mileage.length};
+  const tabs=[
+    {id:"income",icon:"💰",name:"Income",c:counts.income},
+    {id:"expenses",icon:"🧾",name:"Expenses",c:counts.expenses},
+    {id:"mileage",icon:"🚗",name:"Mileage",c:counts.mileage},
+    {id:"deductions",icon:"💡",name:"Find $",c:0},
+    {id:"estimate",icon:"📊",name:"Estimate",c:0},
+    {id:"export",icon:"📤",name:"Export",c:0}
+  ];
+  const app=$("#app");
+  app.innerHTML=`
+    <div class="app">
+      <div class="header">
+        <div class="logo">
+          <div class="logo-icon">GT</div>
+          <div>
+            <div class="logo-text">GigTax Fusion</div>
+            <div class="logo-tag">2025 • SELF-EMPLOYMENT TAX SUITE</div>
+          </div>
+        </div>
+        <div class="header-right">
+          <span class="ty-badge">TY 2025</span>
+          <button class="btn btn-ghost" id="lock-btn" title="Lock">🔒</button>
+          <button class="btn btn-ghost" id="reset-btn" title="Reset all data">📋</button>
+        </div>
+      </div>
+      <div class="summary-strip">
+        <div class="summary-item"><div class="label">Gross 1099</div><div class="value" style="color:var(--accent)">${fmt(t.gross)}</div></div>
+        <div class="summary-item"><div class="label">Deductions</div><div class="value" style="color:var(--amber)">${fmt(totalDeductions)}</div></div>
+        <div class="summary-item"><div class="label">Estimated Tax</div><div class="value" style="color:var(--red)">${fmt(t.total)}</div></div>
+        <div class="summary-item"><div class="label">Quarterly</div><div class="value" style="color:var(--blue)">${fmt(qEst)}</div></div>
+      </div>
+      <div class="quick-actions">
+        <input id="quick-rt-file" type="file" accept=".csv,text/csv" style="display:none" />
+        <button class="btn btn-secondary" id="quick-rt-import">📥 Import Receipt CSV</button>
+        <button class="btn btn-secondary" id="quick-open-rt">🧾 Open Receipt Tracker</button>
+      </div>
+      <div class="tabs" id="tabs">
+        ${tabs.map(t=>`<button class="tab${TAB===t.id?" active":""}" data-tab="${t.id}" title="${t.name}"><span class="tab-icon">${t.icon}</span><span>${t.name}${t.c?` <span class="count">(${t.c})</span>`:""}</span></button>`).join("")}
+      </div>
+      <div id="content"></div>
+      <div class="footer">⚠️ For informational purposes only. Not tax advice.<br>Consult a tax professional for your specific situation.</div>
+    </div>`;
+
+  $("#tabs").onclick=e=>{const t=e.target.closest("[data-tab]");if(t){TAB=t.dataset.tab;renderApp()}};
+  $("#quick-rt-import").onclick=()=>$("#quick-rt-file").click();
+  $("#quick-rt-file").onchange=()=>runReceiptImportFlow($("#quick-rt-file").files&&$("#quick-rt-file").files[0]);
+  $("#quick-open-rt").onclick=()=>{window.location.href="../receipt-tracker/index.html";};
+  $("#lock-btn").onclick=()=>renderPin();
+  $("#reset-btn").onclick=()=>{
+    if($("#reset-btn").dataset.confirm==="1"){DATA=emptyData();save();renderApp()}
+    else{$("#reset-btn").textContent="Sure?";$("#reset-btn").dataset.confirm="1";setTimeout(()=>{if($("#reset-btn")){$("#reset-btn").textContent="📋";delete $("#reset-btn").dataset.confirm}},3000)}
+  };
+
+  const content=$("#content");
+  if(TAB==="income")renderIncome(content);
+  else if(TAB==="expenses")renderExpenses(content);
+  else if(TAB==="mileage")renderMileage(content);
+  else if(TAB==="deductions")renderDeductions(content);
+  else if(TAB==="estimate")renderEstimate(content);
+  else if(TAB==="export")renderExport(content);
+}
+
+function platformOptions(){
+  const all=[...PLATFORMS,...(DATA.profile.custom_platforms||[])];
+  return all.map(p=>`<option value="${p}">${p}</option>`).join("")+`<option value="__custom">+ Add New Platform</option>`;
+}
+
+function renderIncome(el){
+  const total=DATA.income.reduce((s,i)=>s+Number(i.amount||0),0);
+  const today=new Date().toISOString().slice(0,10);
+  el.innerHTML=`
+    <div class="card">
+      <div class="card-head">Add Income <span class="badge tag tag-green">${fmt(total)} total</span></div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="form-group"><label>Platform</label><select class="select" id="i-plat">${platformOptions()}</select></div>
+          <div class="form-group" id="i-custom-wrap" style="display:none"><label>Platform Name</label><input class="input" id="i-custom" placeholder="e.g. TaskRabbit"></div>
+          <div class="form-group"><label>Form Type</label><select class="select" id="i-form"><option value="1099-NEC">1099-NEC</option><option value="1099-K">1099-K</option><option value="1099-MISC">1099-MISC</option><option value="no_form">No 1099 received</option></select></div>
+          <div class="form-group"><label>Amount</label><input class="input" type="number" step="0.01" id="i-amt" placeholder="0.00"></div>
+          <div class="form-group"><label>Date</label><input class="input" type="date" id="i-date" value="${today}"></div>
+          <div class="form-group span-2"><label>Description (optional)</label><input class="input" id="i-desc" placeholder="Dog walking, item sold, etc."></div>
+        </div>
+        <button class="btn btn-primary btn-full" id="i-add">Add Income</button>
+      </div>
+    </div>
+    ${DATA.income.length?`
+    <div class="card">
+      <div class="card-head">Income Entries (${DATA.income.length})</div>
+      <div class="card-body"><div class="list-scroll" id="i-list"></div></div>
+    </div>`:""}`;
+
+  $("#i-plat").onchange=()=>{$("#i-custom-wrap").style.display=$("#i-plat").value==="__custom"?"flex":"none"};
+  $("#i-add").onclick=()=>{
+    const amt=$("#i-amt").value;if(!amt||Number(amt)<=0)return;
+    let plat=$("#i-plat").value;
+    if(plat==="__custom"){plat=$("#i-custom").value.trim();if(!plat)return;if(!DATA.profile.custom_platforms.includes(plat))DATA.profile.custom_platforms.push(plat)}
+    DATA.income.push({id:uid(),platform:plat,form_type:$("#i-form").value,amount:amt,date:$("#i-date").value,description:$("#i-desc").value});
+    save();renderApp();
+  };
+  if($("#i-list")){
+    $("#i-list").innerHTML=DATA.income.slice().reverse().map(i=>`
+      <div class="item">
+        <div class="item-left">
+          <div class="item-main">${fmt(i.amount)} <span class="tag tag-green">${i.platform}</span> <span class="tag tag-blue">${i.form_type}</span></div>
+          ${i.description?`<div class="item-sub">${esc(i.description)}</div>`:""}
+        </div>
+        <div class="item-right"><span style="font-size:11px;color:var(--text3)">${i.date}</span><button class="del" data-id="${i.id}">✕</button></div>
+      </div>`).join("");
+    $("#i-list").querySelectorAll(".del").forEach(b=>b.onclick=()=>{DATA.income=DATA.income.filter(x=>x.id!==b.dataset.id);save();renderApp()});
+  }
+}
+
+function renderExpenses(el){
+  const total=DATA.expenses.reduce((s,e)=>s+Number(e.amount||0),0);
+  const today=new Date().toISOString().slice(0,10);
+  const catOpts=EXPENSE_CATS.map(c=>`<option value="${c.code}">${c.label} (${c.line})</option>`).join("");
+  el.innerHTML=`
+    <div class="card">
+      <div class="card-head">Add Expense <span class="badge tag tag-red">${fmt(total)} total</span></div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="form-group"><label>Category (Schedule C)</label><select class="select" id="e-cat">${catOpts}</select></div>
+          <div class="form-group"><label>Amount</label><input class="input" type="number" step="0.01" id="e-amt" placeholder="0.00"></div>
+          <div class="form-group"><label>Date</label><input class="input" type="date" id="e-date" value="${today}"></div>
+          <div class="form-group"><label>% Deductible</label><input class="input" type="number" id="e-pct" value="100" min="0" max="100"></div>
+          <div class="form-group span-2"><label>Description</label><input class="input" id="e-desc" placeholder="What was this for?"></div>
+        </div>
+        <button class="btn btn-primary btn-full" id="e-add">Add Expense</button>
+      </div>
+    </div>
+    ${DATA.expenses.length?`
+    <div class="card">
+      <div class="card-head">Expenses (${DATA.expenses.length})</div>
+      <div class="card-body"><div class="list-scroll" id="e-list"></div></div>
+    </div>`:""}`;
+
+  $("#e-add").onclick=()=>{
+    const amt=$("#e-amt").value;if(!amt||Number(amt)<=0)return;
+    DATA.expenses.push({id:uid(),category:$("#e-cat").value,amount:amt,date:$("#e-date").value,deductible_pct:$("#e-pct").value||"100",description:$("#e-desc").value});
+    save();renderApp();
+  };
+  if($("#e-list")){
+    $("#e-list").innerHTML=DATA.expenses.slice().reverse().map(e=>{
+      const c=EXPENSE_CATS.find(x=>x.code===e.category);
+      return`<div class="item">
+        <div class="item-left">
+          <div class="item-main">${fmt(e.amount)} <span class="tag tag-amber">${c?.label||e.category}</span></div>
+          ${e.description?`<div class="item-sub">${esc(e.description)}</div>`:""}
+        </div>
+        <div class="item-right"><span style="font-size:11px;color:var(--text3)">${e.deductible_pct}%</span><button class="del" data-id="${e.id}">✕</button></div>
+      </div>`}).join("");
+    $("#e-list").querySelectorAll(".del").forEach(b=>b.onclick=()=>{DATA.expenses=DATA.expenses.filter(x=>x.id!==b.dataset.id);save();renderApp()});
+  }
+}
+
+function renderMileage(el){
+  const totalMiles=DATA.mileage.reduce((s,m)=>s+Number(m.miles||0),0);
+  const today=new Date().toISOString().slice(0,10);
+  el.innerHTML=`
+    <div class="card">
+      <div class="card-head">Mileage Tracker <span class="badge tag tag-blue">${fmtN(totalMiles)} mi = ${fmt(totalMiles*MILEAGE_RATE)}</span></div>
+      <div class="card-body">
+        <p style="font-size:11px;color:var(--text3);margin-bottom:10px">2025 IRS rate: $0.67/mile for business driving — pickups, deliveries, client visits.</p>
+        <div class="form-grid">
+          <div class="form-group"><label>Miles</label><input class="input" type="number" step="0.1" id="m-miles" placeholder="0"></div>
+          <div class="form-group"><label>Date</label><input class="input" type="date" id="m-date" value="${today}"></div>
+          <div class="form-group span-2"><label>Trip Purpose</label><input class="input" id="m-desc" placeholder="Rover client, marketplace pickup, etc."></div>
+        </div>
+        <button class="btn btn-primary btn-full" id="m-add">Add Trip</button>
+      </div>
+    </div>
+    ${DATA.mileage.length?`
+    <div class="card">
+      <div class="card-head">Trips (${DATA.mileage.length})</div>
+      <div class="card-body"><div class="list-scroll" id="m-list"></div></div>
+    </div>`:""}`;
+
+  $("#m-add").onclick=()=>{
+    const miles=$("#m-miles").value;if(!miles||Number(miles)<=0)return;
+    DATA.mileage.push({id:uid(),miles:miles,date:$("#m-date").value,description:$("#m-desc").value});
+    save();renderApp();
+  };
+  if($("#m-list")){
+    $("#m-list").innerHTML=DATA.mileage.slice().reverse().map(m=>`
+      <div class="item">
+        <div class="item-left">
+          <div class="item-main">${m.miles} mi <span class="tag tag-blue">= ${fmt(m.miles*MILEAGE_RATE)}</span></div>
+          ${m.description?`<div class="item-sub">${esc(m.description)}</div>`:""}
+        </div>
+        <div class="item-right"><span style="font-size:11px;color:var(--text3)">${m.date}</span><button class="del" data-id="${m.id}">✕</button></div>
+      </div>`).join("");
+    $("#m-list").querySelectorAll(".del").forEach(b=>b.onclick=()=>{DATA.mileage=DATA.mileage.filter(x=>x.id!==b.dataset.id);save();renderApp()});
+  }
+}
+
+function renderDeductions(el){
+  const usedCats=new Set(DATA.expenses.map(e=>e.category));
+  const hasMileage=DATA.mileage.length>0;
+  const suggestions=[
+    {check:!usedCats.has("phone"),text:"📱 Phone & Internet — Deduct the % used for business"},
+    {check:!usedCats.has("home_office"),text:"🏠 Home Office — Simplified: $5/sq ft up to 300 sq ft ($1,500 max)"},
+    {check:!hasMileage,text:"🚗 Mileage — $0.67/mile for ALL business driving in 2025"},
+    {check:!usedCats.has("software"),text:"💻 Software — Scheduling apps, accounting tools, AI subscriptions"},
+    {check:!usedCats.has("supplies"),text:"🧱 Supplies — Cleaning supplies, packing materials, pet supplies"},
+    {check:!usedCats.has("insurance"),text:"🛡️ Insurance — Business liability, pet insurance for Rover"},
+    {check:!usedCats.has("platform_fees"),text:"💰 Platform Fees — eBay seller fees, Mercari labels, Etsy listing fees"},
+    {check:!usedCats.has("shipping"),text:"📦 Shipping — Postage, boxes, tape, labels for marketplace sales"},
+    {check:!usedCats.has("cogs"),text:"🏭 Cost of Goods — What you paid for items you resold"},
+    {check:!usedCats.has("advertising"),text:"📣 Advertising — Facebook boost, promoted listings"},
+    {check:!usedCats.has("equipment"),text:"🔧 Equipment — Leashes, crates, camera, printer"},
+    {check:true,text:"🏢 Self-Employment Tax Deduction — Automatic! Half of SE tax deducts from AGI"},
+    {check:true,text:"📊 Health Insurance — Self-employed can deduct 100% of premiums"}
+  ];
+  const missing=suggestions.filter(s=>s.check);
+  const found=suggestions.filter(s=>!s.check);
+  el.innerHTML=`
+    <div class="card">
+      <div class="card-head">💡 Deduction Finder</div>
+      <div class="card-body">
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Deductions you may be missing based on your entries:</p>
+        ${missing.map(s=>`<div class="suggestion">${s.text}</div>`).join("")}
+        ${found.length?`<p style="font-size:11px;color:var(--text3);margin-top:8px">✓ Already tracking: ${found.length} categories</p>`:""}
+      </div>
+    </div>`;
+}
+
+function renderEstimate(el){
+  const t=calcTax();
+  const qEst=t.total/4;
+  el.innerHTML=`
+    <div class="card">
+      <div class="card-head">Your Info</div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="form-group"><label>Filing Status</label><select class="select" id="t-status"><option value="single"${DATA.profile.filing_status==="single"?" selected":""}>Single</option><option value="married"${DATA.profile.filing_status==="married"?" selected":""}>Married Filing Jointly</option><option value="hoh"${DATA.profile.filing_status==="hoh"?" selected":""}>Head of Household</option></select></div>
+          <div class="form-group"><label>Other W-2 Income</label><input class="input" type="number" id="t-w2" value="${DATA.profile.other_w2_income||0}" placeholder="0"></div>
+          <div class="form-group"><label>Dependents</label><input class="input" type="number" id="t-dep" value="${DATA.profile.dependents||0}" min="0"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">📊 2025 Tax Estimate</div>
+      <div class="card-body">
+        ${row("Gross Gig Income",fmt(t.gross),"var(--accent)",true)}
+        ${row("Less: Expenses","("+fmt(t.totalExp)+")","var(--red)")}
+        ${row(`Less: Mileage (${fmtN(t.totalMiles)} mi × $0.67)`,"("+fmt(t.mileDed)+")","var(--red)")}
+        <div class="divider"></div>
+        ${row("Net Profit (Schedule C)",fmt(t.net),t.net>=0?"var(--amber)":"var(--accent)",true)}
+        ${t.w2>0?row("W-2 Income",fmt(t.w2)):""}
+        ${row("SE Tax Deduction (½ of SE tax)","("+fmt(t.seDed)+")","var(--blue)")}
+        ${row("Adjusted Gross Income",fmt(t.agi))}
+        ${row("Standard Deduction","("+fmt(t.sd)+")")}
+        ${row("Taxable Income",fmt(t.taxable),"",true)}
+        <div class="divider"></div>
+        ${row("Federal Income Tax",fmt(t.fed),"var(--red)")}
+        ${row("Self-Employment Tax (15.3%)",fmt(t.seTax),"var(--red)")}
+        ${row("Ohio State Tax",fmt(t.ohio),"var(--red)")}
+        <div class="divider"></div>
+        ${row("TOTAL ESTIMATED TAX",fmt(t.total),"var(--red)",true,true)}
+        <div class="alert alert-amber" style="margin-top:10px">
+          📅 Quarterly estimate: ~${fmt(qEst)}<br>
+          <span style="opacity:.7">Due: Apr 15, Jun 15, Sep 15, Jan 15</span>
+        </div>
+        ${t.net>0&&t.net<=400?`<div class="alert alert-green">✓ Net profit under $400 — no SE tax owed!</div>`:""}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">Income by Platform</div>
+      <div class="card-body">${Object.entries(t.bySrc).sort((a,b)=>b[1]-a[1]).map(([k,v])=>row(k,fmt(v),"var(--accent)")).join("")||'<p style="font-size:12px;color:var(--text3)">No income entered yet</p>'}</div>
+    </div>
+    <div class="card">
+      <div class="card-head">Deductions by Category</div>
+      <div class="card-body">
+        ${Object.entries(t.byCat).sort((a,b)=>b[1]-a[1]).map(([k,v])=>row(k,fmt(v),"var(--amber)")).join("")}
+        ${t.mileDed>0?row("Mileage Deduction",fmt(t.mileDed),"var(--blue)"):""}
+        ${!Object.keys(t.byCat).length&&!t.mileDed?'<p style="font-size:12px;color:var(--text3)">No deductions entered yet</p>':""}
+      </div>
+    </div>`;
+
+  const update=()=>{DATA.profile.filing_status=$("#t-status").value;DATA.profile.other_w2_income=$("#t-w2").value;DATA.profile.dependents=$("#t-dep").value;save();renderApp()};
+  $("#t-status").onchange=update;
+  $("#t-w2").onchange=update;
+  $("#t-dep").onchange=update;
+}
+
+function renderExport(el){
+  const report=genReport();
+  el.innerHTML=`
+    <div class="card">
+      <div class="card-head">Import from Receipt Tracker</div>
+      <div class="card-body">
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Import the CSV from Receipt Tracker and convert rows into GigTax expenses automatically.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input class="input" id="x-rt-file" type="file" accept=".csv,text/csv" style="max-width:320px" />
+          <button class="btn btn-secondary" id="x-rt-import">Import CSV</button>
+          <a class="btn btn-ghost" href="../receipt-tracker/index.html">Open Receipt Tracker</a>
+        </div>
+        <p style="font-size:11px;color:var(--text3);margin-top:10px">Income rows are auto-detected only when CSV category contains words like <code>income</code> / <code>sales</code> / <code>revenue</code>. Everything else imports as expense.</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">Export Tax Summary</div>
+      <div class="card-body">
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Generate a complete summary for your tax preparer or records.</p>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" id="x-copy">📋 Copy to Clipboard</button>
+          <button class="btn btn-secondary" id="x-dl">📥 Download .txt</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">Preview</div>
+      <div class="card-body"><pre class="export-pre">${esc(report)}</pre></div>
+    </div>`;
+  $("#x-rt-import").onclick=async()=>{
+    const file=$("#x-rt-file").files&&$("#x-rt-file").files[0];
+    await runReceiptImportFlow(file);
+  };
+  $("#x-copy").onclick=()=>{navigator.clipboard.writeText(report).then(()=>{$("#x-copy").textContent="✓ Copied!";setTimeout(()=>$("#x-copy").textContent="📋 Copy to Clipboard",2000)})};
+  $("#x-dl").onclick=()=>{const b=new Blob([report],{type:"text/plain"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download="gigtax-2025-summary.txt";a.click();URL.revokeObjectURL(u)};
+}
+
+function row(label,val,color,bold,big){
+  return`<div class="row${bold?" bold":""}${big?" big":""}"><span>${label}</span><span class="val"${color?` style="color:${color}"`:""}">${val}</span></div>`;
+}
+
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+
+// Start
+renderPin();
+</script>
+  <script src="../shared/help-content.js"></script>
+  <script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>
