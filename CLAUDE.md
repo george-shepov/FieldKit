@@ -9,31 +9,37 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ### Run Development Server
+
 ```bash
 go run .
 ```
 
 ### Build Release Binaries
+
 ```bash
 ./scripts/build-release.sh
 ```
 
 ### Package for Distribution
+
 ```bash
 ./scripts/package-release.sh
 ```
 
 ### Run with API Features
+
 ```bash
 ./prosepilot --enable-api --api-key "your-secret-key"
 ```
 
 ### Run with LAN Sharing (phone access)
+
 ```bash
 ./prosepilot --share
 ```
 
 ### Other Flags
+
 - `--port` - HTTP port (default: 8787)
 - `--host` - Bind host (default: 127.0.0.1)
 - `--no-browser` - Disable auto-open browser
@@ -43,16 +49,19 @@ go run .
 ## Architecture
 
 ### Go Backend (`prosepilot.go`, `server_api.go`)
+
 - Main HTTP server that embeds all static assets using Go 1.16+ `embed` package
 - Serves API endpoints for registration, heartbeat, media uploads, chat, wishlist, support tickets
 - Optional Google OAuth authentication
 
 ### Frontend Apps (individual `index.html` files)
+
 - Vanilla HTML/CSS/JavaScript (no frameworks)
 - Each app is a standalone tool accessible from the main launcher
 - Apps live in directories: `pomodoro/`, `habit-tracker/`, `drivers-license/`, `games/`, etc.
 
 ### Shared Resources (`shared/`)
+
 - `f1-help-nav.js` - F1 help system available across all apps
 - `help-content.js` - Help content database
 - `privacy-mode.js` - Privacy controls
@@ -61,6 +70,7 @@ go run .
 - `suite-nav.css` - Navigation styles
 
 ### PWA Infrastructure
+
 - `sw.js` - Service Worker for offline caching
 - `manifest.webmanifest` - PWA manifest
 
