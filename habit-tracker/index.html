@@ -73,7 +73,7 @@
     <section class="controls">
       <input id="habitInput" placeholder="New habit..." maxlength="30" />
       <button onclick="addHabit()">Add Habit</button>
-      <button onclick="nextDay()">Next Day âž¡ï¸</button>
+      <button onclick="nextDay()">Next Day -></button>
       <button class="secondary" onclick="exportData()">Export JSON</button>
       <button class="secondary" onclick="importData()">Import JSON</button>
       <button class="secondary" onclick="exportSQLite()">Export DB</button>
@@ -252,8 +252,8 @@
           <div class="habit-header">
             <span class="habit-title">${escapeHtml(habit.name)}</span>
             <div class="habit-actions">
-              <button title="Rename" onclick="editHabit(${index})">📏</button>
-              <button title="Delete" onclick="deleteHabit(${index})">🌱—‘ï¸</button>
+              <button title="Rename" onclick="editHabit(${index})">Rename</button>
+              <button title="Delete" onclick="deleteHabit(${index})">X</button>
             </div>
           </div>
           <div class="days">
@@ -261,7 +261,7 @@
               `<div class="day ${d===1?"checked":d===2?"skipped":""}" onclick="toggleDay(${index},${i})">${i+1}</div>`
             ).join("")}
           </div>
-          <div class="streak">🌱”¥ Streak: ${streak} days</div>
+          <div class="streak">Streak: ${streak} days</div>
           <canvas id="${cid}" class="spark"></canvas>
         `;
         list.appendChild(card);

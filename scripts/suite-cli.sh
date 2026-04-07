@@ -14,7 +14,7 @@ USE_SERVICE_MODE="${SUITE_CLI_USE_SERVICE:-1}"
 
 DEFAULT_PORT="${PORT:-8787}"
 DEFAULT_HOST="${HOST:-127.0.0.1}"
-DEFAULT_API_KEY="${API_KEY:-change-me}"
+DEFAULT_API_KEY="${API_KEY:-}"
 
 mkdir -p "${RUN_DIR}"
 
@@ -119,6 +119,9 @@ read_state() {
   if [[ -f "${STATE_FILE}" ]]; then
     # shellcheck disable=SC1090
     source "${STATE_FILE}"
+  fi
+  if [[ "${API_KEY_VALUE}" == "change-me" ]]; then
+    API_KEY_VALUE=""
   fi
 }
 
@@ -239,7 +242,10 @@ start() {
     args+=("--share")
   fi
   if [[ "${API_VALUE}" == "1" ]]; then
-    args+=("--enable-api" "--api-key" "${API_KEY_VALUE}")
+    args+=("--enable-api")
+    if [[ -n "${API_KEY_VALUE}" ]]; then
+      args+=("--api-key" "${API_KEY_VALUE}")
+    fi
   fi
 
   echo "" >>"${LOG_FILE}"

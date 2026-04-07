@@ -59,6 +59,52 @@
     }
     .install-btn:hover { background: #134429; }
     .help-hint { color: #94a3b8; font-size: 0.95em; }
+    .launcher-controls {
+      margin-bottom: 14px;
+      background: #0f172a;
+      border: 1px solid #263449;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .control-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .control-label {
+      color: #94a3b8;
+      font: 600 12px/1 system-ui, -apple-system, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .control-select {
+      border: 1px solid #334155;
+      border-radius: 10px;
+      background: #101b31;
+      color: #e2e8f0;
+      padding: 8px 10px;
+      font: 600 13px/1.2 system-ui, -apple-system, sans-serif;
+    }
+    .control-btn {
+      border: 1px solid #334155;
+      border-radius: 10px;
+      background: #111b30;
+      color: #e2e8f0;
+      padding: 8px 10px;
+      font: 600 13px/1.2 system-ui, -apple-system, sans-serif;
+      cursor: pointer;
+    }
+    .control-btn:hover { background: #1d2a46; }
+    .legend {
+      color: #94a3b8;
+      font-size: 0.88em;
+    }
     
     .category {
       background: #1e293b;
@@ -66,6 +112,8 @@
       border-radius: 12px;
       margin-bottom: 16px;
       overflow: hidden;
+      --cat-a: #3b82f6;
+      --cat-b: #8b5cf6;
     }
     .category-header {
       display: flex;
@@ -74,6 +122,7 @@
       padding: 20px;
       cursor: pointer;
       transition: background 0.2s;
+      border-left: 3px solid var(--cat-a);
     }
     .category-header:hover { background: #334155; }
     .category-title {
@@ -90,7 +139,21 @@
       font-size: 0.9em;
       color: #94a3b8;
     }
-    .category-icon { font-size: 1.5em; }
+    .category-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .category-icon img {
+      width: 18px;
+      height: 18px;
+      filter: brightness(0) invert(0.9);
+      display: block;
+    }
     .chevron {
       transition: transform 0.3s;
       font-size: 1.2em;
@@ -126,15 +189,49 @@
     .app-icon {
       width: 40px;
       height: 40px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--cat-a), var(--cat-b));
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.3em;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
+    .app-icon img {
+      width: 24px;
+      height: 24px;
+      filter: brightness(0) invert(1);
+      display: block;
+    }
+    .category[data-category="finance"] { --cat-a: #0ea5e9; --cat-b: #0284c7; }
+    .category[data-category="legal"] { --cat-a: #fb7185; --cat-b: #e11d48; }
+    .category[data-category="productivity"] { --cat-a: #8b5cf6; --cat-b: #7c3aed; }
+    .category[data-category="health"] { --cat-a: #14b8a6; --cat-b: #0f766e; }
+    .category[data-category="education"] { --cat-a: #22c55e; --cat-b: #15803d; }
+    .category[data-category="business"] { --cat-a: #f59e0b; --cat-b: #b45309; }
+    .category[data-category="utilities"] { --cat-a: #64748b; --cat-b: #334155; }
+    .category[data-category="field"] { --cat-a: #0ea5a4; --cat-b: #0f766e; }
+    .category[data-category="media"] { --cat-a: #60a5fa; --cat-b: #1d4ed8; }
+    .category[data-category="communications"] { --cat-a: #f97316; --cat-b: #c2410c; }
+    .category[data-category="tools"] { --cat-a: #64748b; --cat-b: #334155; }
+    .category[data-category="games"] { --cat-a: #ec4899; --cat-b: #be185d; }
+    .category[data-category="favorites"] { --cat-a: #f59e0b; --cat-b: #b45309; }
     .app-name { font-weight: 500; }
     .app-desc { font-size: 0.9em; color: #94a3b8; }
+    .app-meta {
+      margin-top: 4px;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .badges {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      margin-left: 8px;
+    }
     .badge {
       padding: 4px 12px;
       border-radius: 999px;
@@ -144,6 +241,36 @@
     .badge.demo { background: #fbbf24; color: #000; }
     .badge.full { background: #10b981; color: #000; }
     .badge.free { background: #6366f1; color: #fff; }
+    .badge.cat { background: #1f2937; color: #cbd5e1; }
+    .badge.offline { background: #0369a1; color: #e0f2fe; }
+    .badge.hybrid { background: #155e75; color: #cffafe; }
+    .badge.online { background: #7f1d1d; color: #fee2e2; }
+    .favorite-btn {
+      border: 1px solid #475569;
+      border-radius: 999px;
+      background: #0f172a;
+      color: #cbd5e1;
+      width: 32px;
+      height: 32px;
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .favorite-btn:hover { border-color: #f59e0b; color: #fcd34d; }
+    .favorite-btn.is-favorite {
+      border-color: #f59e0b;
+      color: #fcd34d;
+      background: #422006;
+    }
+    .favorites-empty {
+      border-top: 1px solid #334155;
+      padding: 14px 18px;
+      color: #94a3b8;
+      font-size: 0.93em;
+    }
     
     .loading {
       text-align: center;
@@ -259,11 +386,27 @@
       <div class="header-tools">
         <button id="openHelpBtn" class="help-btn" type="button">? Help</button>
         <button id="installAppBtn" class="help-btn install-btn" type="button">Install</button>
+        <button id="signOutBtn" class="help-btn" type="button" style="border-color: #7f1d1d; background: #450a0a;">Sign Out</button>
         <span class="help-hint">Press <strong>F1</strong> anywhere on this page</span>
         <span id="installHint" class="help-hint"></span>
       </div>
     </div>
     
+    <div class="launcher-controls" aria-label="Launcher controls">
+      <div class="control-row">
+        <span class="control-label">View</span>
+        <select id="sortModeSelect" class="control-select">
+          <option value="categories">By Category</option>
+          <option value="az">A-Z</option>
+          <option value="za">Z-A</option>
+          <option value="recent">Most Recent</option>
+          <option value="favorites">Favorites Only</option>
+        </select>
+        <button id="clearRecentBtn" class="control-btn" type="button">Clear Recent</button>
+      </div>
+      <div class="legend">Offline labels: OFFLINE works without internet, HYBRID has optional sync/network features. Use ☆ to pin favorites.</div>
+    </div>
+
     <div id="content">
       <div class="loading">
         <div class="spinner"></div>
@@ -286,105 +429,155 @@
 
   <script src="./shared/privacy-mode.js"></script>
   <script src="./shared/pwa-init.js"></script>
+  <script src="./shared/global-auth.js"></script>
   <script>
     const APP_REGISTRY = {
       finance: {
-        title: '💰 Finance',
-        icon: '💰',
+        title: '🧾 Money & Ops',
+        icon: 'calculator.svg',
         apps: {
-          'gigtax': { name: 'GigTax', desc: '1099 tax calculator', icon: '📊' },
-          'receipt-tracker': { name: 'Receipt Tracker', desc: 'Expense tracking', icon: '🧾' },
-          'inventory': { name: 'Inventory Manager', desc: 'Marketplace listings', icon: '📦' }
+          'gigtax': { name: 'GigTax', desc: '1099 tax calculator', icon: 'calculator.svg' },
+          'receipt-tracker': { name: 'Receipt Tracker', desc: 'Expense tracking', icon: 'receipt-text.svg' },
+          'inventory': { name: 'Inventory Manager', desc: 'Stock + software offers + GitHub intake', icon: 'package.svg' }
         }
       },
       legal: {
-        title: '⚖️ Legal',
-        icon: '⚖️',
+        title: '⚖️ Legal & Records',
+        icon: 'shield-alert.svg',
         apps: {
-          'docketpro': { name: 'DocketPro', desc: 'Legal docket manager', icon: '📁' },
-          'legal-library': { name: 'Legal Library', desc: 'Offline refs + import/search docs', icon: '📚' },
-          'authority-assistant': { name: 'Legal Assistant', desc: 'Consent gate + voice clips + emergency alerts', icon: '🚨' }
+          'docketpro': { name: 'DocketPro', desc: 'Legal docket manager', icon: 'folder-kanban.svg' },
+          'legal-library': { name: 'Legal Library', desc: 'Offline refs + import/search docs', icon: 'library.svg' },
+          'authority-assistant': {
+            name: 'Legal Assistant',
+            desc: 'Consent gate + voice clips + emergency alerts',
+            icon: 'shield-alert.svg',
+            offline: 'hybrid'
+          }
         }
       },
       productivity: {
-        title: '⚡ Productivity',
-        icon: '⚡',
+        title: '📈 Execution',
+        icon: 'kanban.svg',
         apps: {
-          'pomodoro': { name: 'Pomodoro Timer', desc: 'Focus sessions with audio', icon: '🍅' },
-          'kanban': { name: 'Kanban Board', desc: 'Visual task management', icon: '📋' },
-          'time-tracker': { name: 'Time Tracker', desc: 'Activity logging', icon: '⏱️' },
-          'habit-tracker': { name: 'Habit Tracker', desc: 'Build better habits', icon: '✅' },
-          'snippet-board': { name: 'Snippet Board', desc: 'Code snippets', icon: '💾' }
+          'pomodoro': { name: 'Pomodoro Timer', desc: 'Focus sessions with audio', icon: 'timer.svg' },
+          'kanban': { name: 'Kanban Board', desc: 'Visual task management', icon: 'kanban.svg' },
+          'time-tracker': { name: 'Time Tracker', desc: 'Activity logging', icon: 'clock.svg' },
+          'habit-tracker': { name: 'Habit Tracker', desc: 'Build better habits', icon: 'check-circle.svg' },
+          'snippet-board': { name: 'Snippet Board', desc: 'Code snippets', icon: 'code-2.svg' }
         }
       },
-      health: {
-        title: '🏃 Health',
-        icon: '🏃',
+      field: {
+        title: '🩺 Field & Safety',
+        icon: 'briefcase-medical.svg',
         apps: {
-          'cns-tap-test': { name: 'CNS Tap Test', desc: 'Readiness + load guidance', icon: '⚡' },
-          'first-aid': { name: 'First Aid & CPR', desc: 'Offline emergency guide', icon: '🩺' },
-          'meal-tracker': { name: 'Meal Tracker', desc: 'Nutrition logging', icon: '🍽️' }
+          'outdoor-kit': {
+            name: 'Outdoor Kit',
+            desc: 'Compass, sun, SOS, chat, scientific calc',
+            icon: 'compass.svg',
+            offline: 'hybrid'
+          },
+          'field-checkin': {
+            name: 'Field Check-In',
+            desc: 'Registration + emergency heartbeat',
+            icon: 'map-pin.svg',
+            offline: 'hybrid'
+          },
+          'cns-tap-test': { name: 'CNS Tap Test', desc: 'Readiness + load guidance', icon: 'activity.svg' },
+          'first-aid': { name: 'First Aid & CPR', desc: 'Offline emergency guide', icon: 'briefcase-medical.svg' }
         }
       },
       education: {
-        title: '📚 Education',
-        icon: '📚',
+        title: '🎓 Training Lab',
+        icon: 'terminal.svg',
         apps: {
-          'linux-trainer': { name: 'Linux Trainer', desc: '163 terminal questions', icon: '🐧' },
-          'js-trainer': { name: 'JavaScript Trainer', desc: 'Live REPL', icon: '🟨' },
-          'math-trainer': { name: 'Math Trainer', desc: 'Practice drills', icon: '🔢' },
-          'drivers-license': { name: 'Driver License Study', desc: 'Multilingual digest + flashcards', icon: '🚗' },
-          'music-trainer': { name: 'Music Theory', desc: 'Ear training', icon: '🎵' },
-          'midi-note-helper': { name: 'MIDI Note Helper', desc: 'Map MIDI numbers to notes/octaves', icon: '🎹' },
-          'quiz-builder': { name: 'Quiz Builder', desc: 'Create quizzes', icon: '❓' },
-          'online-academy': { name: 'Online Academy', desc: 'Learning platform', icon: '🎓' }
+          'linux-trainer': { name: 'Linux Trainer', desc: '163 terminal questions', icon: 'terminal.svg' },
+          'js-trainer': { name: 'JavaScript Trainer', desc: 'Live REPL', icon: 'javascript.svg' },
+          'math-trainer': { name: 'Math Trainer', desc: 'Practice drills', icon: 'calculator.svg' },
+          'drivers-license': { name: 'Driver License Study', desc: 'Digest-driven permit prep with extended card bank', icon: 'id-card.svg' },
+          'music-trainer': { name: 'Music Theory', desc: 'Ear training', icon: 'music-2.svg' },
+          'midi-note-helper': { name: 'MIDI Note Helper', desc: 'Map MIDI numbers to notes/octaves', icon: 'piano.svg' }
+        }
+      },
+      media: {
+        title: '🎬 Media & Capture',
+        icon: 'camera.svg',
+        apps: {
+          'privacy-camera': {
+            name: 'Privacy Camera',
+            desc: 'In-memory photo capture',
+            icon: 'camera.svg',
+            offline: 'hybrid'
+          },
+          'privacy-recorder': {
+            name: 'Privacy Recorder',
+            desc: 'In-memory video recorder',
+            icon: 'video.svg',
+            offline: 'hybrid'
+          },
+          'audio-notes': {
+            name: 'Audio Notes Recorder',
+            desc: 'Voice notes + optional sync',
+            icon: 'mic.svg',
+            offline: 'hybrid'
+          },
+          'music-player': { name: 'Music Player', desc: 'Offline local audio player', icon: 'list-music.svg' },
+          'image-rater': {
+            name: 'Image Rater Lab',
+            desc: 'Rate images + learn preferences',
+            icon: 'image.svg',
+            offline: 'hybrid'
+          },
+          'accent-speaker': { name: 'Accent Voice Lab', desc: 'Style voices + phrase playback', icon: 'volume-2.svg' }
         }
       },
       business: {
-        title: '💼 Business',
-        icon: '💼',
+        title: '🤝 Customer Ops',
+        icon: 'users.svg',
         apps: {
-          'employee-skills': { name: 'Employee Skills', desc: 'Skills matrix', icon: '👥' },
-          'acronym-list': { name: 'Acronym List', desc: 'Corporate acronyms', icon: '🔤' },
-          'wishlist': { name: 'Wishlist Studio', desc: 'Request custom apps/features', icon: '💡' },
-          'support': { name: 'Support Desk', desc: 'Ticket queue + support intake', icon: '🎧' }
+          'employee-skills': { name: 'Employee Skills', desc: 'Skills matrix', icon: 'users.svg' },
+          'acronym-list': { name: 'Acronym List', desc: 'Corporate acronyms', icon: 'languages.svg' },
+          'wishlist': {
+            name: 'Wishlist Studio',
+            desc: 'Request custom apps/features',
+            icon: 'lightbulb.svg',
+            offline: 'hybrid'
+          },
+          'support': { name: 'Support Desk', desc: 'Ticket queue + support intake', icon: 'headset.svg', offline: 'hybrid' }
         }
       },
-      utilities: {
-        title: '🛠️ Utilities',
-        icon: '🛠️',
+      communications: {
+        title: '📡 Communications',
+        icon: 'radio.svg',
         apps: {
-          'outdoor-kit': { name: 'Outdoor Kit', desc: 'Compass, sun, SOS, chat, scientific calc', icon: '🧭' },
-          'field-checkin': { name: 'Field Check-In', desc: 'Registration + emergency heartbeat', icon: '🛰️' },
-          'privacy-camera': { name: 'Privacy Camera', desc: 'In-memory photo capture', icon: '📷' },
-          'privacy-recorder': { name: 'Privacy Recorder', desc: 'In-memory video recorder', icon: '🎥' },
-          'accent-speaker': { name: 'Accent Voice Lab', desc: 'Style voices + phrase playback', icon: '🗣️' },
-          'image-rater': { name: 'Image Rater Lab', desc: 'Rate images + learn preferences', icon: '🖼️' },
-          'light-messenger': { name: 'Light Messenger', desc: 'Offline flash messaging', icon: '📡' },
-          'music-player': { name: 'Music Player', desc: 'Offline local audio player', icon: '🎼' },
-          'audio-notes': { name: 'Audio Notes Recorder', desc: 'Voice notes + optional sync', icon: '🎙️' },
-          'clock': { name: 'Clock', desc: 'Alarm, timer, stopwatch', icon: '🕐' },
-          'chatgpt-viewer': { name: 'ChatGPT Viewer', desc: 'Chat log viewer', icon: '💬' },
-          'qr-generator': { name: 'QR Generator', desc: 'QR code creator', icon: '📱' },
-          'markdown-slides': { name: 'Markdown Slides', desc: 'Presentations', icon: '📊' },
-          'ui-tweaker': { name: 'UI Tweaker', desc: 'Save CSS tweaks per app/path', icon: '🎛️' }
+          'light-messenger': { name: 'Light Messenger', desc: 'Offline flash messaging', icon: 'radio.svg' }
+        }
+      },
+      tools: {
+        title: '🧰 Tools',
+        icon: 'settings-2.svg',
+        apps: {
+          'profile': { name: 'User Profile', desc: 'Global username/password manager', icon: 'id-card.svg' },
+          'clock': { name: 'Clock', desc: 'Alarm, timer, stopwatch', icon: 'alarm-clock.svg' },
+          'ui-tweaker': { name: 'UI Tweaker', desc: 'Save CSS tweaks per app/path', icon: 'settings-2.svg' }
         }
       },
       games: {
-        title: '🎮 Games',
-        icon: '🎮',
+        title: '🧠 Drills & Games',
+        icon: 'trophy.svg',
         apps: {
-          'battleship': { name: 'Battleship', desc: 'Naval strategy board game', icon: '🚢', free: true },
-          'positive-iq': { name: 'Positive IQ Test', desc: 'Cognitive challenge set', icon: '🧠', free: true },
-          'math-raindrops': { name: 'Math Raindrops', desc: 'Adaptive mental math game', icon: '🌧️', free: true },
-          'tic-tac-toe': { name: 'Tic-Tac-Toe', desc: 'Classic strategy', icon: '❌', free: true },
-          'snake': { name: 'Snake', desc: 'Classic arcade', icon: '🐍', free: true },
-          'pattern-mirror': { name: 'Pattern Mirror', desc: 'Memory challenge', icon: '🔲', free: true },
-          'odd-one-out': { name: 'Odd One Out', desc: 'Logic puzzle', icon: '🎯', free: true }
+          'game-academy': { name: 'Game Academy', desc: 'Chess & Checkers — Play & Learn', icon: 'trophy.svg', free: true, path: 'games/game-academy.html' },
+          'reversi': { name: 'Reversi', desc: 'Classic disc-flipping strategy game', icon: 'circle-check-big.svg', free: true, path: 'games/reversi.html' },
+          'battleship': { name: 'Battleship', desc: 'Naval strategy board game', icon: 'ship.svg', free: true },
+          'positive-iq': { name: 'Positive IQ Test', desc: 'Cognitive challenge set', icon: 'brain.svg', free: true },
+          'math-raindrops': { name: 'Math Raindrops', desc: 'Adaptive mental math game', icon: 'cloud-rain.svg', free: true },
+          'tic-tac-toe': { name: 'Tic-Tac-Toe', desc: 'Classic strategy', icon: 'grid-3x3.svg', free: true },
+          'snake': { name: 'Snake', desc: 'Classic arcade', icon: 'gamepad-2.svg', free: true },
+          'pattern-mirror': { name: 'Pattern Mirror', desc: 'Memory challenge', icon: 'layout-dashboard.svg', free: true },
+          'odd-one-out': { name: 'Odd One Out', desc: 'Logic puzzle', icon: 'target.svg', free: true }
         }
       }
     };
-    const APP_NAV_VERSION = '2026.02.17.7';
+    const APP_NAV_VERSION = '2026.02.18.13';
     const APP_HELP = {
       'gigtax': {
         feature: 'Estimate self-employment taxes from 1099 income and deductions.',
@@ -403,8 +596,8 @@
         scenario: 'Use as your standalone legal reference shelf before or during stressful encounters.'
       },
       'inventory': {
-        feature: 'Manage item records and listing metadata.',
-        scenario: 'Use to keep marketplace inventory synchronized.'
+        feature: 'Track stock and software offerings (modules/packages/customizations) with GitHub issue handoff from support/wishlist intake.',
+        scenario: 'Use as your pre-sales catalog plus build pipeline bridge to paid customization work.'
       },
       'pomodoro': {
         feature: 'Run focus cycles with configurable timers and stats.',
@@ -451,7 +644,7 @@
         scenario: 'Use for daily warmups and foundational skill sharpening.'
       },
       'drivers-license': {
-        feature: 'Driving digest in 6 languages with Q&A and flashcards.',
+        feature: 'Driving digest in 6 languages with an expanded ~80-card Q&A + flashcard bank.',
         scenario: 'Use for permit prep or repurpose for any study topic.'
       },
       'music-trainer': {
@@ -546,6 +739,18 @@
         feature: 'Edit selector/property/value tweaks, save per path, and auto-apply on next app load.',
         scenario: 'Use to customize launcher icons/layout and keep your preferred UI style persistent.'
       },
+      'profile': {
+        feature: 'Set and rotate one global username/password used by protected apps.',
+        scenario: 'Use before opening GigTax or Snippet Board, and sign out quickly from shared devices.'
+      },
+      'game-academy': {
+        feature: '2-in-1 strategy trainer with Chess and Checkers in Play mode or Watch & Learn AI commentary mode.',
+        scenario: 'Use to study tactics and positional ideas while watching different skill levels explain moves.'
+      },
+      'reversi': {
+        feature: 'Play classic Reversi against configurable AI or watch AI-vs-AI with move-by-move teaching notes.',
+        scenario: 'Use to learn positional strategy: corners, mobility, and avoiding dangerous squares.'
+      },
       'battleship': {
         feature: 'Turn-based battleship board game with tactical targeting.',
         scenario: 'Use for strategy gameplay and short challenge sessions.'
@@ -577,6 +782,240 @@
     };
     let cachedApps = null;
     let deferredInstallPrompt = null;
+    const RECENT_APPS_KEY = 'suite_recent_apps_v1';
+    const SORT_MODE_KEY = 'suite_sort_mode_v1';
+    const FAVORITE_APPS_KEY = 'suite_favorite_apps_v1';
+    const INSTALL_ACK_KEY = 'suite_install_ack_v1';
+    const SORT_MODES = ['categories', 'az', 'za', 'recent', 'favorites'];
+
+    function loadRecentMap() {
+      try {
+        const raw = localStorage.getItem(RECENT_APPS_KEY);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') return {};
+        const normalized = {};
+        for (const [k, v] of Object.entries(parsed)) {
+          if (typeof k === 'string' && typeof v === 'number' && Number.isFinite(v)) {
+            normalized[k] = v;
+          }
+        }
+        return normalized;
+      } catch (_) {
+        return {};
+      }
+    }
+    function saveRecentMap(map) {
+      try {
+        localStorage.setItem(RECENT_APPS_KEY, JSON.stringify(map));
+      } catch (_) {}
+    }
+    function loadFavoriteMap() {
+      try {
+        const raw = localStorage.getItem(FAVORITE_APPS_KEY);
+        const parsed = raw ? JSON.parse(raw) : {};
+        if (!parsed || typeof parsed !== 'object') return {};
+        const normalized = {};
+        for (const [k, v] of Object.entries(parsed)) {
+          if (typeof k === 'string' && v === true) normalized[k] = true;
+        }
+        return normalized;
+      } catch (_) {
+        return {};
+      }
+    }
+    function saveFavoriteMap(map) {
+      try {
+        localStorage.setItem(FAVORITE_APPS_KEY, JSON.stringify(map));
+      } catch (_) {}
+    }
+    function isFavoriteApp(appKey) {
+      return Boolean(loadFavoriteMap()[appKey]);
+    }
+    function toggleFavoriteApp(appKey) {
+      if (!appKey) return false;
+      const map = loadFavoriteMap();
+      const next = !map[appKey];
+      if (next) map[appKey] = true;
+      else delete map[appKey];
+      saveFavoriteMap(map);
+      return next;
+    }
+    function markRecentApp(appKey) {
+      if (!appKey) return;
+      const map = loadRecentMap();
+      map[appKey] = Date.now();
+      saveRecentMap(map);
+    }
+    function getSortMode() {
+      try {
+        const mode = (localStorage.getItem(SORT_MODE_KEY) || '').toLowerCase();
+        return SORT_MODES.includes(mode) ? mode : 'categories';
+      } catch (_) {
+        return 'categories';
+      }
+    }
+    function setSortMode(mode) {
+      const safeMode = SORT_MODES.includes(mode) ? mode : 'categories';
+      try {
+        localStorage.setItem(SORT_MODE_KEY, safeMode);
+      } catch (_) {}
+      return safeMode;
+    }
+    function hasInstallAck() {
+      try {
+        return localStorage.getItem(INSTALL_ACK_KEY) === '1';
+      } catch (_) {
+        return false;
+      }
+    }
+    function setInstallAck(value) {
+      try {
+        if (value) localStorage.setItem(INSTALL_ACK_KEY, '1');
+        else localStorage.removeItem(INSTALL_ACK_KEY);
+      } catch (_) {}
+    }
+    function refreshInstallButton() {
+      const btn = document.getElementById('installAppBtn');
+      if (!btn) return;
+      if (isStandaloneMode() || hasInstallAck()) {
+        btn.style.display = 'none';
+      } else {
+        btn.style.display = '';
+      }
+    }
+    function getOfflineMode(app) {
+      if (app.offline === 'hybrid') return 'hybrid';
+      if (app.offline === 'online') return 'online';
+      return 'offline';
+    }
+    function getOfflineBadgeHTML(app) {
+      const mode = getOfflineMode(app);
+      if (mode === 'hybrid') return '<span class="badge hybrid">HYBRID</span>';
+      if (mode === 'online') return '<span class="badge online">ONLINE</span>';
+      return '<span class="badge offline">OFFLINE</span>';
+    }
+    function getTierBadgeHTML(app) {
+      if (app.demo) return '<span class="badge demo">DEMO</span>';
+      if (app.free) return '<span class="badge free">FREE</span>';
+      return '<span class="badge full">FULL</span>';
+    }
+    function getAllApps(foundApps) {
+      const all = [];
+      for (const [categoryKey, category] of Object.entries(foundApps)) {
+        for (const app of category.found) {
+          all.push({
+            ...app,
+            categoryKey,
+            categoryTitle: category.title
+          });
+        }
+      }
+      return all;
+    }
+    function sortAppsForMode(apps, mode) {
+      const sorted = [...apps];
+      if (mode === 'favorites') {
+        return sorted
+          .filter(app => isFavoriteApp(app.key))
+          .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+      }
+      if (mode === 'az' || mode === 'za') {
+        sorted.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+        if (mode === 'za') sorted.reverse();
+        return sorted;
+      }
+      if (mode === 'recent') {
+        const recent = loadRecentMap();
+        sorted.sort((a, b) => {
+          const diff = (recent[b.key] || 0) - (recent[a.key] || 0);
+          if (diff !== 0) return diff;
+          return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+        });
+      }
+      return sorted;
+    }
+    function appItemHTML(app, categoryKey, includeCategoryTag) {
+      const categoryTitle = APP_REGISTRY[categoryKey]?.title || categoryKey;
+      const cleanTitle = categoryTitle.includes(' ') ? categoryTitle.split(' ').slice(1).join(' ') : categoryTitle;
+      const categoryBadge = includeCategoryTag
+        ? `<span class="badge cat">${cleanTitle}</span>`
+        : '';
+      const favoriteState = isFavoriteApp(app.key);
+      const favoriteLabel = favoriteState ? 'Unfavorite app' : 'Add to favorites';
+      return `
+        <a href="${toAppHref(app)}" class="app-item" data-app-key="${app.key}" data-category-key="${categoryKey}">
+          <div class="app-info">
+            <div class="app-icon" data-app-key="${app.key}">
+              <img src="shared/icons/${app.icon}" alt="" onerror="this.style.display='none'" aria-hidden="true">
+            </div>
+            <div>
+              <div class="app-name">${app.name}</div>
+              <div class="app-desc">${app.desc}</div>
+              <div class="app-meta">${categoryBadge}</div>
+            </div>
+          </div>
+          <div class="badges">
+            ${getOfflineBadgeHTML(app)}
+            ${getTierBadgeHTML(app)}
+            <button class="favorite-btn ${favoriteState ? 'is-favorite' : ''}" type="button" data-favorite-btn="1" data-app-key="${app.key}" aria-label="${favoriteLabel}" title="${favoriteLabel}">${favoriteState ? '★' : '☆'}</button>
+          </div>
+        </a>
+      `;
+    }
+    function renderFavoritesSectionHTML(foundApps) {
+      const favorites = sortAppsForMode(getAllApps(foundApps).filter(app => isFavoriteApp(app.key)), 'az');
+      if (!favorites.length) {
+        return `
+          <div class="category open" data-category="favorites">
+            <div class="category-header" onclick="toggleCategory('favorites')">
+              <div class="category-title">
+                <div class="category-icon">
+                  <img src="shared/icons/target.svg" alt="" onerror="this.style.display='none'" aria-hidden="true">
+                </div>
+                <span>Favorites</span>
+                <span class="category-count">0</span>
+              </div>
+              <span class="chevron">▼</span>
+            </div>
+            <div class="apps-list">
+              <div class="favorites-empty">Pin your go-to apps with the ☆ button and they will stay here.</div>
+            </div>
+          </div>
+        `;
+      }
+      return `
+        <div class="category open" data-category="favorites">
+          <div class="category-header" onclick="toggleCategory('favorites')">
+            <div class="category-title">
+              <div class="category-icon">
+                <img src="shared/icons/target.svg" alt="" onerror="this.style.display='none'" aria-hidden="true">
+              </div>
+              <span>Favorites</span>
+              <span class="category-count">${favorites.length}</span>
+            </div>
+            <span class="chevron">▼</span>
+          </div>
+          <div class="apps-list">
+            ${favorites.map(app => appItemHTML(app, app.categoryKey, true)).join('')}
+          </div>
+        </div>
+      `;
+    }
+    function renderCurrentLauncher(foundApps) {
+      const mode = getSortMode();
+      if (mode === 'categories') {
+        renderLauncher(foundApps);
+        return;
+      }
+      if (mode === 'favorites') {
+        const favoriteApps = sortAppsForMode(getAllApps(foundApps), 'favorites');
+        renderFlatLauncher(favoriteApps, mode, foundApps, { showFavoritesSection: false });
+        return;
+      }
+      const allApps = sortAppsForMode(getAllApps(foundApps), mode);
+      renderFlatLauncher(allApps, mode, foundApps);
+    }
 
     function scanApps() {
       // Use static registry - assume all registered apps exist
@@ -620,7 +1059,7 @@
             const help = getAppHelp(app);
             return `
               <article class="help-card">
-                <h3>${app.icon} ${app.name}</h3>
+                <h3><img src="shared/icons/${app.icon}" style="width:1.2em; vertical-align:middle; filter:brightness(0) invert(0.9); margin-right:4px;" onerror="this.style.display='none'" aria-hidden="true"> ${app.name}</h3>
                 <p><strong>Main feature:</strong> ${help.feature}</p>
                 <p><strong>Main scenario:</strong> ${help.scenario}</p>
               </article>
@@ -628,7 +1067,7 @@
           }).join('');
           return `
             <section class="help-section">
-              <div class="help-section-head">${category.title}</div>
+              <div class="help-section-head">${category.title.split(' ').slice(1).join(' ')}</div>
               <div class="help-grid">${cards}</div>
             </section>
           `;
@@ -664,6 +1103,7 @@
         const choice = await deferredInstallPrompt.userChoice.catch(() => null);
         deferredInstallPrompt = null;
         if (choice && choice.outcome === 'accepted') {
+          setInstallAck(true);
           setInstallHint('Installed. You can launch it from your home screen.');
           if (btn) btn.style.display = 'none';
         } else {
@@ -672,7 +1112,9 @@
         return;
       }
       if (isStandaloneMode()) {
+        setInstallAck(true);
         setInstallHint('Already installed on this device.');
+        refreshInstallButton();
         return;
       }
       if (isIOS()) {
@@ -687,38 +1129,65 @@
     }
 
     function renderLauncher(foundApps) {
+      const favoritesSection = renderFavoritesSectionHTML(foundApps);
       const html = Object.entries(foundApps)
         .filter(([_, category]) => category.found.length > 0)
         .map(([categoryKey, category], index) => `
           <div class="category ${index === 0 ? 'open' : ''}" data-category="${categoryKey}">
             <div class="category-header" onclick="toggleCategory('${categoryKey}')">
               <div class="category-title">
-                <span class="category-icon">${category.icon}</span>
+                <div class="category-icon">
+                  <img src="shared/icons/${category.icon}" alt="" onerror="this.style.display='none'" aria-hidden="true">
+                </div>
                 <span>${category.title.split(' ').slice(1).join(' ')}</span>
                 <span class="category-count">${category.found.length}</span>
               </div>
               <span class="chevron">▼</span>
             </div>
             <div class="apps-list">
-              ${category.found.map(app => `
-                <a href="${toAppHref(app)}" class="app-item" data-app-key="${app.key}" data-category-key="${categoryKey}">
-                  <div class="app-info">
-                    <div class="app-icon" data-app-key="${app.key}">${app.icon}</div>
-                    <div>
-                      <div class="app-name">${app.name}</div>
-                      <div class="app-desc">${app.desc}</div>
-                    </div>
-                  </div>
-                  ${app.demo ? '<span class="badge demo">DEMO</span>' : 
-                    app.free ? '<span class="badge free">FREE</span>' : 
-                    '<span class="badge full">FULL</span>'}
-                </a>
-              `).join('')}
+              ${category.found
+                .slice()
+                .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+                .map(app => appItemHTML(app, categoryKey, false))
+                .join('')}
             </div>
           </div>
         `).join('');
       
-      document.getElementById('content').innerHTML = html;
+      document.getElementById('content').innerHTML = favoritesSection + html;
+    }
+    function renderFlatLauncher(apps, mode, foundApps, options) {
+      const opts = options || {};
+      const modeTitle = mode === 'recent'
+        ? 'Most Recently Used'
+        : mode === 'favorites'
+          ? 'Favorite Apps'
+          : (mode === 'za' ? 'All Apps (Z-A)' : 'All Apps (A-Z)');
+      const modeIcon = mode === 'recent' ? 'clock.svg' : (mode === 'favorites' ? 'target.svg' : 'library.svg');
+      const html = `
+        <div class="category open" data-category="all-apps">
+          <div class="category-header">
+            <div class="category-title">
+              <div class="category-icon">
+                <img src="shared/icons/${modeIcon}" alt="" onerror="this.style.display='none'" aria-hidden="true">
+              </div>
+              <span>${modeTitle}</span>
+              <span class="category-count">${apps.length}</span>
+            </div>
+            <span class="chevron">▼</span>
+          </div>
+          <div class="apps-list">
+            ${apps.length
+              ? apps.map(app => appItemHTML(app, app.categoryKey, true)).join('')
+              : '<div class="favorites-empty">No apps to show for this view yet.</div>'}
+          </div>
+        </div>
+      `;
+      if (opts.showFavoritesSection === false) {
+        document.getElementById('content').innerHTML = html;
+      } else {
+        document.getElementById('content').innerHTML = renderFavoritesSectionHTML(foundApps) + html;
+      }
     }
     function toAppHref(app) {
       const raw = app.path || (app.key + '/index.html');
@@ -729,12 +1198,86 @@
       return url.pathname + url.search;
     }
 
+    function normalizeHandle(value) {
+      const v = String(value || '').trim().toLowerCase();
+      return /^[a-z0-9._-]{3,64}$/.test(v) ? v : '';
+    }
+
+    function captureReferralHandleFromURL() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const handle = normalizeHandle(params.get('u') || params.get('user'));
+        if (!handle) return;
+        localStorage.setItem('suite_ref_user', handle);
+        sessionStorage.setItem('suite_ref_user', handle);
+      } catch (_) {}
+    }
+
+    function hasLegacyLogin() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('login') === '1') {
+          sessionStorage.setItem('suite_logged_in', '1');
+        }
+      } catch (_) {}
+
+      let localFlag = false;
+      let sessionFlag = false;
+      try { localFlag = localStorage.getItem('suite_logged_in') === '1'; } catch (_) {}
+      try { sessionFlag = sessionStorage.getItem('suite_logged_in') === '1'; } catch (_) {}
+      return localFlag || sessionFlag;
+    }
+
+    function isSignedIn() {
+      const legacy = hasLegacyLogin();
+      let modern = false;
+      try {
+        modern = !!(window.SuiteAuth && typeof window.SuiteAuth.isSignedIn === 'function' && window.SuiteAuth.isSignedIn());
+      } catch (_) {}
+      return legacy || modern;
+    }
+
+    function clearLoginState() {
+      try { localStorage.removeItem('suite_logged_in'); } catch (_) {}
+      try { sessionStorage.removeItem('suite_logged_in'); } catch (_) {}
+      try {
+        if (window.SuiteAuth && typeof window.SuiteAuth.signOut === 'function') {
+          window.SuiteAuth.signOut();
+        }
+      } catch (_) {}
+    }
+
+    function goToLandingForAuth() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const ref = normalizeHandle(params.get('u') || params.get('user'));
+        const next = new URLSearchParams();
+        next.set('next', 'index');
+        if (ref) next.set('u', ref);
+        window.location.href = `landing.html?${next.toString()}`;
+      } catch (_) {
+        window.location.href = 'landing.html?next=index';
+      }
+    }
+
     function toggleCategory(categoryKey) {
       const category = document.querySelector(`[data-category="${categoryKey}"]`);
+      if (!category) return;
       category.classList.toggle('open');
     }
 
     function init() {
+      captureReferralHandleFromURL();
+      if (!isSignedIn()) {
+        goToLandingForAuth();
+        return;
+      }
+
+      const controls = document.querySelector('.launcher-controls');
+      if (controls) controls.style.display = 'flex';
+      const signOutBtnVisible = document.getElementById('signOutBtn');
+      if (signOutBtnVisible) signOutBtnVisible.style.display = 'inline-flex';
+
       const foundApps = scanApps();
       cachedApps = foundApps;
       renderHelp(foundApps);
@@ -763,17 +1306,57 @@
           window.location.href = toAppHref(singleApp);
         }, 500);
       } else {
-        renderLauncher(foundApps);
+        renderCurrentLauncher(foundApps);
+      }
+      const sortModeSelect = document.getElementById('sortModeSelect');
+      if (sortModeSelect) {
+        sortModeSelect.value = getSortMode();
+        sortModeSelect.addEventListener('change', () => {
+          setSortMode(sortModeSelect.value);
+          if (cachedApps) renderCurrentLauncher(cachedApps);
+        });
+      }
+      const clearRecentBtn = document.getElementById('clearRecentBtn');
+      if (clearRecentBtn) {
+        clearRecentBtn.addEventListener('click', () => {
+          saveRecentMap({});
+          if (cachedApps && getSortMode() === 'recent') renderCurrentLauncher(cachedApps);
+        });
+      }
+      const contentEl = document.getElementById('content');
+      if (contentEl) {
+        contentEl.addEventListener('click', e => {
+          const favBtn = e.target.closest('button.favorite-btn[data-favorite-btn="1"]');
+          if (favBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleFavoriteApp(favBtn.getAttribute('data-app-key'));
+            if (cachedApps) renderCurrentLauncher(cachedApps);
+            return;
+          }
+          const link = e.target.closest('a.app-item[data-app-key]');
+          if (!link) return;
+          markRecentApp(link.getAttribute('data-app-key'));
+        });
       }
       document.getElementById('openHelpBtn').addEventListener('click', openHelp);
       const installBtn = document.getElementById('installAppBtn');
       if (installBtn) {
         installBtn.addEventListener('click', handleInstallClick);
       }
+      const signOutBtn = document.getElementById('signOutBtn');
+      if (signOutBtn) {
+        signOutBtn.addEventListener('click', () => {
+          clearLoginState();
+          window.location.href = 'landing.html?signed_out=1';
+        });
+      }
       if (isStandaloneMode()) {
+        setInstallAck(true);
         if (installBtn) installBtn.style.display = 'none';
       } else {
-        setInstallHint('Tip: use Install for app icon on your phone.');
+        refreshInstallButton();
+        setInstallHint('Tip: for compass/GPS on iPhone use HTTPS, then Add to Home Screen.');
       }
       document.getElementById('closeHelpBtn').addEventListener('click', closeHelp);
       document.getElementById('helpOverlay').addEventListener('click', e => {
@@ -785,9 +1368,17 @@
         setInstallHint('Ready: tap Install to add app icon.');
       });
       window.addEventListener('appinstalled', () => {
+        setInstallAck(true);
         setInstallHint('Installed successfully.');
         if (installBtn) installBtn.style.display = 'none';
       });
+      const displayModeMedia = window.matchMedia('(display-mode: standalone)');
+      if (displayModeMedia && typeof displayModeMedia.addEventListener === 'function') {
+        displayModeMedia.addEventListener('change', () => {
+          if (isStandaloneMode()) setInstallAck(true);
+          refreshInstallButton();
+        });
+      }
       document.addEventListener('keydown', e => {
         if (e.key === 'F1') {
           e.preventDefault();

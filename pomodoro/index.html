@@ -4,7 +4,6 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Pomodoro — SQLite • Tags • Focus • Weekly • Phase Sounds</title>
-<link rel="stylesheet" href="../../shared/theme.css">
 <style>
   :root {
     --bg:#f9fafb; --panel:#ffffff; --text:#1f2937; --muted:#6b7280;
@@ -100,7 +99,7 @@
 .suite-nav .suite-name{color:hsl(215,10%,40%);font-family:'DM Mono',monospace;font-size:11px}
 </style>
 </head>
-<body>
+<body class="dark">
 <nav class="suite-nav">
   <a href="../index.html">← Back to Suite</a>
   <span class="suite-name">ProSe Pilot</span>
@@ -109,13 +108,13 @@
   <div class="app">
     <header>
       <div class="row">
-        <h1>â±ï¸ Pomodoro</h1>
+        <h1>Pomodoro</h1>
         <span id="phaseTag" class="tag">Work</span>
       </div>
       <div class="row">
-        <button class="dark-btn" id="focusBtn" title="Focus-only full-screen">🌱Ž¯</button>
-        <button class="dark-btn" id="compactBtn" title="Toggle compact mode">🌱—œï¸</button>
-        <button class="dark-btn" id="darkBtn" title="Toggle dark mode">🌱Œ™</button>
+        <button class="dark-btn" id="focusBtn" title="Focus-only full-screen">F</button>
+        <button class="dark-btn" id="compactBtn" title="Toggle compact mode">C</button>
+        <button class="dark-btn" id="darkBtn" title="Toggle dark mode">D</button>
       </div>
     </header>
 
@@ -140,7 +139,7 @@
         <button class="btn primary" id="startBtn">Start</button>
         <button class="btn ghost" id="pauseBtn">Pause</button>
         <button class="btn ghost" id="resetBtn">Reset</button>
-        <button class="btn ghost" id="skipBtn" title="Finish this phase now (log it)">Skip –¶ï¸Ž</button>
+        <button class="btn ghost" id="skipBtn" title="Finish this phase now (log it)">Skip >></button>
         <button class="btn ghost" id="skipNoLogBtn" title="Skip to next phase without logging">Skip (no log)</button>
         <span class="muted" id="streakHint">0 work sessions completed</span>
       </div>
@@ -286,14 +285,14 @@
     <div class="focusControls">
       <button class="btn primary" id="fStart">Start (Space)</button>
       <button class="btn ghost" id="fPause">Pause</button>
-      <button class="btn ghost" id="fSkip">Skip –¶ï¸Ž (S)</button>
+      <button class="btn ghost" id="fSkip">Skip >> (S)</button>
       <button class="btn ghost" id="fSkipNo">Skip (no log) (N)</button>
       <button class="btn ghost" id="fReset">Reset (R)</button>
-      <button class="btn ghost" id="fMinus">âˆ’1m (â†“)</button>
-      <button class="btn ghost" id="fPlus">+1m (â†‘)</button>
+      <button class="btn ghost" id="fMinus">-1m (Down)</button>
+      <button class="btn ghost" id="fPlus">+1m (Up)</button>
       <button class="btn danger" id="fExit">Exit (F)</button>
     </div>
-    <div class="help">Shortcuts: <span class="kbd">Space</span> start/pause • <span class="kbd">S</span> skip • <span class="kbd">N</span> skip no-log • <span class="kbd">R</span> reset • <span class="kbd">â†‘/â†“</span> Â±1m • <span class="kbd">F</span> toggle focus</div>
+    <div class="help">Shortcuts: <span class="kbd">Space</span> start/pause • <span class="kbd">S</span> skip • <span class="kbd">N</span> skip no-log • <span class="kbd">R</span> reset • <span class="kbd">Up/Down</span> +/-1m • <span class="kbd">F</span> toggle focus</div>
   </div>
 
   <!-- Modal for Add/Edit -->
@@ -301,7 +300,7 @@
     <div class="modal" style="max-width:560px;width:100%;background:var(--panel);border:1px solid var(--ring);border-radius:14px;padding:16px">
       <header style="display:flex;justify-content:space-between;align-items:center;margin:0 0 10px 0">
         <h3 id="modalTitle" style="margin:0;font-size:18px">Add Session</h3>
-        <button class="btn ghost" id="modalCloseBtn">âœ•</button>
+        <button class="btn ghost" id="modalCloseBtn">X</button>
       </header>
       <div class="grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div class="cell">
@@ -323,7 +322,7 @@
         <div class="cell" style="grid-column:1/-1">
           <label for="modalEnded">Ended at (optional)</label>
           <input type="datetime-local" id="modalEnded" />
-          <div class="muted" style="margin-top:4px">Leave empty to use —œnow—. Start time will be computed from duration.</div>
+          <div class="muted" style="margin-top:4px">Leave empty to use 'now'. Start time will be computed from duration.</div>
         </div>
       </div>
       <div class="actions" style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px">
@@ -402,8 +401,8 @@ function loadSettings(){
     if (typeof s.notifyStart === 'boolean') $('notifyStart').checked = s.notifyStart;
     if (s.goalType) $('goalType').value = s.goalType;
     if (s.goalValue) $('goalValue').value = s.goalValue;
-    if (s.dark) document.body.classList.add('dark');
-    if (s.compact) document.body.classList.add('compact');
+    document.body.classList.toggle('dark', typeof s.dark === 'boolean' ? s.dark : true);
+    document.body.classList.toggle('compact', !!s.compact);
     if (typeof s.currentTag === 'string') $('currentTag').value = s.currentTag;
     if (typeof s.tagFilter === 'string') tagFilter = s.tagFilter;
   } catch(e){}

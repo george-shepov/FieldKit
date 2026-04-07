@@ -2,25 +2,32 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"embed"
 	"flag"
 	"fmt"
 	"io/fs"
 	"log"
+	"math"
 	"mime"
 	"net"
 	"net/http"
+	"net/url"
+	"os"
 	"os/exec"
+	"os/signal"
 	"path"
 	"runtime"
 	"strings"
+	"sync"
+	"syscall"
 	"time"
 )
 
 // Set via -ldflags "-X main.buildVersion=...".
 var buildVersion = "dev"
 
-//go:embed index.html
+//go:embed index.html landing.html
 //go:embed manifest.webmanifest sw.js
 //go:embed accent-speaker/* acronym-list/* authority-assistant/* battleship/* clock/* cns-tap-test/* docketpro/* legal-library/*
 //go:embed drivers-license/* drivers-license/DriversLicensePrep_files/*
@@ -42,12 +49,18 @@ var buildVersion = "dev"
 //go:embed positive-iq/*
 //go:embed pomodoro/* receipt-tracker/* shared/* snake/*
 //go:embed shared/icons/*
-//go:embed snippet-board/* tic-tac-toe/* time-tracker/* ui-tweaker/*
+//go:embed snippet-board/* tic-tac-toe/* time-tracker/* ui-tweaker/* profile/*
 //go:embed privacy-camera/* privacy-recorder/*
+//go:embed games/*
 var appFS embed.FS
+
+var apiLimiter = newAPIRateLimiter(10.0, 2.0, 10*time.Minute)
+
+const baselineCSP = "default-src 'self' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://quickchart.io; media-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' http: https: ws: wss:; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
 
 func main() {
 	_ = mime.AddExtensionType(".webmanifest", "application/manifest+json")
+	loadDotEnv(".env")
 
 	port := flag.Int("port", 8787, "port to serve on")
 	host := flag.String("host", "127.0.0.1", "host to bind to (ignored when --share is used)")
@@ -94,6 +107,9 @@ func main() {
 	}
 
 	printBanner(localURL, lanURL, *share, *enableAPI, *dataDir, *apiKey != "")
+	if *enableAPI && *apiKey == "" {
+		log.Printf("WARNING: --enable-api is active with no --api-key; all API endpoints are unauthenticated")
+	}
 
 	if !*noBrowser {
 		go func() {
@@ -109,11 +125,37 @@ func main() {
 		Addr:              addr,
 		Handler:           logRequests(withHeaders(mux)),
 		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      60 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	}
 
 	log.Printf("ProSe Pilot launcher %s running", buildVersion)
-	if err := srv.Serve(ln); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("server error: %v", err)
+	serveErr := make(chan error, 1)
+	go func() {
+		serveErr <- srv.Serve(ln)
+	}()
+
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+	defer signal.Stop(sigCh)
+
+	select {
+	case err := <-serveErr:
+		if err != nil && err != http.ErrServerClosed {
+			log.Fatalf("server error: %v", err)
+		}
+	case sig := <-sigCh:
+		log.Printf("shutdown signal received: %s", sig)
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		if err := srv.Shutdown(ctx); err != nil {
+			log.Printf("graceful shutdown failed, forcing close: %v", err)
+			_ = srv.Close()
+		}
+		cancel()
+		if err := <-serveErr; err != nil && err != http.ErrServerClosed {
+			log.Printf("server exited with error: %v", err)
+		}
 	}
 }
 
@@ -130,6 +172,11 @@ func normalizePath(p string) string {
 func serveAppRoot(root fs.FS) http.Handler {
 	fileServer := http.FileServer(http.FS(root))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if _, ok := resolveUserLandingAlias(r, root); ok {
+			serveEmbeddedHTMLWithTweaks(root, "landing.html", w, r)
+			return
+		}
+
 		if p, ok := resolveHTMLRouteToFSPath(r, root); ok {
 			serveEmbeddedHTMLWithTweaks(root, p, w, r)
 			return
@@ -207,6 +254,9 @@ func resolveHTMLRouteToFSPath(r *http.Request, root fs.FS) (string, bool) {
 	}
 	p := routePathToFSPath(r.URL.Path)
 	if p == "" {
+		if pathExists(root, "landing.html") {
+			return "landing.html", true
+		}
 		if pathExists(root, "index.html") {
 			return "index.html", true
 		}
@@ -234,6 +284,57 @@ func resolveHTMLRouteToFSPath(r *http.Request, root fs.FS) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+func resolveUserLandingAlias(r *http.Request, root fs.FS) (string, bool) {
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		return "", false
+	}
+
+	p := routePathToFSPath(r.URL.Path)
+	if p == "" {
+		return "", false
+	}
+
+	segments := strings.Split(p, "/")
+	switch len(segments) {
+	case 1:
+		// Bare vanity route: /shepov
+		if segments[0] == "api" || strings.Contains(segments[0], ".") {
+			return "", false
+		}
+		if pathExists(root, segments[0]) || pathExists(root, segments[0]+".html") || pathExists(root, path.Join(segments[0], "index.html")) {
+			return "", false
+		}
+		handle := strings.ToLower(strings.TrimSpace(segments[0]))
+		if isValidUserHandle(handle) {
+			return handle, true
+		}
+	case 2:
+		// Explicit user routes: /u/shepov or /user/shepov
+		prefix := strings.ToLower(strings.TrimSpace(segments[0]))
+		if prefix != "u" && prefix != "user" {
+			return "", false
+		}
+		handle := strings.ToLower(strings.TrimSpace(segments[1]))
+		if isValidUserHandle(handle) {
+			return handle, true
+		}
+	}
+	return "", false
+}
+
+func isValidUserHandle(handle string) bool {
+	if len(handle) < 3 || len(handle) > 64 {
+		return false
+	}
+	for _, ch := range handle {
+		if (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '.' || ch == '_' || ch == '-' {
+			continue
+		}
+		return false
+	}
+	return true
 }
 
 func serveEmbeddedHTMLWithTweaks(root fs.FS, p string, w http.ResponseWriter, r *http.Request) {
@@ -272,21 +373,169 @@ func injectUITweaksRuntimeScript(html []byte) []byte {
 func withHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "SAMEORIGIN")
+		w.Header().Set("Referrer-Policy", "no-referrer")
+		w.Header().Set("Content-Security-Policy", baselineCSP)
 		if r.URL.Path == "/sw.js" || r.URL.Path == "/manifest.webmanifest" {
 			w.Header().Set("Cache-Control", "no-cache")
 		}
 		if strings.HasPrefix(r.URL.Path, "/api/") {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-			w.Header().Set("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization,X-API-Key")
 			w.Header().Set("Cache-Control", "no-store")
+			if r.Method != http.MethodOptions {
+				if !apiLimiter.Allow(clientIPFromRequest(r), time.Now()) {
+					writeJSON(w, http.StatusTooManyRequests, map[string]any{"error": "rate limit exceeded"})
+					return
+				}
+			}
+			origin := strings.TrimSpace(r.Header.Get("Origin"))
+			allowedOrigin := origin != "" && isAllowedAPIOrigin(origin, r.Host)
+			if allowedOrigin {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				w.Header().Set("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
+				w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization,X-API-Key")
+				w.Header().Add("Vary", "Origin")
+			}
 			if r.Method == http.MethodOptions {
+				if origin != "" && !allowedOrigin {
+					http.Error(w, "forbidden origin", http.StatusForbidden)
+					return
+				}
+				w.Header().Set("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
+				w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization,X-API-Key")
 				w.WriteHeader(http.StatusNoContent)
 				return
 			}
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+type rateBucket struct {
+	tokens float64
+	last   time.Time
+}
+
+type apiRateLimiter struct {
+	mu         sync.Mutex
+	globalRate float64
+	perIPRate  float64
+	bucketTTL  time.Duration
+	global     rateBucket
+	perIP      map[string]*rateBucket
+}
+
+func newAPIRateLimiter(globalRate, perIPRate float64, bucketTTL time.Duration) *apiRateLimiter {
+	return &apiRateLimiter{
+		globalRate: globalRate,
+		perIPRate:  perIPRate,
+		bucketTTL:  bucketTTL,
+		perIP:      make(map[string]*rateBucket),
+	}
+}
+
+func (l *apiRateLimiter) Allow(ip string, now time.Time) bool {
+	if ip == "" {
+		ip = "unknown"
+	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	globalBurst := math.Max(1, l.globalRate*2)
+	if !consumeToken(&l.global, l.globalRate, globalBurst, now) {
+		return false
+	}
+
+	b, ok := l.perIP[ip]
+	if !ok {
+		b = &rateBucket{}
+		l.perIP[ip] = b
+	}
+	perIPBurst := math.Max(1, l.perIPRate*4)
+	if !consumeToken(b, l.perIPRate, perIPBurst, now) {
+		return false
+	}
+
+	l.gc(now)
+	return true
+}
+
+func (l *apiRateLimiter) gc(now time.Time) {
+	for k, b := range l.perIP {
+		if b.last.IsZero() || now.Sub(b.last) <= l.bucketTTL {
+			continue
+		}
+		delete(l.perIP, k)
+	}
+}
+
+func consumeToken(b *rateBucket, rate, burst float64, now time.Time) bool {
+	if rate <= 0 || burst <= 0 {
+		return true
+	}
+	if b.last.IsZero() {
+		b.tokens = burst
+		b.last = now
+	}
+	elapsed := now.Sub(b.last).Seconds()
+	if elapsed > 0 {
+		b.tokens = math.Min(burst, b.tokens+elapsed*rate)
+		b.last = now
+	}
+	if b.tokens < 1 {
+		return false
+	}
+	b.tokens -= 1
+	return true
+}
+
+func clientIPFromRequest(r *http.Request) string {
+	host, _, err := net.SplitHostPort(strings.TrimSpace(r.RemoteAddr))
+	if err != nil {
+		return strings.TrimSpace(r.RemoteAddr)
+	}
+	return strings.TrimSpace(host)
+}
+
+func isAllowedAPIOrigin(origin, requestHost string) bool {
+	u, err := url.Parse(origin)
+	if err != nil || u.Host == "" {
+		return false
+	}
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return false
+	}
+
+	originHost, originPort := splitHostPort(u.Host)
+	reqHost, reqPort := splitHostPort(requestHost)
+	if strings.EqualFold(u.Host, requestHost) {
+		return true
+	}
+	if originPort != reqPort {
+		return false
+	}
+	return isLoopbackHost(originHost) && isLoopbackHost(reqHost)
+}
+
+func splitHostPort(hostport string) (string, string) {
+	if h, p, err := net.SplitHostPort(hostport); err == nil {
+		return strings.ToLower(strings.Trim(h, "[]")), p
+	}
+	if strings.HasPrefix(hostport, "[") && strings.HasSuffix(hostport, "]") {
+		return strings.ToLower(strings.Trim(hostport, "[]")), ""
+	}
+	if i := strings.LastIndex(hostport, ":"); i != -1 && strings.Count(hostport, ":") == 1 {
+		return strings.ToLower(hostport[:i]), hostport[i+1:]
+	}
+	return strings.ToLower(hostport), ""
+}
+
+func isLoopbackHost(host string) bool {
+	host = strings.ToLower(strings.Trim(host, "[]"))
+	if host == "localhost" {
+		return true
+	}
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
 }
 
 func logRequests(next http.Handler) http.Handler {
@@ -375,4 +624,31 @@ func openBrowser(url string) error {
 		cmd = exec.Command("xdg-open", url)
 	}
 	return cmd.Start()
+}
+
+// loadDotEnv reads key=value pairs from path and sets them as env vars.
+// Existing env vars are never overwritten. Silently ignored if file is absent.
+func loadDotEnv(path string) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return
+	}
+	for _, line := range strings.Split(string(data), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		idx := strings.IndexByte(line, '=')
+		if idx < 1 {
+			continue
+		}
+		key := strings.TrimSpace(line[:idx])
+		val := strings.TrimSpace(line[idx+1:])
+		if len(val) >= 2 && val[0] == val[len(val)-1] && (val[0] == '"' || val[0] == '\'') {
+			val = val[1 : len(val)-1]
+		}
+		if os.Getenv(key) == "" {
+			os.Setenv(key, val)
+		}
+	}
 }

@@ -9,7 +9,7 @@ Use this checklist to ship a release quickly to Gumroad and/or oneof.store.
 - [ ] Confirm bundles exist in `dist/packages/`
 - [ ] Smoke test one Linux build and one Windows build
 - [ ] Verify launcher opens and F1 help works
-- [ ] Verify API mode starts: `--enable-api --api-key "change-me"`
+- [ ] Verify API mode starts: `--enable-api --api-key "<strong-random-key>"`
 - [ ] Update version/date in product page copy
 
 ## 2) Files To Upload

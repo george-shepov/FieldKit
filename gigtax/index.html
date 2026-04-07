@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GigTax Quick — 2025</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -135,6 +132,7 @@ input,select,button,textarea{font-family:inherit;font-size:inherit}
   <span class="suite-name">ProSe Pilot</span>
 </nav>
 <div id="app"></div>
+<script src="../shared/global-auth.js"></script>
 <script>
 const PLATFORMS=[
   "Rover","Wag","TaskRabbit","Thumbtack","Care.com","Instacart Shipt",
@@ -185,7 +183,6 @@ const FED_BRACKETS={
 };
 const OHIO_BRACKETS=[[26050,0],[46100,.02765],[92150,.03226],[115300,.03688],[1e15,.03990]];
 const LS_DATA="gigtax_data";
-const LS_PIN="gigtax_pin";
 
 const uid=()=>Math.random().toString(36).slice(2,10);
 const fmt=n=>"$"+Number(n||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -200,8 +197,13 @@ let TAB="income";
 
 function load(){try{const d=localStorage.getItem(LS_DATA);return d?JSON.parse(d):null}catch(e){return null}}
 function save(){localStorage.setItem(LS_DATA,JSON.stringify(DATA))}
-function getPin(){return localStorage.getItem(LS_PIN)}
-function setPin(p){localStorage.setItem(LS_PIN,p)}
+
+function hydrateDataFromStorage(){
+  const saved=load();
+  if(saved){
+    DATA={...emptyData(),...saved,profile:{...emptyData().profile,...(saved.profile||{})}};
+  }
+}
 
 function calcTax(){
   const d=DATA;
@@ -390,43 +392,67 @@ async function runReceiptImportFlow(file){
   }
 }
 
-function renderPin(){
-  const isNew=!getPin();
+function renderAuthGate(){
+  const auth=window.SuiteAuth;
+  if(!auth){
+    hydrateDataFromStorage();
+    renderApp();
+    return;
+  }
+
+  const profile=auth.getProfile();
   const app=$("#app");
+  if(!profile){
+    app.innerHTML=`
+      <div class="pin-screen">
+        <div class="pin-box">
+          <div class="icon">👤</div>
+          <h1>Profile Required</h1>
+          <p class="subtitle">Set a global username/password once in Profile, then use it to unlock GigTax and other protected apps.</p>
+          <div class="actions">
+            <button class="btn btn-primary btn-full" id="open-profile">Open Profile App</button>
+            <button class="btn btn-secondary btn-full" id="retry-auth">Retry</button>
+          </div>
+        </div>
+      </div>`;
+    $("#open-profile").onclick=()=>{window.location.href="../profile/index.html";};
+    $("#retry-auth").onclick=()=>renderAuthGate();
+    return;
+  }
+
   app.innerHTML=`
     <div class="pin-screen">
       <div class="pin-box">
-        <div class="icon">💰</div>
+        <div class="icon">🔐</div>
         <h1>GigTax Quick</h1>
-        <p class="subtitle">${isNew?"Set a PIN to protect your data":"Enter PIN to unlock"}</p>
+        <p class="subtitle">Sign in with your global profile credentials.</p>
         <div class="form-group" style="margin-bottom:10px">
-          <label>PIN</label>
-          <input class="input" type="password" id="pin1" maxlength="8" placeholder="Enter PIN" autofocus>
+          <label>Username</label>
+          <input class="input" type="text" id="auth-user" placeholder="Username" autofocus>
         </div>
-        ${isNew?`<div class="form-group" style="margin-bottom:10px"><label>Confirm PIN</label><input class="input" type="password" id="pin2" maxlength="8" placeholder="Confirm PIN"></div>`:""}
+        <div class="form-group" style="margin-bottom:10px">
+          <label>Password</label>
+          <input class="input" type="password" id="auth-pass" placeholder="Password">
+        </div>
         <div id="pin-error" class="error" style="display:none"></div>
-        <button class="btn btn-primary btn-full" id="pin-btn">${isNew?"Set PIN & Start":"Unlock"}</button>
+        <button class="btn btn-primary btn-full" id="pin-btn">Unlock</button>
+        <button class="btn btn-secondary btn-full" id="manage-profile" style="margin-top:8px">Open Profile App</button>
       </div>
     </div>`;
   const showErr=msg=>{const e=$("#pin-error");e.textContent=msg;e.style.display="block"};
-  const submit=()=>{
-    const p1=$("#pin1").value.replace(/\D/g,"");
-    if(isNew){
-      const p2=$("#pin2").value.replace(/\D/g,"");
-      if(p1.length<4)return showErr("PIN must be at least 4 digits");
-      if(p1!==p2)return showErr("PINs don't match");
-      setPin(p1);
-    }else{
-      if(p1!==getPin())return showErr("Wrong PIN");
-    }
-    const saved=load();
-    if(saved)DATA={...emptyData(),...saved,profile:{...emptyData().profile,...(saved.profile||{})}};
+  const submit=async()=>{
+    const username=$("#auth-user").value.trim();
+    const password=$("#auth-pass").value;
+    if(!username||!password)return showErr("Enter username and password.");
+    const ok=await auth.signInWithPassword(username,password);
+    if(!ok)return showErr("Wrong username or password.");
+    hydrateDataFromStorage();
     renderApp();
   };
   $("#pin-btn").onclick=submit;
+  $("#manage-profile").onclick=()=>{window.location.href="../profile/index.html";};
+  $("#auth-user").value=profile.username;
   app.querySelectorAll("input").forEach(el=>el.addEventListener("keydown",e=>{if(e.key==="Enter")submit()}));
-  // filter non-digits
-  app.querySelectorAll("input[type=password]").forEach(el=>el.addEventListener("input",()=>{el.value=el.value.replace(/\D/g,"")}));
 }
 
 function renderApp(){
@@ -455,7 +481,7 @@ function renderApp(){
         </div>
         <div class="header-right">
           <span class="ty-badge">TY 2025</span>
-          <button class="btn btn-ghost" id="lock-btn" title="Lock">🔒</button>
+          <button class="btn btn-ghost" id="lock-btn" title="Sign out">🔓</button>
           <button class="btn btn-ghost" id="reset-btn" title="Reset all data">📋</button>
         </div>
       </div>
@@ -481,7 +507,10 @@ function renderApp(){
   $("#quick-rt-import").onclick=()=>$("#quick-rt-file").click();
   $("#quick-rt-file").onchange=()=>runReceiptImportFlow($("#quick-rt-file").files&&$("#quick-rt-file").files[0]);
   $("#quick-open-rt").onclick=()=>{window.location.href="../receipt-tracker/index.html";};
-  $("#lock-btn").onclick=()=>renderPin();
+  $("#lock-btn").onclick=()=>{
+    if(window.SuiteAuth) window.SuiteAuth.signOut();
+    renderAuthGate();
+  };
   $("#reset-btn").onclick=()=>{
     if($("#reset-btn").dataset.confirm==="1"){DATA=emptyData();save();renderApp()}
     else{$("#reset-btn").textContent="Sure?";$("#reset-btn").dataset.confirm="1";setTimeout(()=>{if($("#reset-btn")){$("#reset-btn").textContent="📋";delete $("#reset-btn").dataset.confirm}},3000)}
@@ -763,7 +792,12 @@ function row(label,val,color,bold,big){
 function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
 
 // Start
-renderPin();
+if(window.SuiteAuth&&window.SuiteAuth.hasProfile()&&window.SuiteAuth.isSignedIn()){
+  hydrateDataFromStorage();
+  renderApp();
+}else{
+  renderAuthGate();
+}
 </script>
   <script src="../shared/help-content.js"></script>
   <script src="../shared/f1-help-nav.js"></script>

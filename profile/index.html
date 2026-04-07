@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile Manager</title>
+<style>
+  :root {
+    --bg: #0b1220;
+    --panel: #111c32;
+    --panel-2: #14223d;
+    --line: #25406f;
+    --text: #e6eefc;
+    --muted: #9db1d6;
+    --accent: #22c55e;
+    --danger: #ef4444;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(800px 400px at 10% -10%, rgba(34, 197, 94, 0.16), transparent 60%),
+      radial-gradient(800px 400px at 90% -20%, rgba(59, 130, 246, 0.18), transparent 60%),
+      var(--bg);
+  }
+  .suite-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: rgba(9, 17, 31, 0.9);
+    border-bottom: 1px solid #203251;
+    font-size: 12px;
+  }
+  .suite-nav a { color: var(--muted); text-decoration: none; }
+  .suite-nav a:hover { color: var(--text); }
+  .suite-nav .suite-name { color: #8ea4cb; }
+  .wrap {
+    max-width: 720px;
+    margin: 24px auto;
+    padding: 0 14px 28px;
+    display: grid;
+    gap: 12px;
+  }
+  .card {
+    background: linear-gradient(180deg, var(--panel), #0f1930);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  h1 { font-size: 1.3rem; margin-bottom: 8px; }
+  p { color: var(--muted); line-height: 1.45; }
+  .status {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #2d4d82;
+    background: #10203e;
+    font-size: 14px;
+  }
+  .grid {
+    display: grid;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  label {
+    display: grid;
+    gap: 6px;
+    font-size: 12px;
+    color: #aec0e3;
+    letter-spacing: .2px;
+  }
+  input {
+    width: 100%;
+    border: 1px solid #355689;
+    background: var(--panel-2);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  input:focus {
+    outline: none;
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.18);
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .btn {
+    border: 1px solid #365788;
+    border-radius: 10px;
+    background: #1b3358;
+    color: var(--text);
+    padding: 9px 12px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .btn.primary {
+    border-color: #1f7a40;
+    background: #166534;
+  }
+  .btn.warn {
+    border-color: #8e2f2f;
+    background: #7f1d1d;
+  }
+  .hint { font-size: 13px; color: #90a7cf; margin-top: 8px; }
+</style>
+</head>
+<body>
+<nav class="suite-nav">
+  <a href="../index.html">← Back to Suite</a>
+  <span class="suite-name">ProSe Pilot</span>
+</nav>
+
+<main class="wrap">
+  <section class="card">
+    <h1>Profile Manager</h1>
+    <p>Set one global username/password and use it across protected apps like GigTax and Snippet Board.</p>
+    <div id="profileState" class="status"></div>
+  </section>
+
+  <section class="card">
+    <div id="formTitle" style="font-weight:700;font-size:1.02rem">Create Profile</div>
+    <form id="profileForm" class="grid">
+      <label>
+        Username
+        <input id="username" type="text" autocomplete="username" placeholder="e.g. shepov" required>
+      </label>
+      <label>
+        Password
+        <input id="password" type="password" autocomplete="new-password" placeholder="At least 8 characters" required>
+      </label>
+      <label>
+        Confirm Password
+        <input id="password2" type="password" autocomplete="new-password" placeholder="Retype password" required>
+      </label>
+      <div class="row">
+        <button class="btn primary" id="saveBtn" type="submit">Save Profile</button>
+        <button class="btn" id="signOutBtn" type="button">Sign Out This Device</button>
+        <button class="btn warn" id="clearBtn" type="button">Delete Profile</button>
+      </div>
+    </form>
+    <p class="hint">Username: lowercase letters, digits, dot, underscore, dash.</p>
+    <p id="message" class="hint"></p>
+  </section>
+</main>
+
+<script src="../shared/global-auth.js"></script>
+<script>
+  const el = {
+    profileState: document.getElementById("profileState"),
+    formTitle: document.getElementById("formTitle"),
+    username: document.getElementById("username"),
+    password: document.getElementById("password"),
+    password2: document.getElementById("password2"),
+    saveBtn: document.getElementById("saveBtn"),
+    signOutBtn: document.getElementById("signOutBtn"),
+    clearBtn: document.getElementById("clearBtn"),
+    message: document.getElementById("message"),
+    profileForm: document.getElementById("profileForm")
+  };
+
+  function showMessage(text, isError) {
+    el.message.textContent = text || "";
+    el.message.style.color = isError ? "#fca5a5" : "#90a7cf";
+  }
+
+  function refreshView() {
+    const auth = window.SuiteAuth;
+    const profile = auth.getProfile();
+    if (!profile) {
+      el.profileState.textContent = "No profile configured yet.";
+      el.formTitle.textContent = "Create Profile";
+      el.saveBtn.textContent = "Save Profile";
+      el.username.value = "";
+      return;
+    }
+
+    const signedIn = auth.isSignedIn() ? "signed in" : "signed out";
+    el.profileState.textContent = `Profile: ${profile.username} (${signedIn})`;
+    el.formTitle.textContent = "Update Profile Credentials";
+    el.saveBtn.textContent = "Update Profile";
+    el.username.value = profile.username;
+  }
+
+  el.profileForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    showMessage("", false);
+    const auth = window.SuiteAuth;
+    const username = auth.normalizeUsername(el.username.value);
+    const password = el.password.value;
+    const password2 = el.password2.value;
+
+    if (password !== password2) {
+      showMessage("Passwords do not match.", true);
+      return;
+    }
+
+    try {
+      await auth.setProfile(username, password);
+      el.password.value = "";
+      el.password2.value = "";
+      showMessage("Profile saved and signed in on this device.", false);
+      refreshView();
+    } catch (err) {
+      showMessage(err && err.message ? err.message : "Failed to save profile.", true);
+    }
+  });
+
+  el.signOutBtn.addEventListener("click", () => {
+    window.SuiteAuth.signOut();
+    showMessage("Signed out on this device.", false);
+    refreshView();
+  });
+
+  el.clearBtn.addEventListener("click", () => {
+    if (!confirm("Delete global profile credentials from this device?")) return;
+    window.SuiteAuth.clearProfile();
+    el.password.value = "";
+    el.password2.value = "";
+    showMessage("Profile deleted.", false);
+    refreshView();
+  });
+
+  refreshView();
+</script>
+<script src="../shared/help-content.js"></script>
+<script src="../shared/f1-help-nav.js"></script>
+</body>
+</html>

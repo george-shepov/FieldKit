@@ -89,7 +89,11 @@ EOF
     cat >"${bundle_root}/run-lan.bat" <<EOF
 @echo off
 set SCRIPT_DIR=%~dp0
-"%SCRIPT_DIR%${APP}.exe" --share --enable-api --api-key "change-me"
+if "%PROSEPILOT_API_KEY%"=="" (
+  "%SCRIPT_DIR%${APP}.exe" --share --enable-api
+) else (
+  "%SCRIPT_DIR%${APP}.exe" --share --enable-api --api-key "%PROSEPILOT_API_KEY%"
+)
 EOF
   else
     cp "${bin_path}" "${bundle_root}/${APP}"
@@ -106,7 +110,11 @@ EOF
 #!/usr/bin/env bash
 set -euo pipefail
 DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
-exec "\${DIR}/${APP}" --share --enable-api --api-key "change-me" "\$@"
+API_KEY="\${PROSEPILOT_API_KEY:-}"
+if [[ -n "\${API_KEY}" ]]; then
+  exec "\${DIR}/${APP}" --share --enable-api --api-key "\${API_KEY}" "\$@"
+fi
+exec "\${DIR}/${APP}" --share --enable-api "\$@"
 EOF
     chmod +x "${bundle_root}/run-local.sh" "${bundle_root}/run-lan.sh"
   fi
@@ -124,6 +132,7 @@ Quick start:
 
 Important:
 - For public hosting, run behind HTTPS and set a strong API key.
+- To require API auth in run-lan scripts, set PROSEPILOT_API_KEY before launch.
 - API endpoints include media sync, registration, heartbeat, wishlist, and support ticket intake.
 - Press F1 in launcher/apps for built-in help.
 EOF

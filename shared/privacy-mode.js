@@ -68,13 +68,24 @@
 
   function classify(url, cfg) {
     var u = new URL(String(url), window.location.href);
+    var p = (u.pathname || "").toLowerCase();
+    function isAIPath(pathname) {
+      return pathname.indexOf("/api/ai/") === 0 ||
+        pathname.indexOf("/v1/chat/completions") === 0 ||
+        pathname.indexOf("/chat/completions") === 0 ||
+        pathname.indexOf("/api/chat") === 0;
+    }
     if (u.protocol === "data:" || u.protocol === "blob:") return "local";
     if (u.origin === window.location.origin) {
+      if (isAIPath(p)) return "ai";
       if (u.pathname.indexOf("/api/support/") === 0 || u.pathname === "/api/support/ticket") return "support";
       if (u.pathname.indexOf("/api/") === 0) return "sync";
       return "local";
     }
-    if (endpointOrigins(cfg).indexOf(u.origin) >= 0) return "remote-server";
+    if (endpointOrigins(cfg).indexOf(u.origin) >= 0) {
+      if (isAIPath(p)) return "ai";
+      return "remote-server";
+    }
     return "external";
   }
 
@@ -92,15 +103,15 @@
         ? { ok: true, category: cat }
         : { ok: false, category: cat, reason: "Support submit is disabled in Privacy settings." };
     }
+    if (cat === "ai" || cat === "external") {
+      return conf.allowAI
+        ? { ok: true, category: cat }
+        : { ok: false, category: cat, reason: "External AI/network calls are disabled in Privacy settings." };
+    }
     if (cat === "sync" || cat === "remote-server") {
       return conf.allowSync
         ? { ok: true, category: cat }
         : { ok: false, category: cat, reason: "Cloud sync is disabled in Privacy settings." };
-    }
-    if (cat === "external") {
-      return conf.allowAI
-        ? { ok: true, category: cat }
-        : { ok: false, category: cat, reason: "External AI/network calls are disabled in Privacy settings." };
     }
     return { ok: false, category: cat, reason: "Blocked by privacy policy." };
   }

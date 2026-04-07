@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProSe Pilot | Personal Productivity Suite</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --border: #334155;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --secondary: #8b5cf6;
+      --accent: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+    
+    /* Hero Section */
+    .hero {
+      padding: 100px 0 60px;
+      text-align: center;
+      background: radial-gradient(circle at top, #1e293b 0%, #0f172a 70%);
+    }
+    .hero h1 {
+      font-size: clamp(2.5rem, 8vw, 4rem);
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 20px;
+      font-weight: 800;
+    }
+    .hero p {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 700px;
+      margin: 0 auto 40px;
+    }
+    .cta-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+      font-size: 1rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+    }
+    .btn-primary:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+    }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover {
+      background: var(--border);
+    }
+
+    /* Auth Section */
+    .auth-section {
+      padding: 60px 0;
+      background: #0b1221;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .auth-card {
+      max-width: 500px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    .auth-card h2 {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 1.75rem;
+    }
+    .auth-card p {
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 30px;
+      font-size: 0.95rem;
+    }
+    .social-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .social-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #111b30;
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .social-btn:hover {
+      background: #1d2a46;
+      border-color: var(--text-muted);
+    }
+    .social-btn img {
+      width: 20px;
+      height: 20px;
+    }
+    .social-btn.preferred {
+      border-color: var(--accent);
+      background: #2b1f0e;
+      position: relative;
+    }
+    .social-btn.preferred::after {
+      content: "RECOMMENDED";
+      position: absolute;
+      top: -10px;
+      right: 10px;
+      background: var(--accent);
+      color: #000;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 800;
+    }
+
+    /* Features Section */
+    .features {
+      padding: 80px 0;
+    }
+    .section-title {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+    .section-title h2 {
+      font-size: 2.25rem;
+      margin-bottom: 12px;
+    }
+    .section-title p {
+      color: var(--text-muted);
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+    }
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 30px;
+      transition: transform 0.3s;
+    }
+    .feature-card:hover {
+      transform: translateY(-5px);
+    }
+    .feature-icon {
+      width: 50px;
+      height: 50px;
+      background: rgba(59, 130, 246, 0.1);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .feature-icon img {
+      width: 28px;
+      height: 28px;
+      filter: brightness(0) invert(1);
+    }
+    .feature-card h3 {
+      margin-bottom: 12px;
+      font-size: 1.25rem;
+    }
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* Footer */
+    footer {
+      padding: 40px 0;
+      text-align: center;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 640px) {
+      .hero { padding: 60px 0 40px; }
+      .auth-card { padding: 25px; }
+    }
+  </style>
+</head>
+<body>
+  <section class="hero">
+    <div class="container">
+      <h1>ProSe Pilot</h1>
+      <p>The ultimate personal productivity suite for professionals. 40+ offline-first apps designed for efficiency, privacy, and speed.</p>
+      <div class="cta-buttons">
+        <a href="#register" class="btn btn-primary">Get Started Free</a>
+        <a href="index.html" class="btn btn-outline">Preview Lobby</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="auth-section" id="register">
+    <div class="container">
+      <div class="auth-card">
+        <h2>Join the Fleet</h2>
+        <p>Register to sync your preferences and access 9,000+ member features.</p>
+        <div id="refRouteHint" style="display:none; margin: 0 0 14px; padding: 10px 12px; border: 1px solid #334155; border-radius: 10px; background: #111b30; color: #cbd5e1; font-size: 0.92rem;"></div>
+        <div id="authStateHint" style="display:none; margin: 0 0 14px; padding: 10px 12px; border: 1px solid #334155; border-radius: 10px; background: #0f2a1e; color: #b7f5d3; font-size: 0.92rem;"></div>
+        <div class="social-grid">
+          <button class="social-btn" id="btn-linkedin">
+            <img src="shared/icons/linkedin.svg" alt="">
+            Continue with LinkedIn
+          </button>
+          <button class="social-btn" id="btn-github">
+            <img src="shared/icons/github.svg" alt="">
+            Continue with GitHub
+          </button>
+          <button class="social-btn" id="btn-google">
+            <img src="shared/icons/google-icon.svg" alt="">
+            Continue with Google
+          </button>
+          <button class="social-btn" id="btn-microsoft">
+            <img src="shared/icons/microsoft.svg" alt="">
+            Continue with Microsoft
+          </button>
+          <button class="social-btn" id="btn-facebook">
+            <img src="shared/icons/facebook.svg" alt="">
+            Continue with Facebook
+          </button>
+        </div>
+        <div style="margin-top: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+          <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem; color: var(--text-muted);">
+            <input id="skipLandingToggle" type="checkbox" />
+            <span>Skip this landing after sign-in on this device</span>
+          </label>
+          <button id="continueLobbyBtn" class="btn btn-outline" type="button" style="display:none;">Continue to Lobby</button>
+        </div>
+        <div style="margin-top: 20px; text-align: center; font-size: 0.85rem; color: var(--text-muted);">
+          Already have an account? <a href="#" style="color: var(--primary); text-decoration: none;">Log in</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="container">
+      <div class="section-title">
+        <h2>Built for Your Network</h2>
+        <p>Join over 9,000 professionals using ProSe Pilot every day.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <img src="shared/icons/rocket.svg" alt="">
+          </div>
+          <h3>Lightning Fast</h3>
+          <p>Instant load times and responsive interfaces. Optimized for both desktop and mobile performance.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <img src="shared/icons/shield-check.svg" alt="">
+          </div>
+          <h3>Privacy First</h3>
+          <p>Your data stays on your device. Local-first architecture with optional secure cloud sync.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <img src="shared/icons/package.svg" alt="">
+          </div>
+          <h3>Comprehensive Suite</h3>
+          <p>From Legal and Finance to Games and Productivity. Everything you need in one powerful lobby.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features" style="background: #0b1221;">
+    <div class="container">
+      <div class="section-title">
+        <h2>Explore the Suite</h2>
+        <p>A few of our 40+ integrated applications.</p>
+      </div>
+      <div class="features-grid" id="apps-preview">
+        <!-- Dynamic content would go here -->
+        <div class="feature-card">
+          <h3>⚖️ Legal & Records</h3>
+          <p>DocketPro, Legal Library, and Authority Assistant. Built-in legal references and docket management.</p>
+        </div>
+        <div class="feature-card">
+          <h3>📈 Productivity</h3>
+          <p>Kanban, Pomodoro, Time Tracking, and Habit Building. Execute your daily tasks with precision.</p>
+        </div>
+        <div class="feature-card">
+          <h3>🎬 Media & Capture</h3>
+          <p>Privacy Camera, Audio Notes, and Music Player. Securely capture and manage your media.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 ProSe Pilot Suite. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="shared/global-auth.js"></script>
+  <script>
+    const SKIP_LANDING_KEY = 'suite_skip_landing_v1';
+    // Platform detection for preferred login
+    const referrer = document.referrer.toLowerCase();
+    const userAgent = navigator.userAgent.toLowerCase();
+    
+    function setPreferred(id) {
+      const btn = document.getElementById(id);
+      if (btn) btn.classList.add('preferred');
+    }
+
+    if (referrer.includes('github') || userAgent.includes('github')) {
+      setPreferred('btn-github');
+    } else if (referrer.includes('linkedin') || userAgent.includes('linkedin')) {
+      setPreferred('btn-linkedin');
+    } else if (referrer.includes('facebook') || userAgent.includes('facebook')) {
+      setPreferred('btn-facebook');
+    } else if (referrer.includes('google')) {
+      setPreferred('btn-google');
+    } else {
+      // Default to LinkedIn as requested for the 9000+ network
+      setPreferred('btn-linkedin');
+    }
+
+    function setLegacyLoginState() {
+      let ok = false;
+      try { localStorage.setItem('suite_logged_in', '1'); ok = true; } catch (_) {}
+      try { sessionStorage.setItem('suite_logged_in', '1'); ok = true; } catch (_) {}
+      return ok;
+    }
+
+    function hasLegacyLoginState() {
+      try {
+        if (localStorage.getItem('suite_logged_in') === '1') return true;
+      } catch (_) {}
+      try {
+        if (sessionStorage.getItem('suite_logged_in') === '1') return true;
+      } catch (_) {}
+      return false;
+    }
+
+    function isSignedIn() {
+      const legacy = hasLegacyLoginState();
+      let modern = false;
+      try {
+        modern = !!(window.SuiteAuth && typeof window.SuiteAuth.isSignedIn === 'function' && window.SuiteAuth.isSignedIn());
+      } catch (_) {}
+      return legacy || modern;
+    }
+
+    function getSkipLandingPref() {
+      try { return localStorage.getItem(SKIP_LANDING_KEY) === '1'; } catch (_) { return false; }
+    }
+
+    function setSkipLandingPref(enabled) {
+      try {
+        if (enabled) localStorage.setItem(SKIP_LANDING_KEY, '1');
+        else localStorage.removeItem(SKIP_LANDING_KEY);
+      } catch (_) {}
+    }
+
+    function normalizeHandle(value) {
+      const v = String(value || '').trim().toLowerCase();
+      return /^[a-z0-9._-]{3,64}$/.test(v) ? v : '';
+    }
+
+    function referralHandleFromRoute() {
+      const params = new URLSearchParams(window.location.search);
+      const fromQuery = normalizeHandle(params.get('u') || params.get('user'));
+      if (fromQuery) return fromQuery;
+
+      const p = window.location.pathname || '/';
+      const prefixed = p.match(/^\/(?:u|user)\/([a-z0-9._-]{3,64})\/?$/i);
+      if (prefixed) return normalizeHandle(prefixed[1]);
+
+      // Bare vanity route is intentionally stricter (no dot) to avoid path collisions.
+      const bare = p.match(/^\/([a-z0-9_-]{3,64})\/?$/i);
+      if (bare) return normalizeHandle(bare[1]);
+      return '';
+    }
+
+    const referralHandle = referralHandleFromRoute();
+    const skipLandingToggle = document.getElementById('skipLandingToggle');
+    const continueLobbyBtn = document.getElementById('continueLobbyBtn');
+    const authStateHint = document.getElementById('authStateHint');
+    const currentlySignedIn = isSignedIn();
+    if (skipLandingToggle) {
+      skipLandingToggle.checked = getSkipLandingPref();
+      skipLandingToggle.addEventListener('change', () => {
+        setSkipLandingPref(!!skipLandingToggle.checked);
+      });
+    }
+    if (currentlySignedIn && continueLobbyBtn) {
+      continueLobbyBtn.style.display = 'inline-flex';
+      continueLobbyBtn.addEventListener('click', () => {
+        const userQuery = referralHandle ? `&u=${encodeURIComponent(referralHandle)}` : '';
+        window.location.href = `index.html?login=1${userQuery}`;
+      });
+    }
+    if (currentlySignedIn && authStateHint) {
+      authStateHint.textContent = 'Signed in on this device. You can continue to lobby or stay on this landing page.';
+      authStateHint.style.display = 'block';
+    }
+
+    if (referralHandle) {
+      try { localStorage.setItem('suite_ref_user', referralHandle); } catch (_) {}
+      try { sessionStorage.setItem('suite_ref_user', referralHandle); } catch (_) {}
+      const hint = document.getElementById('refRouteHint');
+      if (hint) {
+        hint.textContent = `Registering sync profile for @${referralHandle}.`;
+        hint.style.display = 'block';
+      }
+    }
+
+    try {
+      const p = new URLSearchParams(window.location.search);
+      if (currentlySignedIn && getSkipLandingPref() && p.get('showLanding') !== '1') {
+        const userQuery = referralHandle ? `&u=${encodeURIComponent(referralHandle)}` : '';
+        window.location.href = `index.html?login=1${userQuery}`;
+      }
+    } catch (_) {}
+
+    // Google button → real server-side OAuth flow
+    const googleBtn = document.getElementById('btn-google');
+    if (googleBtn) {
+      googleBtn.addEventListener('click', () => {
+        const next = referralHandle
+          ? `/index.html?login=1&u=${encodeURIComponent(referralHandle)}`
+          : '/index.html?login=1';
+        window.location.href = `/api/auth/oauth/google?next=${encodeURIComponent(next)}`;
+      });
+    }
+
+    // All other social buttons remain simulated (placeholder)
+    document.querySelectorAll('.social-btn:not(#btn-google)').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const stored = setLegacyLoginState();
+        if (!stored) {
+          alert('Browser storage is blocked. Please allow site data/cookies for oneofstore.com and try again.');
+          return;
+        }
+        if (skipLandingToggle) setSkipLandingPref(!!skipLandingToggle.checked);
+        const userQuery = referralHandle ? `&u=${encodeURIComponent(referralHandle)}` : '';
+        window.location.href = `index.html?login=1${userQuery}`;
+      });
+    });
+
+    // Check server-side Google session on page load (cookie-based)
+    fetch('/api/auth/session', { credentials: 'same-origin' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data || !data.signedIn) return;
+        if (continueLobbyBtn && continueLobbyBtn.style.display === 'none') {
+          continueLobbyBtn.style.display = 'inline-flex';
+          continueLobbyBtn.onclick = () => { window.location.href = '/index.html'; };
+        }
+        if (authStateHint && authStateHint.style.display === 'none') {
+          const display = data.name || data.email || 'you';
+          authStateHint.textContent = `Signed in as ${display}. Continue to lobby or stay here.`;
+          authStateHint.style.display = 'block';
+        }
+      })
+      .catch(() => {}); // API may not be enabled; fail silently
+  </script>
+</body>
+</html>

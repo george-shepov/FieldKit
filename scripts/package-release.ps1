@@ -62,7 +62,11 @@ set SCRIPT_DIR=%~dp0
     @"
 @echo off
 set SCRIPT_DIR=%~dp0
-"%SCRIPT_DIR%$App.exe" --share --enable-api --api-key "change-me"
+if "%PROSEPILOT_API_KEY%"=="" (
+  "%SCRIPT_DIR%$App.exe" --share --enable-api
+) else (
+  "%SCRIPT_DIR%$App.exe" --share --enable-api --api-key "%PROSEPILOT_API_KEY%"
+)
 "@ | Set-Content -Path (Join-Path $BundleRoot 'run-lan.bat') -Encoding ASCII
 
     $RunLocal = 'run-local.bat'
@@ -80,7 +84,11 @@ exec "`${DIR}/$App" "`$@"
 #!/usr/bin/env bash
 set -euo pipefail
 DIR="`$(cd "`$(dirname "`${BASH_SOURCE[0]}")" && pwd)"
-exec "`${DIR}/$App" --share --enable-api --api-key "change-me" "`$@"
+API_KEY="`${PROSEPILOT_API_KEY:-}"
+if [[ -n "`${API_KEY}" ]]; then
+  exec "`${DIR}/$App" --share --enable-api --api-key "`${API_KEY}" "`$@"
+fi
+exec "`${DIR}/$App" --share --enable-api "`$@"
 "@ | Set-Content -Path (Join-Path $BundleRoot 'run-lan.sh') -Encoding ASCII
   }
 
@@ -97,6 +105,7 @@ Quick start:
 
 Important:
 - For public hosting, run behind HTTPS and set a strong API key.
+- To require API auth in run-lan scripts, set PROSEPILOT_API_KEY before launch.
 - API endpoints include media sync, registration, heartbeat, wishlist, and support ticket intake.
 - Press F1 in launcher/apps for built-in help.
 "@ | Set-Content -Path (Join-Path $BundleRoot 'README.txt') -Encoding UTF8

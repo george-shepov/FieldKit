@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Snippet Board — One-Shot (SQLite + PIN)</title>
+  <title>Snippet Board — One-Shot (SQLite + Profile Login)</title>
   <style>
     :root{
       --bg:#0f1216; --panel:#161a20; --panel-2:#1b2028; --text:#e7edf5; --muted:#a9b3c1; --accent:#79ffe1; --accent-2:#5bc8ff;
@@ -116,7 +116,7 @@
       <div class="side-section">
         <div class="side-title">Settings</div>
         <div style="display:grid;gap:.6rem">
-          <button class="btn" id="change-pin">Change PIN</button>
+          <button class="btn" id="change-pin">Sign Out</button>
           <button class="btn" id="export-db">Export DB</button>
           <label class="btn" for="import-db-input">Import DB</label>
           <input id="import-db-input" type="file" accept="application/octet-stream,.sqlite,.db" style="display:none"/>
@@ -152,10 +152,11 @@
     <div class="modal">
       <h2>Unlock your board</h2>
       <div style="display:grid;gap:.6rem">
-        <input id="pin-input" class="input" type="password" inputmode="numeric" autocomplete="off" placeholder="Enter PIN"/>
+        <input id="auth-user" class="input" type="text" autocomplete="username" placeholder="Username"/>
+        <input id="pin-input" class="input" type="password" autocomplete="current-password" placeholder="Password"/>
         <div class="actions" style="justify-content:space-between">
           <button class="btn" id="pin-submit">Unlock</button>
-          <button class="btn warn" id="forgot-pin">Forgot PIN?</button>
+          <button class="btn warn" id="forgot-pin">Open Profile</button>
         </div>
       </div>
     </div>
@@ -163,17 +164,18 @@
 
   <div class="overlay" id="onboard-overlay" style="display:none">
     <div class="modal">
-      <h2>Set up security</h2>
+      <h2>Profile Required</h2>
       <div style="display:grid;gap:.6rem">
-        <input id="setup-pin" class="input" type="password" inputmode="numeric" placeholder="Choose a PIN"/>
-        <input id="setup-pin2" class="input" type="password" inputmode="numeric" placeholder="Confirm PIN"/>
-        <input id="setup-q" class="input" placeholder="Security question (e.g., Favorite teacher?)"/>
-        <input id="setup-a" class="input" type="password" placeholder="Answer"/>
-        <div class="actions"><button class="btn" id="setup-save">Save & Enter</button></div>
+        <p style="color:var(--muted);margin:0">Create a global username/password in the Profile app, then come back and unlock Snippet Board with those credentials.</p>
+        <div class="actions">
+          <button class="btn" id="setup-save">Open Profile App</button>
+          <button class="btn warn" id="setup-refresh">Retry</button>
+        </div>
       </div>
     </div>
   </div>
 
+  <script src="../shared/global-auth.js"></script>
   <script>
   // ---------------------------
   // Utilities
@@ -186,11 +188,6 @@
   // Base64 helpers for Uint8Array <-> base64 (no unicode)
   function u8ToB64(u8){let s=""; u8.forEach(b=>s+=String.fromCharCode(b)); return btoa(s)}
   function b64ToU8(b64){const s=atob(b64); const u=new Uint8Array(s.length); for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i); return u}
-
-  // WebCrypto SHA-256 with per-value salt
-  async function sha256Base64(str){const enc=new TextEncoder(); const buf=await crypto.subtle.digest('SHA-256', enc.encode(str)); return u8ToB64(new Uint8Array(buf))}
-  function randomSalt(len=16){const u=new Uint8Array(len); crypto.getRandomValues(u); return u8ToB64(u)}
-  async function saltedHash(value, salt){return await sha256Base64(`${salt}:${value}`)}
 
   // ---------------------------
   // SQL.js (SQLite in WASM)
@@ -241,18 +238,32 @@
   function run(sql, params=[]){ const stmt = db.prepare(sql); stmt.run(params); stmt.free(); }
 
   // ---------------------------
-  // Security (PIN + Security Q)
+  // Security (global profile auth)
   // ---------------------------
-  async function hasPin(){ const row = get('SELECT pin_hash AS h FROM settings WHERE id=1'); return !!row && !!row.h }
-  async function ensureLock(){ if(await hasPin()) { $('#lock-overlay').style.display='flex' } else { $('#onboard-overlay').style.display='flex' } }
+  function authClient(){ return window.SuiteAuth || null }
 
-  async function attemptUnlock(pin){ const s = get('SELECT pin_hash, pin_salt FROM settings WHERE id=1'); if(!s||!s.pin_salt||!s.pin_hash) return false; const h = await saltedHash(pin, s.pin_salt); return h===s.pin_hash }
-
-  async function setPinAndQA(pin, q, a){ const pSalt = randomSalt(); const aSalt = randomSalt(); const pinHash = await saltedHash(pin, pSalt); const aHash = a ? await saltedHash(a, aSalt) : null; run('UPDATE settings SET pin_hash=?, pin_salt=?, q=?, a_hash=?, a_salt=?, created_at=COALESCE(created_at,?) WHERE id=1', [pinHash,pSalt,q||null,aHash,aSalt, nowIso()]); saveDB(); }
-
-  async function changePin(oldPin, newPin){ if(!(await attemptUnlock(oldPin))) throw new Error('Invalid current PIN'); const pSalt=randomSalt(); const pinHash=await saltedHash(newPin,pSalt); run('UPDATE settings SET pin_hash=?, pin_salt=? WHERE id=1',[pinHash,pSalt]); saveDB(); }
-
-  async function resetPinWithAnswer(newPin, answer){ const s=get('SELECT a_hash, a_salt FROM settings WHERE id=1'); if(!s||!s.a_hash||!s.a_salt) throw new Error('Security answer not set'); const h=await saltedHash(answer, s.a_salt); if(h!==s.a_hash) throw new Error('Incorrect answer'); const pSalt=randomSalt(); const pinHash=await saltedHash(newPin,pSalt); run('UPDATE settings SET pin_hash=?, pin_salt=? WHERE id=1',[pinHash,pSalt]); saveDB(); }
+  async function ensureLock(){
+    const auth = authClient();
+    if(!auth){
+      $('#lock-overlay').style.display='none';
+      $('#onboard-overlay').style.display='none';
+      return;
+    }
+    if(!auth.hasProfile()){
+      $('#onboard-overlay').style.display='flex';
+      $('#lock-overlay').style.display='none';
+      return;
+    }
+    if(auth.isSignedIn()){
+      $('#lock-overlay').style.display='none';
+      $('#onboard-overlay').style.display='none';
+      return;
+    }
+    const profile = auth.getProfile();
+    $('#auth-user').value = (profile && profile.username) ? profile.username : '';
+    $('#lock-overlay').style.display='flex';
+    $('#onboard-overlay').style.display='none';
+  }
 
   // ---------------------------
   // App Logic
@@ -434,22 +445,12 @@
       const f=e.target.files[0]; if(!f) return; const buf=new Uint8Array(await f.arrayBuffer()); db.close(); db=new SQL.Database(buf); saveDB(); location.reload();
     });
 
-    // Change PIN flow
+    // Global sign-out
     $('#change-pin').addEventListener('click', ()=>{
-      const modal = document.createElement('div'); modal.className='overlay'; modal.innerHTML = `
-        <div class="modal"><h2>Change PIN</h2>
-          <div style="display:grid;gap:.6rem">
-            <input id="cp-old" class="input" type="password" placeholder="Current PIN"/>
-            <input id="cp-new" class="input" type="password" placeholder="New PIN"/>
-            <div class="actions"><button class="btn" id="cp-save">Save</button><button class="btn warn" id="cp-cancel">Cancel</button></div>
-          </div>
-        </div>`;
-      document.body.appendChild(modal);
-      modal.querySelector('#cp-cancel').onclick=()=> modal.remove();
-      modal.querySelector('#cp-save').onclick=async ()=>{
-        try{ await changePin(modal.querySelector('#cp-old').value, modal.querySelector('#cp-new').value); alert('PIN changed.'); modal.remove(); }
-        catch(err){ alert(err.message||String(err)) }
-      }
+      const auth = authClient();
+      if(auth) auth.signOut();
+      $('#pin-input').value = '';
+      ensureLock();
     });
   }
 
@@ -457,39 +458,38 @@
   // Lock & Onboarding wiring
   // ---------------------------
   function wireSecurity(){
-    // Unlock
-    $('#pin-submit').addEventListener('click', async ()=>{
-      const ok = await attemptUnlock($('#pin-input').value); if(ok){ $('#lock-overlay').style.display='none'; } else { alert('Invalid PIN'); }
-    });
-    $('#pin-input').addEventListener('keydown', async (e)=>{ if(e.key==='Enter'){ $('#pin-submit').click(); }});
+    const auth = authClient();
 
-    // Forgot PIN
-    $('#forgot-pin').addEventListener('click', ()=>{
-      const s=get('SELECT q FROM settings WHERE id=1'); const q=s&&s.q ? s.q : '(no security question set)';
-      const modal = document.createElement('div'); modal.className='overlay'; modal.innerHTML = `
-        <div class="modal"><h2>Reset PIN</h2>
-          <div style="display:grid;gap:.6rem">
-            <div style="color:var(--muted)">Security question:</div>
-            <div style="background:var(--panel-2);border:1px solid var(--border);padding:.6rem;border-radius:10px">${escapeHtml(q)}</div>
-            <input id="ra" class="input" type="password" placeholder="Answer"/>
-            <input id="rn" class="input" type="password" placeholder="New PIN"/>
-            <div class="actions"><button class="btn" id="r-go">Reset</button><button class="btn warn" id="r-cancel">Cancel</button></div>
-          </div>
-        </div>`;
-      document.body.appendChild(modal);
-      modal.querySelector('#r-cancel').onclick=()=> modal.remove();
-      modal.querySelector('#r-go').onclick=async ()=>{
-        try{ await resetPinWithAnswer($('#rn').value, $('#ra').value); alert('PIN reset. Enter new PIN to unlock.'); modal.remove(); }
-        catch(err){ alert(err.message||String(err)) }
+    // Unlock using global username/password
+    $('#pin-submit').addEventListener('click', async ()=>{
+      if(!auth){
+        $('#lock-overlay').style.display='none';
+        return;
+      }
+      const username = $('#auth-user').value.trim();
+      const password = $('#pin-input').value;
+      if(!username || !password){
+        alert('Enter username and password.');
+        return;
+      }
+      const ok = await auth.signInWithPassword(username, password);
+      if(ok){
+        $('#pin-input').value = '';
+        $('#lock-overlay').style.display='none';
+      }else{
+        alert('Invalid credentials.');
       }
     });
+    $('#pin-input').addEventListener('keydown', async (e)=>{ if(e.key==='Enter'){ $('#pin-submit').click(); }});
+    $('#auth-user').addEventListener('keydown', async (e)=>{ if(e.key==='Enter'){ $('#pin-submit').click(); }});
 
-    // Onboarding
-    $('#setup-save').addEventListener('click', async ()=>{
-      const p1=$('#setup-pin').value, p2=$('#setup-pin2').value, q=$('#setup-q').value.trim(), a=$('#setup-a').value;
-      if(!p1 || p1!==p2){ alert('PINs do not match.'); return }
-      await setPinAndQA(p1,q,a); $('#onboard-overlay').style.display='none'; $('#lock-overlay').style.display='flex';
+    // Profile manager link
+    $('#forgot-pin').addEventListener('click', ()=>{
+      window.location.href='../profile/index.html';
     });
+
+    $('#setup-save').addEventListener('click', ()=>{ window.location.href='../profile/index.html'; });
+    $('#setup-refresh').addEventListener('click', ()=>{ ensureLock(); });
   }
 
   // ---------------------------

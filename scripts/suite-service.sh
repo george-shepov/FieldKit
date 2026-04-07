@@ -18,7 +18,7 @@ PORT=8787
 HOST=0.0.0.0
 SHARE=1
 ENABLE_API=0
-API_KEY=change-me
+API_KEY=
 DATA_DIR=${ROOT_DIR}/data
 EOF
   fi
@@ -106,4 +106,3 @@ case "${cmd}" in
   uninstall) uninstall_service ;;
   *) usage; exit 1 ;;
 esac
-

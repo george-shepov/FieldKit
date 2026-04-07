@@ -1,14 +1,16 @@
-const CACHE_NAME = "prosepilot-shell-v11";
+const CACHE_NAME = "prosepilot-shell-v14";
 const OFFLINE_FALLBACK = "/index.html";
 
 const PRECACHE_URLS = [
   "/",
   "/index.html",
+  "/landing.html",
   "/manifest.webmanifest",
   "/help/index.html",
   "/shared/help-content.js",
   "/shared/f1-help-nav.js",
   "/shared/privacy-mode.js",
+  "/shared/global-auth.js",
   "/shared/pwa-init.js",
   "/shared/ui-tweaks-runtime.js",
   "/shared/icons/suite-icon.svg",
@@ -42,6 +44,7 @@ const PRECACHE_URLS = [
   "/outdoor-kit/index.html",
   "/pattern-mirror/index.html",
   "/pomodoro/index.html",
+  "/profile/index.html",
   "/positive-iq/index.html",
   "/privacy-camera/index.html",
   "/privacy-recorder/index.html",
@@ -53,7 +56,9 @@ const PRECACHE_URLS = [
   "/time-tracker/index.html",
   "/ui-tweaker/index.html",
   "/wishlist/index.html",
-  "/drivers-license/DriversLicensePrep.html"
+  "/drivers-license/DriversLicensePrep.html",
+  "/games/reversi.html",
+  "/games/game-academy.html"
 ];
 
 self.addEventListener("install", (event) => {

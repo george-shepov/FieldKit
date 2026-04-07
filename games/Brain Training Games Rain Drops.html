@@ -22,8 +22,14 @@
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.8)}100%{box-shadow:0 0 0 26px rgba(255,255,255,0)}}
   .hint{opacity:.9;font-size:12px;text-align:center}
 </style>
+  <link rel="stylesheet" href="../shared/suite-nav.css" />
 </head>
 <body>
+<nav class="suite-nav" data-suite-nav="1">
+  <a href="../index.html">&larr; Back to Suite</a>
+  <span>ProSe Pilot</span>
+</nav>
+
 <div class="wrap">
   <h1 style="text-align:center;margin:8px 0;">Math Raindrops – Gentle Adaptive</h1>
   <p style="text-align:center;margin:0 0 8px;">Space = Pause/Resume • Type answers or switch to Multiple Choice. Cursor auto-focuses in the answer box.</p>
@@ -231,5 +237,7 @@
   start();
 })();
 </script>
+<script src="../shared/help-content.js"></script>
+<script src="../shared/f1-help-nav.js"></script>
 </body>
 </html>
