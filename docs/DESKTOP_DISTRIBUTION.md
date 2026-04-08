@@ -149,12 +149,18 @@ Run on VPS and expose behind HTTPS (Caddy/Nginx):
 ./fieldkit-linux-amd64 --host 0.0.0.0 --port 8787 --enable-api --data-dir ./data --api-key "replace-me" --no-browser
 ```
 
+Recommended TLS setup:
+
+1. Point both `giorgiy.org` and `giorgiy-shepov.com` at the same VPS
+2. Install Caddy and use [deploy/Caddyfile](../deploy/Caddyfile)
+3. Let Caddy terminate TLS for both domains and reverse-proxy to `127.0.0.1:8787`
+
 Phone install flow:
 
-1. User opens `https://your-domain`.
+1. User opens `https://giorgiy.org` or `https://giorgiy-shepov.com`.
 2. User adds to Home Screen (PWA-style install).
 3. User opens `Field Check-In` app, enters emergency contact, taps `Send Registration`.
-4. `Privacy Camera` / `Privacy Recorder` default sync endpoint becomes `https://your-domain/api/media/upload`.
+4. `Privacy Camera` / `Privacy Recorder` default sync endpoint becomes `https://giorgiy.org/api/media/upload` or `https://giorgiy-shepov.com/api/media/upload`.
 
 ## Sales funnel tie-in (Gumroad/Store)
 

@@ -90,11 +90,11 @@ Useful endpoints:
 
 ### iPhone Compass + HTTPS Setup (VPS)
 
-1. Provision a VPS you control and use your domain (example: `giorgiy.org` or `giorgiy-shepov.com`)
+1. Provision a VPS you control and point both `giorgiy.org` and `giorgiy-shepov.com` DNS records to that server
 2. Copy your bundle to VPS (launcher binary + app folders)
 3. Run launcher on localhost only: `./fieldkit --host 127.0.0.1 --port 8787`
-4. Put Caddy or Nginx in front and terminate TLS on `443`, reverse-proxy to `127.0.0.1:8787`
-5. Open `https://giorgiy.org` on iPhone, then Share -> Add to Home Screen
+4. Put Caddy in front with [deploy/Caddyfile](../deploy/Caddyfile) so both domains terminate TLS on `443` and reverse-proxy to `127.0.0.1:8787`
+5. Open either `https://giorgiy.org` or `https://giorgiy-shepov.com` on iPhone, then Share -> Add to Home Screen
 6. Verify in Safari address bar that lock icon is present before testing compass/GPS
 
 ### Capture media and sync later
