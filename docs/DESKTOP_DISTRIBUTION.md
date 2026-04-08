@@ -1,4 +1,4 @@
-# ProSe Pilot Desktop Launcher (Go)
+# FieldKit Desktop Launcher (Go)
 
 This project includes a compiled launcher executable that serves the suite locally with no Python/Node dependency.
 

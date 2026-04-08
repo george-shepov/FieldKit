@@ -1,4 +1,4 @@
-# ProSe Pilot - Offline PWA Suite
+# FieldKit - Offline PWA Suite
 
 An offline-first Progressive Web App suite served by a compact Go server. It bundles many independent tools and games that run locally, with optional network features for selected apps.
 
@@ -26,13 +26,13 @@ go run .
 Install launcher from GitHub:
 
 ```bash
-go install github.com/USERNAME/prosepilot-launcher@latest
+go install github.com/USERNAME/fieldkit-launcher@latest
 ```
 
 Validate locally before publish:
 
 ```bash
-go mod edit -module github.com/USERNAME/prosepilot-launcher
+go mod edit -module github.com/USERNAME/fieldkit-launcher
 go test ./...
 go build ./...
 ```

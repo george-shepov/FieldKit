@@ -33,7 +33,7 @@ New-Item -ItemType Directory -Force -Path $Stage | Out-Null
 
 $Manifest = Join-Path $PkgDir "manifest-$Version.txt"
 @(
-  "ProSe Pilot customer bundles"
+  "FieldKit customer bundles"
   "Version: $Version"
   "Generated: $([DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ'))"
   ""
@@ -62,10 +62,10 @@ set SCRIPT_DIR=%~dp0
     @"
 @echo off
 set SCRIPT_DIR=%~dp0
-if "%PROSEPILOT_API_KEY%"=="" (
+if "%FIELDKIT_API_KEY%"=="" (
   "%SCRIPT_DIR%$App.exe" --share --enable-api
 ) else (
-  "%SCRIPT_DIR%$App.exe" --share --enable-api --api-key "%PROSEPILOT_API_KEY%"
+  "%SCRIPT_DIR%$App.exe" --share --enable-api --api-key "%FIELDKIT_API_KEY%"
 )
 "@ | Set-Content -Path (Join-Path $BundleRoot 'run-lan.bat') -Encoding ASCII
 
@@ -84,7 +84,7 @@ exec "`${DIR}/$App" "`$@"
 #!/usr/bin/env bash
 set -euo pipefail
 DIR="`$(cd "`$(dirname "`${BASH_SOURCE[0]}")" && pwd)"
-API_KEY="`${PROSEPILOT_API_KEY:-}"
+API_KEY="`${FIELDKIT_API_KEY:-}"
 if [[ -n "`${API_KEY}" ]]; then
   exec "`${DIR}/$App" --share --enable-api --api-key "`${API_KEY}" "`$@"
 fi
@@ -93,7 +93,7 @@ exec "`${DIR}/$App" --share --enable-api "`$@"
   }
 
   @"
-ProSe Pilot ($Goos/$Goarch)
+FieldKit ($Goos/$Goarch)
 Version: $Version
 
 Quick start:

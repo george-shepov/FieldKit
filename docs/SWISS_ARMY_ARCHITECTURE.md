@@ -1,4 +1,4 @@
-# ProSe Pilot "Last App Standing" Architecture
+# FieldKit "Last App Standing" Architecture
 
 ## North Star
 

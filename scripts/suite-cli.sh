@@ -312,12 +312,12 @@ stop_all() {
   local pids
   pids="$(find_suite_pids)"
   if [[ -z "${pids}" ]]; then
-    echo "No ProSe Pilot processes found for this suite."
+    echo "No FieldKit processes found for this suite."
     rm -f "${PID_FILE}"
     return
   fi
 
-  echo "Stopping all suite ProSe Pilot processes..."
+  echo \"Stopping all suite FieldKit processes...\"
   while IFS= read -r pid; do
     [[ -z "${pid}" ]] && continue
     echo "  -> PID ${pid}"
@@ -409,7 +409,7 @@ logs() {
 menu() {
   while true; do
     echo ""
-    echo "ProSe Pilot Control"
+    echo "FieldKit Control"
     echo "1) Start (desktop)"
     echo "2) Start (LAN)"
     echo "3) Start (LAN + API)"

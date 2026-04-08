@@ -1,7 +1,7 @@
 {
-  "name": "suite",
+  "name": "fieldkit",
   "version": "1.0.0",
-  "description": "",
+  "description": "FieldKit - Offline-first PWA suite with 40+ productivity, learning, and field tools",
   "main": "sw.js",
   "directories": {
     "doc": "docs"

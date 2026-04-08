@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "ProSe Pilot Suite",
-  "short_name": "ProSe Pilot",
+  "name": "FieldKit Suite",
+  "short_name": "FieldKit",
   "description": "Offline-ready productivity, education, and field tools.",
   "start_url": "/?source=pwa",
   "scope": "/",

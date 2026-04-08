@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**ProSe Pilot** is an offline-first Progressive Web App (PWA) suite served by a Go HTTP server. It bundles multiple productivity, learning, field tools, games, and privacy utilities into a single executable that works completely offline after initial load.
+**FieldKit** is an offline-first Progressive Web App (PWA) suite served by a Go HTTP server. It bundles multiple productivity, learning, field tools, games, and privacy utilities into a single executable that works completely offline after initial load.
 
 ## Commands
 

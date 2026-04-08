@@ -130,7 +130,7 @@ func main() {
 		IdleTimeout:       120 * time.Second,
 	}
 
-	log.Printf("ProSe Pilot launcher %s running", buildVersion)
+	log.Printf("FieldKit launcher %s running", buildVersion)
 	serveErr := make(chan error, 1)
 	go func() {
 		serveErr <- srv.Serve(ln)
@@ -547,7 +547,7 @@ func logRequests(next http.Handler) http.Handler {
 
 func printBanner(localURL, lanURL string, share bool, apiEnabled bool, dataDir string, apiKeySet bool) {
 	fmt.Println("")
-	fmt.Printf("ProSe Pilot Launcher (%s)\n", buildVersion)
+	fmt.Printf("FieldKit Launcher (%s)\n", buildVersion)
 	fmt.Printf("Desktop URL: %s\n", localURL)
 	if share {
 		if lanURL == "" {

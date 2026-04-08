@@ -19,7 +19,7 @@ $Targets = @(
 
 $LdFlags = "-s -w -X main.buildVersion=$Version"
 
-Write-Host "Building ProSe Pilot launcher"
+Write-Host "Building FieldKit launcher"
 Write-Host "Version: $Version"
 Write-Host "Output:  $OutDir"
 Write-Host ""

@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for your interest in contributing to ProSe Pilot. A few quick guidelines:
+Thanks for your interest in contributing to FieldKit. A few quick guidelines:
 
 - Fork the repository and open a pull request with a clear description of your change.
 - Keep changes small and focused; open an issue for large features first.

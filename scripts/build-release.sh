@@ -20,7 +20,7 @@ TARGETS=(
 
 LDFLAGS="-s -w -X main.buildVersion=${VERSION}"
 
-echo "Building ProSe Pilot launcher"
+echo "Building FieldKit launcher"
 echo "Version: ${VERSION}"
 echo "Output:  ${OUT_DIR}"
 echo ""

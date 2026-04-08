@@ -1,4 +1,4 @@
-# ProSe Pilot Publish Checklist
+# FieldKit Publish Checklist
 
 Use this checklist to ship a release quickly to Gumroad and/or oneof.store.
 
@@ -16,8 +16,8 @@ Use this checklist to ship a release quickly to Gumroad and/or oneof.store.
 
 Primary customer files:
 
-1. `prosepilot-<version>-windows-amd64.zip`
-2. `prosepilot-<version>-linux-amd64.zip`
+1. `fieldkit-<version>-windows-amd64.zip`
+2. `fieldkit-<version>-linux-amd64.zip`
 3. Optional ARM variants (`windows-arm64`, `linux-arm64`)
 4. Optional macOS variants (`darwin-amd64`, `darwin-arm64`)
 
@@ -27,7 +27,7 @@ Internal tracking file:
 
 ## 3) Gumroad Setup
 
-1. Create product: `ProSe Pilot (Offline Productivity + Survival Toolkit)`
+1. Create product: `FieldKit (Offline Productivity + Swiss Army Pocket Suite)`
 2. Product type: digital product with downloadable files
 3. Upload ZIP files for each platform
 4. Add pricing tiers:
@@ -86,7 +86,7 @@ Custom work framing:
 
 Subject:
 
-`Your ProSe Pilot Download + Quick Start`
+`Your FieldKit Download + Quick Start`
 
 Body:
 

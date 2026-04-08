@@ -56,7 +56,7 @@ mkdir -p "${PKG_DIR}/.stage"
 
 manifest="${PKG_DIR}/manifest-${VERSION}.txt"
 {
-  echo "ProSe Pilot customer bundles"
+  echo "FieldKit customer bundles"
   echo "Version: ${VERSION}"
   echo "Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo ""
@@ -120,7 +120,7 @@ EOF
   fi
 
   cat >"${bundle_root}/README.txt" <<EOF
-ProSe Pilot (${goos}/${goarch})
+FieldKit (${goos}/${goarch})
 Version: ${VERSION}
 
 Quick start:

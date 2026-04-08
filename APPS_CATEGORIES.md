@@ -11,7 +11,9 @@ This document groups the included apps into two simple categories to help presen
 - docketpro
 - drivers-license
 - employee-skills
-- games/* (many games are offline: Tic-Tac-Toe, Snake, Battleship, Reversi, etc.)
+- games/game-academy (Chess & Checkers)
+- games/reversi (Reversi / Othello)
+- games/* (many games offline: Tic-Tac-Toe, Snake, Battleship, Positive IQ Test, Math Raindrops, Pattern Mirror, Odd One Out, etc.)
 - habit-tracker
 - kanban
 - math-raindrops
@@ -41,7 +43,7 @@ This document groups the included apps into two simple categories to help presen
 - privacy-recorder (media upload / sync endpoint)
 - audio-notes (media upload / sync endpoint)
 - image-rater (fetches images and optional caption/tag APIs)
-- games/game-academy-v2 (fetches tags / chat endpoints)
+- games/game-academy-v2 (variant with Ollama AI integration, requires local Ollama server)
 - any app that exposes a "sync endpoint" or shows an `/api/` input field
 
 ## Notes

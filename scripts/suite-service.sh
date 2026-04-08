@@ -25,7 +25,7 @@ EOF
 
   cat >"${UNIT_FILE}" <<EOF
 [Unit]
-Description=ProSe Pilot Suite Launcher
+Description=FieldKit Suite Launcher
 After=network.target
 
 [Service]

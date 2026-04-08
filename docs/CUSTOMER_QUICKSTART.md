@@ -1,6 +1,6 @@
-# ProSe Pilot Customer Quickstart
+# FieldKit Customer Quickstart
 
-This guide is for end users who downloaded a ProSe Pilot bundle.
+This guide is for end users who downloaded a FieldKit bundle.
 
 ## 1) Choose Your File
 
