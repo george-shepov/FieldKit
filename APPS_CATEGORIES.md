@@ -2,7 +2,8 @@
 
 This document groups the included apps into two simple categories to help present the project in a portfolio and explain which apps work fully offline.
 
-**Airplane mode (fully offline / core functionality works without a network)**
+## Airplane mode (fully offline / core functionality works without a network)
+
 - accent-speaker
 - acronym-list
 - battleship
@@ -28,7 +29,8 @@ This document groups the included apps into two simple categories to help presen
 - ui-tweaker
 - many small tools under root directories that do not call remote endpoints
 
-**Wi‑Fi / Cell (uses network or optional API endpoints)**
+## Wi-Fi / Cell (uses network or optional API endpoints)
+
 - landing.html (OAuth / auth session)
 - field-checkin (register / heartbeat / server sync)
 - wishlist (optional submit endpoint)
@@ -42,7 +44,8 @@ This document groups the included apps into two simple categories to help presen
 - games/game-academy-v2 (fetches tags / chat endpoints)
 - any app that exposes a "sync endpoint" or shows an `/api/` input field
 
-Notes
+## Notes
+
 - Many apps in the "Wi‑Fi / Cell" section include offline-first UX and local fallbacks; they will still function in a limited capacity when offline but provide extra features when a server is available.
 - The Go server exposes optional API endpoints when started with `--enable-api` (see `prosepilot.go`). These are: `/api/pulse`, `/api/media/upload`, `/api/register`, `/api/heartbeat`, `/api/wishlist/submit`, `/api/support/ticket`, and several auth endpoints.
 - If you'd like, I can:

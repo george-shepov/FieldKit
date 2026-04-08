@@ -402,9 +402,15 @@
           <option value="recent">Most Recent</option>
           <option value="favorites">Favorites Only</option>
         </select>
+        <span class="control-label">Connectivity</span>
+        <select id="connectivityFilterSelect" class="control-select">
+          <option value="all">All</option>
+          <option value="airplane">Airplane Mode</option>
+          <option value="wifi">Wi-Fi / Cell</option>
+        </select>
         <button id="clearRecentBtn" class="control-btn" type="button">Clear Recent</button>
       </div>
-      <div class="legend">Offline labels: OFFLINE works without internet, HYBRID has optional sync/network features. Use ☆ to pin favorites.</div>
+      <div class="legend">Connectivity labels: AIRPLANE MODE works offline, WI-FI / CELL uses optional or required network features. Use ☆ to pin favorites.</div>
     </div>
 
     <div id="content">
@@ -785,8 +791,10 @@
     const RECENT_APPS_KEY = 'suite_recent_apps_v1';
     const SORT_MODE_KEY = 'suite_sort_mode_v1';
     const FAVORITE_APPS_KEY = 'suite_favorite_apps_v1';
+    const CONNECTIVITY_FILTER_KEY = 'suite_connectivity_filter_v1';
     const INSTALL_ACK_KEY = 'suite_install_ack_v1';
     const SORT_MODES = ['categories', 'az', 'za', 'recent', 'favorites'];
+    const CONNECTIVITY_FILTERS = ['all', 'airplane', 'wifi'];
 
     function loadRecentMap() {
       try {
@@ -869,6 +877,21 @@
         return false;
       }
     }
+    function getConnectivityFilter() {
+      try {
+        const mode = (localStorage.getItem(CONNECTIVITY_FILTER_KEY) || '').toLowerCase();
+        return CONNECTIVITY_FILTERS.includes(mode) ? mode : 'all';
+      } catch (_) {
+        return 'all';
+      }
+    }
+    function setConnectivityFilter(mode) {
+      const safeMode = CONNECTIVITY_FILTERS.includes(mode) ? mode : 'all';
+      try {
+        localStorage.setItem(CONNECTIVITY_FILTER_KEY, safeMode);
+      } catch (_) {}
+      return safeMode;
+    }
     function setInstallAck(value) {
       try {
         if (value) localStorage.setItem(INSTALL_ACK_KEY, '1');
@@ -884,16 +907,15 @@
         btn.style.display = '';
       }
     }
-    function getOfflineMode(app) {
-      if (app.offline === 'hybrid') return 'hybrid';
-      if (app.offline === 'online') return 'online';
-      return 'offline';
+    function getConnectivityMode(app) {
+      if (app.offline === 'hybrid') return 'wifi';
+      if (app.offline === 'online') return 'wifi';
+      return 'airplane';
     }
     function getOfflineBadgeHTML(app) {
-      const mode = getOfflineMode(app);
-      if (mode === 'hybrid') return '<span class="badge hybrid">HYBRID</span>';
-      if (mode === 'online') return '<span class="badge online">ONLINE</span>';
-      return '<span class="badge offline">OFFLINE</span>';
+      const mode = getConnectivityMode(app);
+      if (mode === 'wifi') return '<span class="badge online">WI-FI / CELL</span>';
+      return '<span class="badge offline">AIRPLANE MODE</span>';
     }
     function getTierBadgeHTML(app) {
       if (app.demo) return '<span class="badge demo">DEMO</span>';
@@ -912,6 +934,25 @@
         }
       }
       return all;
+    }
+    function includeByConnectivityFilter(app, mode) {
+      if (mode === 'all') return true;
+      const appMode = getConnectivityMode(app);
+      if (mode === 'airplane') return appMode === 'airplane';
+      if (mode === 'wifi') return appMode === 'wifi';
+      return true;
+    }
+    function applyConnectivityFilter(foundApps) {
+      const mode = getConnectivityFilter();
+      if (mode === 'all') return foundApps;
+      const filtered = {};
+      for (const [categoryKey, category] of Object.entries(foundApps)) {
+        filtered[categoryKey] = {
+          ...category,
+          found: category.found.filter(app => includeByConnectivityFilter(app, mode))
+        };
+      }
+      return filtered;
     }
     function sortAppsForMode(apps, mode) {
       const sorted = [...apps];
@@ -1003,18 +1044,19 @@
       `;
     }
     function renderCurrentLauncher(foundApps) {
+      const filteredApps = applyConnectivityFilter(foundApps);
       const mode = getSortMode();
       if (mode === 'categories') {
-        renderLauncher(foundApps);
+        renderLauncher(filteredApps);
         return;
       }
       if (mode === 'favorites') {
-        const favoriteApps = sortAppsForMode(getAllApps(foundApps), 'favorites');
-        renderFlatLauncher(favoriteApps, mode, foundApps, { showFavoritesSection: false });
+        const favoriteApps = sortAppsForMode(getAllApps(filteredApps), 'favorites');
+        renderFlatLauncher(favoriteApps, mode, filteredApps, { showFavoritesSection: false });
         return;
       }
-      const allApps = sortAppsForMode(getAllApps(foundApps), mode);
-      renderFlatLauncher(allApps, mode, foundApps);
+      const allApps = sortAppsForMode(getAllApps(filteredApps), mode);
+      renderFlatLauncher(allApps, mode, filteredApps);
     }
 
     function scanApps() {
@@ -1313,6 +1355,14 @@
         sortModeSelect.value = getSortMode();
         sortModeSelect.addEventListener('change', () => {
           setSortMode(sortModeSelect.value);
+          if (cachedApps) renderCurrentLauncher(cachedApps);
+        });
+      }
+      const connectivityFilterSelect = document.getElementById('connectivityFilterSelect');
+      if (connectivityFilterSelect) {
+        connectivityFilterSelect.value = getConnectivityFilter();
+        connectivityFilterSelect.addEventListener('change', () => {
+          setConnectivityFilter(connectivityFilterSelect.value);
           if (cachedApps) renderCurrentLauncher(cachedApps);
         });
       }
