@@ -1060,9 +1060,9 @@ func writeJSON(w http.ResponseWriter, status int, payload any) {
 // ── Google OAuth ──────────────────────────────────────────────────────────────
 
 const (
-	oauthStateTTL    = 10 * time.Minute
+	oauthStateTTL     = 10 * time.Minute
 	sessionCookieName = "pp_session"
-	sessionMaxAge    = 30 * 24 * 60 * 60 // 30 days in seconds
+	sessionMaxAge     = 30 * 24 * 60 * 60 // 30 days in seconds
 )
 
 func secureToken(n int) (string, error) {
