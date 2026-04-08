@@ -84,12 +84,12 @@ Useful service commands:
 
 Artifacts are written to `dist/`:
 
-- `prosepilot-linux-amd64`
-- `prosepilot-linux-arm64`
-- `prosepilot-windows-amd64.exe`
-- `prosepilot-windows-arm64.exe`
-- `prosepilot-darwin-amd64`
-- `prosepilot-darwin-arm64`
+- `fieldkit-linux-amd64`
+- `fieldkit-linux-arm64`
+- `fieldkit-windows-amd64.exe`
+- `fieldkit-windows-arm64.exe`
+- `fieldkit-darwin-amd64`
+- `fieldkit-darwin-arm64`
 
 ## Build customer upload bundles
 
@@ -101,8 +101,8 @@ After build, create per-platform ZIP bundles with quick-start scripts and README
 
 Output is written to `dist/packages/`:
 
-- `prosepilot-<version>-linux-amd64.zip`
-- `prosepilot-<version>-windows-amd64.zip`
+- `fieldkit-<version>-linux-amd64.zip`
+- `fieldkit-<version>-windows-amd64.zip`
 - and other target variants
 
 Bundle manifest:
@@ -126,19 +126,19 @@ Optional Windows-side packaging:
 Desktop-only (private localhost):
 
 ```bash
-prosepilot
+fieldkit
 ```
 
 Desktop + phone on same network:
 
 ```bash
-prosepilot --share
+fieldkit --share
 ```
 
 Desktop + phone + sync/check-in API:
 
 ```bash
-prosepilot --share --enable-api --api-key "replace-me"
+fieldkit --share --enable-api --api-key "replace-me"
 ```
 
 ## VPS hosting mode
@@ -146,7 +146,7 @@ prosepilot --share --enable-api --api-key "replace-me"
 Run on VPS and expose behind HTTPS (Caddy/Nginx):
 
 ```bash
-./prosepilot-linux-amd64 --host 0.0.0.0 --port 8787 --enable-api --data-dir ./data --api-key "replace-me" --no-browser
+./fieldkit-linux-amd64 --host 0.0.0.0 --port 8787 --enable-api --data-dir ./data --api-key "replace-me" --no-browser
 ```
 
 Phone install flow:
