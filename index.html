@@ -12,30 +12,48 @@
   <link rel="apple-touch-icon" href="/shared/icons/tictak-icon-512.png">
   <title>FieldKit</title>
   <style>
+    :root {
+      --background: #09090b;
+      --foreground: #fafafa;
+      --card: #111113;
+      --muted: #18181b;
+      --muted-foreground: #a1a1aa;
+      --border: #27272a;
+      --input: #18181b;
+      --ring: #a1a1aa;
+      --primary: #f4f4f5;
+      --primary-foreground: #0a0a0a;
+      --accent: #1f1f22;
+      --radius: 14px;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #0f172a;
-      color: #e2e8f0;
+      font-family: "Manrope", "Inter", "Segoe UI", sans-serif;
+      color: var(--foreground);
       min-height: 100vh;
-      padding: 20px;
+      padding: 24px;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(244, 244, 245, 0.08) 0%, rgba(244, 244, 245, 0) 34%),
+        radial-gradient(circle at 88% 0%, rgba(99, 102, 241, 0.18) 0%, rgba(99, 102, 241, 0) 40%),
+        linear-gradient(180deg, #09090b 0%, #0d0d10 100%);
     }
-    .container { max-width: 800px; margin: 0 auto; }
+    .container { max-width: 1040px; margin: 0 auto; }
     .header {
       text-align: center;
-      padding: 40px 0;
-      border-bottom: 2px solid #1e293b;
-      margin-bottom: 30px;
+      padding: 30px 24px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: color-mix(in oklab, var(--card) 94%, white 6%);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+      margin-bottom: 18px;
     }
     .header h1 {
-      font-size: 2.5em;
-      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-size: clamp(2.1rem, 4vw, 3rem);
+      letter-spacing: -0.02em;
+      color: var(--foreground);
       margin-bottom: 10px;
     }
-    .header p { color: #94a3b8; font-size: 1.1em; }
+    .header p { color: var(--muted-foreground); font-size: 1.02em; }
     .header-tools {
       margin-top: 16px;
       display: flex;
@@ -45,27 +63,32 @@
       flex-wrap: wrap;
     }
     .help-btn {
-      border: 1px solid #334155;
+      border: 1px solid var(--border);
       border-radius: 10px;
-      background: #111b30;
-      color: #e2e8f0;
+      background: var(--muted);
+      color: var(--foreground);
       padding: 9px 14px;
       font-weight: 600;
       cursor: pointer;
+      transition: background .16s ease, border-color .16s ease, transform .16s ease;
     }
-    .help-btn:hover { background: #1d2a46; }
+    .help-btn:hover {
+      background: var(--accent);
+      border-color: #3f3f46;
+      transform: translateY(-1px);
+    }
     .install-btn {
-      border-color: #14532d;
-      background: #0d2f1b;
+      border-color: #365314;
+      background: #1a2e10;
     }
-    .install-btn:hover { background: #134429; }
-    .help-hint { color: #94a3b8; font-size: 0.95em; }
+    .install-btn:hover { background: #213916; }
+    .help-hint { color: var(--muted-foreground); font-size: 0.95em; }
     .launcher-controls {
       margin-bottom: 14px;
-      background: #0f172a;
-      border: 1px solid #263449;
-      border-radius: 12px;
-      padding: 12px;
+      background: color-mix(in oklab, var(--card) 96%, white 4%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
@@ -79,42 +102,49 @@
       flex-wrap: wrap;
     }
     .control-label {
-      color: #94a3b8;
+      color: var(--muted-foreground);
       font: 600 12px/1 system-ui, -apple-system, sans-serif;
       text-transform: uppercase;
       letter-spacing: .04em;
     }
     .control-select {
-      border: 1px solid #334155;
+      border: 1px solid var(--border);
       border-radius: 10px;
-      background: #101b31;
-      color: #e2e8f0;
+      background: var(--input);
+      color: var(--foreground);
       padding: 8px 10px;
       font: 600 13px/1.2 system-ui, -apple-system, sans-serif;
+      outline: none;
     }
+    .control-select:focus { box-shadow: 0 0 0 2px rgba(161, 161, 170, 0.35); }
     .control-btn {
-      border: 1px solid #334155;
+      border: 1px solid var(--border);
       border-radius: 10px;
-      background: #111b30;
-      color: #e2e8f0;
+      background: var(--muted);
+      color: var(--foreground);
       padding: 8px 10px;
       font: 600 13px/1.2 system-ui, -apple-system, sans-serif;
       cursor: pointer;
+      transition: background .16s ease, border-color .16s ease;
     }
-    .control-btn:hover { background: #1d2a46; }
+    .control-btn:hover {
+      background: var(--accent);
+      border-color: #3f3f46;
+    }
     .legend {
-      color: #94a3b8;
+      color: var(--muted-foreground);
       font-size: 0.88em;
     }
     
     .category {
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
       margin-bottom: 16px;
       overflow: hidden;
       --cat-a: #3b82f6;
       --cat-b: #8b5cf6;
+      box-shadow: 0 8px 26px rgba(0, 0, 0, 0.22);
     }
     .category-header {
       display: flex;
@@ -125,7 +155,7 @@
       transition: background 0.2s;
       border-left: 3px solid var(--cat-a);
     }
-    .category-header:hover { background: #334155; }
+    .category-header:hover { background: #17171a; }
     .category-title {
       font-size: 1.2em;
       font-weight: 600;
@@ -134,17 +164,18 @@
       gap: 10px;
     }
     .category-count {
-      background: #334155;
+      background: #1f1f23;
+      border: 1px solid #2f2f35;
       padding: 4px 12px;
       border-radius: 999px;
       font-size: 0.9em;
-      color: #94a3b8;
+      color: var(--muted-foreground);
     }
     .category-icon {
       width: 32px;
       height: 32px;
       border-radius: 8px;
-      background: #334155;
+      background: #1a1a1e;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -158,7 +189,7 @@
     .chevron {
       transition: transform 0.3s;
       font-size: 1.2em;
-      color: #64748b;
+      color: var(--muted-foreground);
     }
     .category.open .chevron { transform: rotate(180deg); }
     
@@ -176,12 +207,12 @@
       align-items: center;
       justify-content: space-between;
       padding: 16px 20px;
-      border-top: 1px solid #334155;
+      border-top: 1px solid #232327;
       transition: background 0.2s;
       text-decoration: none;
       color: inherit;
     }
-    .app-item:hover { background: #334155; }
+    .app-item:hover { background: #18181b; }
     .app-info {
       display: flex;
       align-items: center;
@@ -218,7 +249,7 @@
     .category[data-category="games"] { --cat-a: #ec4899; --cat-b: #be185d; }
     .category[data-category="favorites"] { --cat-a: #f59e0b; --cat-b: #b45309; }
     .app-name { font-weight: 500; }
-    .app-desc { font-size: 0.9em; color: #94a3b8; }
+    .app-desc { font-size: 0.9em; color: var(--muted-foreground); }
     .app-meta {
       margin-top: 4px;
       display: flex;
@@ -242,15 +273,15 @@
     .badge.demo { background: #fbbf24; color: #000; }
     .badge.full { background: #10b981; color: #000; }
     .badge.free { background: #6366f1; color: #fff; }
-    .badge.cat { background: #1f2937; color: #cbd5e1; }
+    .badge.cat { background: #232328; color: #d4d4d8; border: 1px solid #2f2f35; }
     .badge.offline { background: #0369a1; color: #e0f2fe; }
     .badge.hybrid { background: #155e75; color: #cffafe; }
     .badge.online { background: #7f1d1d; color: #fee2e2; }
     .favorite-btn {
-      border: 1px solid #475569;
+      border: 1px solid #3a3a40;
       border-radius: 999px;
-      background: #0f172a;
-      color: #cbd5e1;
+      background: #111113;
+      color: #d4d4d8;
       width: 32px;
       height: 32px;
       font-size: 16px;
@@ -267,20 +298,20 @@
       background: #422006;
     }
     .favorites-empty {
-      border-top: 1px solid #334155;
+      border-top: 1px solid #232327;
       padding: 14px 18px;
-      color: #94a3b8;
+      color: var(--muted-foreground);
       font-size: 0.93em;
     }
     
     .loading {
       text-align: center;
       padding: 60px 20px;
-      color: #64748b;
+      color: var(--muted-foreground);
     }
     .spinner {
-      border: 3px solid #334155;
-      border-top: 3px solid #3b82f6;
+      border: 3px solid #27272a;
+      border-top: 3px solid #e4e4e7;
       border-radius: 50%;
       width: 40px;
       height: 40px;
@@ -295,7 +326,7 @@
       position: fixed;
       inset: 0;
       display: none;
-      background: rgba(2, 6, 23, 0.78);
+      background: rgba(9, 9, 11, 0.8);
       backdrop-filter: blur(2px);
       padding: 20px;
       z-index: 50;
@@ -309,16 +340,16 @@
       width: min(1100px, 100%);
       max-height: calc(100vh - 40px);
       overflow: auto;
-      background: #0b1221;
-      border: 1px solid #334155;
+      background: #0f0f12;
+      border: 1px solid #27272a;
       border-radius: 14px;
       box-shadow: 0 18px 60px rgba(0, 0, 0, 0.5);
     }
     .help-head {
       position: sticky;
       top: 0;
-      background: #0f172a;
-      border-bottom: 1px solid #334155;
+      background: #121216;
+      border-bottom: 1px solid #27272a;
       padding: 16px 18px;
       display: flex;
       justify-content: space-between;
@@ -327,29 +358,29 @@
       z-index: 2;
     }
     .help-head h2 { font-size: 1.15em; }
-    .help-head p { color: #94a3b8; font-size: 0.92em; margin-top: 4px; }
+    .help-head p { color: var(--muted-foreground); font-size: 0.92em; margin-top: 4px; }
     .help-close {
-      border: 1px solid #334155;
-      background: #111827;
-      color: #e2e8f0;
+      border: 1px solid #313138;
+      background: #19191e;
+      color: var(--foreground);
       border-radius: 8px;
       padding: 6px 10px;
       cursor: pointer;
       font-weight: 600;
     }
-    .help-close:hover { background: #1f2937; }
+    .help-close:hover { background: #232329; }
     .help-body { padding: 16px; display: grid; gap: 14px; }
     .help-section {
-      background: #0f172a;
-      border: 1px solid #273549;
+      background: #111115;
+      border: 1px solid #27272a;
       border-radius: 12px;
       overflow: hidden;
     }
     .help-section-head {
       padding: 12px 14px;
       font-weight: 700;
-      border-bottom: 1px solid #1f2b3f;
-      background: #111c31;
+      border-bottom: 1px solid #232327;
+      background: #16161b;
     }
     .help-grid {
       display: grid;
@@ -358,15 +389,15 @@
       padding: 12px;
     }
     .help-card {
-      background: #101826;
-      border: 1px solid #2a3850;
+      background: #15151a;
+      border: 1px solid #26262d;
       border-radius: 10px;
       padding: 10px;
     }
     .help-card h3 { font-size: 0.98em; margin-bottom: 6px; }
-    .help-card p { font-size: 0.88em; color: #cbd5e1; line-height: 1.45; }
+    .help-card p { font-size: 0.88em; color: #d4d4d8; line-height: 1.45; }
     .help-card p + p { margin-top: 6px; }
-    .help-card strong { color: #93c5fd; }
+    .help-card strong { color: #f4f4f5; }
     
     @media (max-width: 640px) {
       .header h1 { font-size: 2em; }
@@ -383,11 +414,11 @@
   <div class="container">
     <div class="header">
       <h1>FieldKit</h1>
-      <p>Your Personal Productivity Suite</p>
+      <p>Offline-first lobby for tools, training, and field workflows</p>
       <div class="header-tools">
         <button id="openHelpBtn" class="help-btn" type="button">? Help</button>
         <button id="installAppBtn" class="help-btn install-btn" type="button">Install</button>
-        <button id="signOutBtn" class="help-btn" type="button" style="border-color: #7f1d1d; background: #450a0a;">Sign Out</button>
+        <button id="signOutBtn" class="help-btn" type="button" style="border-color: #7f1d1d; background: #2a0d0f;">Sign Out</button>
         <span class="help-hint">Press <strong>F1</strong> anywhere on this page</span>
         <span id="installHint" class="help-hint"></span>
       </div>
