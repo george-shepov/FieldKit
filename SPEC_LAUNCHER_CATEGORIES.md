@@ -14,7 +14,7 @@ Acceptance criteria
 - All new UI text and screenshots are documented in `README.md` and `APPS_CATEGORIES.md` before code changes.
 
 Implementation notes
-- Minimal DOM/JS changes in `prosepilot-launcher` or main `index.html`/launcher file to avoid large refactor.
+- Minimal DOM/JS changes in `fieldkit-launcher` or main `index.html`/launcher file to avoid large refactor.
 - Add a small CSS class for badges, keep visual change small and reversible.
 - Tests: add Playwright tests in `tests/launcher.spec.js` that assert category toggle and badges.
 

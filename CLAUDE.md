@@ -48,7 +48,7 @@ go run .
 
 ## Architecture
 
-### Go Backend (`prosepilot.go`, `server_api.go`)
+### Go Backend (`fieldkit.go`, `server_api.go`)
 
 - Main HTTP server that embeds all static assets using Go 1.16+ `embed` package
 - Serves API endpoints for registration, heartbeat, media uploads, chat, wishlist, support tickets

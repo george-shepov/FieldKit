@@ -11,7 +11,7 @@ Before coding
 
 Coding notes
 
-- Modify the launcher file (likely `index.html` or `prosepilot-launcher`) to add category controls and a small badge element for each app tile.
+- Modify the launcher file (likely `index.html` or `fieldkit-launcher`) to add category controls and a small badge element for each app tile.
 - Keep all new UI behind a `data-feature-launcher-categories` attribute on the root launcher element so it is easy to toggle.
 - Use minimal CSS: `.badge.offline { background:#16a34a } .badge.online { background:#f97316 }`.
 

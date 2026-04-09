@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — FieldKit</title>
+  <style>
+    :root {
+      --bg: #09090b;
+      --fg: #fafafa;
+      --card: #111113;
+      --muted: #18181b;
+      --muted-fg: #a1a1aa;
+      --border: #27272a;
+      --accent: #3b82f6;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Manrope", "Inter", "Segoe UI", sans-serif;
+      color: var(--fg);
+      background: linear-gradient(180deg, #09090b 0%, #0d0d10 100%);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+    .subtitle {
+      color: var(--muted-fg);
+      font-size: 1.08em;
+    }
+    .profile {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 40px;
+      margin-bottom: 40px;
+      text-align: center;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+    }
+    .profile-image {
+      width: 200px;
+      height: 200px;
+      border-radius: 16px;
+      margin: 0 auto 24px;
+      overflow: hidden;
+      border: 2px solid var(--border);
+      box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
+    }
+    .profile-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .profile-name {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .profile-title {
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 1.1em;
+      margin-bottom: 24px;
+    }
+    .profile-bio {
+      color: var(--muted-fg);
+      line-height: 1.8;
+      margin-bottom: 24px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 26px rgba(0, 0, 0, 0.22);
+    }
+    .section h2 {
+      font-size: 1.4rem;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section p {
+      color: var(--muted-fg);
+      line-height: 1.8;
+      margin-bottom: 12px;
+    }
+    .section p:last-child {
+      margin-bottom: 0;
+    }
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 24px 0;
+    }
+    .highlights {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+    .highlight-card {
+      background: #17171a;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .highlight-icon {
+      font-size: 2em;
+      margin-bottom: 8px;
+    }
+    .highlight-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .highlight-text {
+      font-size: 0.9em;
+      color: var(--muted-fg);
+    }
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+    .btn {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--muted);
+      color: var(--fg);
+      padding: 10px 20px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #000;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(59, 130, 246, 0.25);
+    }
+    .back-link {
+      color: var(--accent);
+      text-decoration: none;
+      margin-bottom: 24px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .back-link:hover {
+      gap: 10px;
+    }
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+    .social-link {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      color: var(--muted-fg);
+      transition: all 0.2s ease;
+      font-size: 1.2em;
+    }
+    .social-link:hover {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">← Back to FieldKit</a>
+    
+    <header>
+      <h1>About FieldKit</h1>
+      <p class="subtitle">Built with care for offline-first productivity</p>
+    </header>
+
+    <div class="profile">
+      <div class="profile-image">
+        <img src="profile.jpg" alt="Creator" loading="lazy">
+      </div>
+      <div class="profile-name">Giorgiy Shepov</div>
+      <div class="profile-title">Creator</div>
+      <p class="profile-bio">
+        Passionate about building tools that work offline, with privacy at the core. 
+        FieldKit is a collection of productivity and learning apps designed to empower users 
+        to stay focused and productive, anywhere.
+      </p>
+    </div>
+
+    <div class="section">
+      <h2>🎯 Mission</h2>
+      <p>
+        To create a comprehensive suite of offline-first tools that respect user privacy while 
+        providing powerful productivity, learning, and field capabilities. FieldKit empowers 
+        individuals to work anywhere — on airplanes, in remote areas, or simply without relying 
+        on constant internet connectivity.
+      </p>
+    </div>
+
+    <div class="section">
+      <h2>💡 Philosophy</h2>
+      <p>
+        <strong>Privacy First:</strong> All data stays on your device. No tracking, no analytics, no third-party services.
+      </p>
+      <p>
+        <strong>Offline by Default:</strong> Core functionality works completely offline. Network features are optional.
+      </p>
+      <p>
+        <strong>Simple & Fast:</strong> Clean interfaces, minimal bloat. Each tool does one thing well.
+      </p>
+      <p>
+        <strong>Open & Transparent:</strong> Built with open-source technologies. Code is available on GitHub.
+      </p>
+    </div>
+
+    <div class="section">
+      <h2>✨ Highlights</h2>
+      <div class="highlights">
+        <div class="highlight-card">
+          <div class="highlight-icon">⚡</div>
+          <div class="highlight-title">40+ Apps</div>
+          <div class="highlight-text">Productivity, learning, games, and field tools</div>
+        </div>
+        <div class="highlight-card">
+          <div class="highlight-icon">🔒</div>
+          <div class="highlight-title">100% Private</div>
+          <div class="highlight-text">No data leaves your device</div>
+        </div>
+        <div class="highlight-card">
+          <div class="highlight-icon">🌐</div>
+          <div class="highlight-title">Offline First</div>
+          <div class="highlight-text">Works anywhere, anytime</div>
+        </div>
+        <div class="highlight-card">
+          <div class="highlight-icon">📦</div>
+          <div class="highlight-title">Single Binary</div>
+          <div class="highlight-text">One download, all tools</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🏗️ Technology</h2>
+      <p>
+        <strong>Backend:</strong> Go 1.22+ with embedded static assets and optional API endpoints
+      </p>
+      <p>
+        <strong>Frontend:</strong> Vanilla HTML, CSS, and JavaScript — no frameworks, no bloat
+      </p>
+      <p>
+        <strong>Distribution:</strong> Available as native binaries for macOS, Linux, and Windows
+      </p>
+      <p>
+        <strong>PWA:</strong> Works as a Progressive Web App with offline service worker support
+      </p>
+    </div>
+
+    <div class="section">
+      <h2>🔗 Connect</h2>
+      <p>Have feedback or want to contribute? Find us on GitHub or reach out.</p>
+      <div class="social-links">
+        <a href="https://github.com/george-shepov/FieldKit" class="social-link" title="GitHub" target="_blank" rel="noopener noreferrer">🐙</a>
+        <a href="https://github.com/george-shepov" class="social-link" title="Creator GitHub" target="_blank" rel="noopener noreferrer">👤</a>
+      </div>
+      <div class="btn-group">
+        <a href="https://github.com/george-shepov/FieldKit" class="btn" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+        <a href="/" class="btn">Explore FieldKit</a>
+      </div>
+    </div>
+
+    <div class="section" style="text-align: center;">
+      <p style="font-size: 0.9em; margin: 0;">
+        Created with ❤️ for productivity, privacy, and offline-first development
+      </p>
+    </div>
+  </div>
+
+  <script src="/shared/f1-help-nav.js"></script>
+  <script src="/shared/ui-tweaks-runtime.js"></script>
+</body>
+</html>

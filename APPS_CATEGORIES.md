@@ -49,7 +49,7 @@ This document groups the included apps into two simple categories to help presen
 ## Notes
 
 - Many apps in the "Wi‑Fi / Cell" section include offline-first UX and local fallbacks; they will still function in a limited capacity when offline but provide extra features when a server is available.
-- The Go server exposes optional API endpoints when started with `--enable-api` (see `prosepilot.go`). These are: `/api/pulse`, `/api/media/upload`, `/api/register`, `/api/heartbeat`, `/api/wishlist/submit`, `/api/support/ticket`, and several auth endpoints.
+- The Go server exposes optional API endpoints when started with `--enable-api` (see `fieldkit.go`). These are: `/api/pulse`, `/api/media/upload`, `/api/register`, `/api/heartbeat`, `/api/wishlist/submit`, `/api/support/ticket`, and several auth endpoints.
 - If you'd like, I can:
   - update the launcher UI to present these categories in the sidebar
   - add a small badge for each app indicating "offline" or "online features"
