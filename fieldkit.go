@@ -52,6 +52,7 @@ var buildVersion = "dev"
 //go:embed snippet-board/* tic-tac-toe/* time-tracker/* ui-tweaker/* profile/*
 //go:embed privacy-camera/* privacy-recorder/*
 //go:embed games/*
+//go:embed about/* calisthenics/*
 var appFS embed.FS
 
 var apiLimiter = newAPIRateLimiter(10.0, 2.0, 10*time.Minute)
