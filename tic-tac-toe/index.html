@@ -13,6 +13,13 @@
       --control-bg:#0d1528; --control-fg:#e5e7eb; --control-border:#475569;
       --secondary-bg:#64748b; --secondary-fg:#0c1117;
       --panel-border:#334155;
+      --neon-purple:#b517ff;
+      --neon-cyan:#31f2ff;
+      --neon-yellow:#ffd60a;
+      --neon-lime:#b7ff1a;
+      --neon-orange:#ff5a00;
+      --neon-red:#ff3a2a;
+      --neon-blue:#6a67ff;
     }
     @media (prefers-color-scheme: light){
       :root{
@@ -46,14 +53,64 @@
 
     /* Board */
     #board{ display:grid; gap:2px; width:min(96vw,640px); border-radius:12px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,.35); background:var(--grid); }
-    .cell{ background:var(--control-bg); display:flex; align-items:center; justify-content:center; font-weight:800; cursor:pointer; -webkit-user-select:none; user-select:none; aspect-ratio:1; position:relative; color:var(--primary); font-size:clamp(.85rem, 1.8vw, 2.2rem); transition:background .15s ease, transform .15s ease; }
-    .cell.O{ color:var(--danger); }
+    .cell{ background:var(--control-bg); display:flex; align-items:center; justify-content:center; font-weight:800; cursor:pointer; -webkit-user-select:none; user-select:none; aspect-ratio:1; position:relative; font-size:clamp(.85rem, 1.8vw, 2.2rem); transition:background .15s ease, transform .15s ease; }
     .cell.disabled{ cursor:default; opacity:.95; }
     .cell:not(.disabled):hover{ background:#0f1b2f; }
 
+    .cell .mark{
+      width:72%;
+      height:72%;
+      position:relative;
+      display:block;
+      --mark-color: var(--neon-cyan);
+      --mark-glow: color-mix(in srgb, var(--mark-color) 75%, white 25%);
+      filter: drop-shadow(0 0 5px var(--mark-glow)) drop-shadow(0 0 10px var(--mark-color));
+    }
+    .mark.neon-purple{ --mark-color: var(--neon-purple); }
+    .mark.neon-cyan{ --mark-color: var(--neon-cyan); }
+    .mark.neon-yellow{ --mark-color: var(--neon-yellow); }
+    .mark.neon-lime{ --mark-color: var(--neon-lime); }
+    .mark.neon-orange{ --mark-color: var(--neon-orange); }
+    .mark.neon-red{ --mark-color: var(--neon-red); }
+    .mark.neon-blue{ --mark-color: var(--neon-blue); }
+
+    .mark.x::before,
+    .mark.x::after{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:88%;
+      height:12%;
+      border-radius:999px;
+      background: var(--mark-color);
+      transform-origin:center;
+      box-shadow: 0 0 8px var(--mark-glow), 0 0 14px var(--mark-color);
+    }
+    .mark.x::before{ transform:translate(-50%,-50%) rotate(45deg); }
+    .mark.x::after{ transform:translate(-50%,-50%) rotate(-45deg); }
+
+    .mark.o::before{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:82%;
+      height:82%;
+      transform:translate(-50%,-50%);
+      border-radius:50%;
+      border:0.34rem solid var(--mark-color);
+      box-shadow: 0 0 8px var(--mark-glow), inset 0 0 8px var(--mark-color), 0 0 14px var(--mark-color);
+    }
+
     .cell.last-move{ background:var(--last-move-bg)!important; transform:scale(var(--last-move-scale)); z-index:2; }
 
-    .cell.ghost::before{ content:attr(data-ghost); opacity:.35; }
+    .cell.ghost::before{
+      content:attr(data-ghost);
+      opacity:.35;
+      font-size:clamp(.95rem, 2vw, 2.2rem);
+      text-shadow: 0 0 10px var(--primary);
+    }
 
     .cell.win{ background:var(--win-bg); }
     .cell.win::after{ content:""; position:absolute; inset:0; border:3px solid var(--win-border); border-radius:10px; pointer-events:none; box-shadow:0 0 14px 2px var(--win-border); animation:winPulse .9s ease-in-out 4 alternate; }
@@ -311,7 +368,12 @@
     function makeMove(r,c,sym){
       boardState[r][c]=sym; moveHistory.push({r,c,sym}); const cell=cellEls[r][c];
       clearLastMove();
-      cell.textContent=sym; cell.classList.add('disabled',sym,'last-move');
+      cell.textContent='';
+      const mark = document.createElement('span');
+      const neonClass = getNeonClass(r,c,sym);
+      mark.className = `mark ${sym==='X' ? 'x' : 'o'} ${neonClass}`;
+      cell.appendChild(mark);
+      cell.classList.add('disabled',sym,'last-move');
       cell.setAttribute('aria-label',`Row ${r+1}, Column ${c+1}, ${sym}`);
 
       clearWinHighlights();
@@ -331,6 +393,12 @@
 
     function clearLastMove(){ document.querySelectorAll('.last-move').forEach(el=>{ el.classList.remove('last-move'); }); }
     function clearWinHighlights(){ document.querySelectorAll('.cell.win').forEach(el=>el.classList.remove('win')); }
+    function getNeonClass(r,c,sym){
+      const xPalette = ['neon-blue','neon-red','neon-cyan'];
+      const oPalette = ['neon-lime','neon-yellow','neon-purple','neon-cyan','neon-orange'];
+      const palette = sym === 'X' ? xPalette : oPalette;
+      return palette[(r*boardSize + c + moveHistory.length) % palette.length];
+    }
 
     function disableAll(){ document.querySelectorAll('.cell').forEach(c=>c.classList.add('disabled')); }
     function isFull(){ for(let r=0;r<boardSize;r++) for(let c=0;c<boardSize;c++) if(!boardState[r][c]) return false; return true; }
