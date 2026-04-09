@@ -4,7 +4,7 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Root = Split-Path -Parent $ScriptDir
 $OutDir = if ($env:OUT_DIR) { $env:OUT_DIR } else { Join-Path $Root 'dist' }
 $Version = if ($env:VERSION) { $env:VERSION } else { Get-Date -Format 'yyyy.MM.dd' }
-$App = if ($env:APP) { $env:APP } else { 'prosepilot' }
+$App = if ($env:APP) { $env:APP } else { 'fieldkit' }
 
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 

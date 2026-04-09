@@ -4,11 +4,9 @@ An offline-first Progressive Web App suite served by a compact Go server. It bun
 
 ## Install Buttons
 
-[![Install One App](https://img.shields.io/badge/Install-One%20App-0ea5e9?style=for-the-badge)](https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh)
-[![Install All Apps](https://img.shields.io/badge/Install-All%20Apps-22c55e?style=for-the-badge)](https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-all.sh)
-[![Install Go Launcher](https://img.shields.io/badge/Go%20Install-Launcher-6366f1?style=for-the-badge)](https://pkg.go.dev/github.com/USERNAME/fieldkit-launcher)
-
-Replace `USERNAME/REPO` with your real repository path before publishing.
+[![Install One App](https://img.shields.io/badge/Install-One%20App-0ea5e9?style=for-the-badge)](https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh)
+[![Install All Apps](https://img.shields.io/badge/Install-All%20Apps-22c55e?style=for-the-badge)](https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-all.sh)
+[![Install Go Launcher](https://img.shields.io/badge/Go%20Install-Launcher-6366f1?style=for-the-badge)](https://pkg.go.dev/github.com/george-shepov/FieldKit)
 
 ## Quick Start
 
@@ -26,13 +24,13 @@ go run .
 Install launcher from GitHub:
 
 ```bash
-go install github.com/USERNAME/fieldkit-launcher@latest
+go install github.com/george-shepov/FieldKit@latest
 ```
 
 Validate locally before publish:
 
 ```bash
-go mod edit -module github.com/USERNAME/fieldkit-launcher
+go mod edit -module github.com/george-shepov/FieldKit
 go test ./...
 go build ./...
 ```
@@ -40,13 +38,13 @@ go build ./...
 Install one app from README-linked script:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO accent-speaker
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit accent-speaker
 ```
 
 Install all apps from README-linked script:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-all.sh | bash -s -- OWNER REPO
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-all.sh | bash -s -- george-shepov FieldKit
 ```
 
 ## App Categories
@@ -62,7 +60,7 @@ The launcher also includes a connectivity filter with these same two categories.
 
 Use the install buttons per app, or install the whole suite at once.
 
-[![Install All Apps](https://img.shields.io/badge/Install-All%20Apps-22c55e?style=for-the-badge)](https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-all.sh)
+[![Install All Apps](https://img.shields.io/badge/Install-All%20Apps-22c55e?style=for-the-badge)](https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-all.sh)
 
 ### Airplane Mode
 
@@ -113,193 +111,193 @@ Replace `OWNER` and `REPO` with your repository path.
 ### Install clock
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO clock
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit clock
 ```
 
 ### Install pomodoro
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO pomodoro
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit pomodoro
 ```
 
 ### Install kanban
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO kanban
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit kanban
 ```
 
 ### Install time-tracker
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO time-tracker
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit time-tracker
 ```
 
 ### Install habit-tracker
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO habit-tracker
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit habit-tracker
 ```
 
 ### Install snippet-board
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO snippet-board
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit snippet-board
 ```
 
 ### Install battleship
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO battleship
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit battleship
 ```
 
 ### Install snake
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO snake
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit snake
 ```
 
 ### Install tic-tac-toe
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO tic-tac-toe
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit tic-tac-toe
 ```
 
 ### Install math-raindrops
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO math-raindrops
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit math-raindrops
 ```
 
 ### Install pattern-mirror
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO pattern-mirror
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit pattern-mirror
 ```
 
 ### Install odd-one-out
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO odd-one-out
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit odd-one-out
 ```
 
 ### Install acronym-list
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO acronym-list
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit acronym-list
 ```
 
 ### Install employee-skills
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO employee-skills
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit employee-skills
 ```
 
 ### Install drivers-license
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO drivers-license
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit drivers-license
 ```
 
 ### Install linux-trainer
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO linux-trainer
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit linux-trainer
 ```
 
 ### Install js-trainer
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO js-trainer
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit js-trainer
 ```
 
 ### Install math-trainer
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO math-trainer
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit math-trainer
 ```
 
 ### Install midi-note-helper
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO midi-note-helper
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit midi-note-helper
 ```
 
 ### Install music-player
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO music-player
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit music-player
 ```
 
 ### Install positive-iq
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO positive-iq
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit positive-iq
 ```
 
 ### Install docketpro
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO docketpro
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit docketpro
 ```
 
 ### Install legal-library
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO legal-library
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit legal-library
 ```
 
 ### Install field-checkin
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO field-checkin
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit field-checkin
 ```
 
 ### Install wishlist
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO wishlist
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit wishlist
 ```
 
 ### Install support
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO support
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit support
 ```
 
 ### Install authority-assistant
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO authority-assistant
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit authority-assistant
 ```
 
 ### Install outdoor-kit
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO outdoor-kit
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit outdoor-kit
 ```
 
 ### Install privacy-camera
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO privacy-camera
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit privacy-camera
 ```
 
 ### Install privacy-recorder
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO privacy-recorder
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit privacy-recorder
 ```
 
 ### Install audio-notes
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO audio-notes
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit audio-notes
 ```
 
 ### Install image-rater
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/USERNAME/REPO/main/scripts/install-app.sh | bash -s -- OWNER REPO image-rater
+curl -sSL https://raw.githubusercontent.com/george-shepov/FieldKit/main/scripts/install-app.sh | bash -s -- george-shepov FieldKit image-rater
 ```
 
 ## Testing

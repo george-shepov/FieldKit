@@ -1,4 +1,4 @@
-const CACHE_NAME = "prosepilot-shell-v14";
+const CACHE_NAME = "fieldkit-shell-v15";
 const OFFLINE_FALLBACK = "/index.html";
 
 const PRECACHE_URLS = [
@@ -13,7 +13,8 @@ const PRECACHE_URLS = [
   "/shared/global-auth.js",
   "/shared/pwa-init.js",
   "/shared/ui-tweaks-runtime.js",
-  "/shared/icons/suite-icon.svg",
+  "/shared/icons/tictak-icon-192.png",
+  "/shared/icons/tictak-icon-512.png",
   "/accent-speaker/index.html",
   "/authority-assistant/index.html",
   "/legal-library/index.html",

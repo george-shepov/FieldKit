@@ -36,5 +36,5 @@ This file captures the explicit review prompts requested for agent-driven develo
 
 ### Documentation follow-ups
 
-- Replace placeholder `USERNAME/REPO` values with actual GitHub path before publish.
+- Confirm all repository links use `george-shepov/FieldKit` before publish.
 - Add screenshots/GIFs for top 6 apps to improve portfolio conversion.

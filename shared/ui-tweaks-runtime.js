@@ -246,7 +246,7 @@
     window.addEventListener("resize", scheduleApply, { passive: true });
     window.addEventListener("pageshow", scheduleApply);
 
-    window.ProSePilotUITweaks = {
+    window.FieldKitUITweaks = {
       storageKey: STORAGE_KEY,
       script: SCRIPT_MARKER,
       applyNow: applyAll,

@@ -1,4 +1,3 @@
-// Replace USERNAME with your GitHub username to enable `go install` from GitHub.
-module github.com/USERNAME/fieldkit-launcher
+module github.com/george-shepov/FieldKit
 
 go 1.22

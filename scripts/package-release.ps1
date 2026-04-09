@@ -4,7 +4,7 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Root = Split-Path -Parent $ScriptDir
 $DistDir = if ($env:DIST_DIR) { $env:DIST_DIR } else { Join-Path $Root 'dist' }
 $PkgDir = if ($env:PKG_DIR) { $env:PKG_DIR } else { Join-Path $DistDir 'packages' }
-$App = if ($env:APP) { $env:APP } else { 'prosepilot' }
+$App = if ($env:APP) { $env:APP } else { 'fieldkit' }
 $Version = if ($env:VERSION) { $env:VERSION } else { Get-Date -Format 'yyyy.MM.dd' }
 $BuildIfMissing = if ($env:BUILD_IF_MISSING) { $env:BUILD_IF_MISSING } else { '0' }
 
@@ -105,7 +105,7 @@ Quick start:
 
 Important:
 - For public hosting, run behind HTTPS and set a strong API key.
-- To require API auth in run-lan scripts, set PROSEPILOT_API_KEY before launch.
+- To require API auth in run-lan scripts, set FIELDKIT_API_KEY before launch.
 - API endpoints include media sync, registration, heartbeat, wishlist, and support ticket intake.
 - Press F1 in launcher/apps for built-in help.
 "@ | Set-Content -Path (Join-Path $BundleRoot 'README.txt') -Encoding UTF8

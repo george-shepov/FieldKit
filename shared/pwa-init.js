@@ -21,7 +21,7 @@
 
   if (document.head) {
     ensureLink("manifest", "/manifest.webmanifest");
-    ensureLink("apple-touch-icon", "/shared/icons/suite-icon.svg");
+    ensureLink("apple-touch-icon", "/shared/icons/tictak-icon-512.png");
     ensureMeta("theme-color", "#0f172a");
     ensureMeta("mobile-web-app-capable", "yes");
     ensureMeta("apple-mobile-web-app-capable", "yes");

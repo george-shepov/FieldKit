@@ -4,11 +4,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 RUN_DIR="${ROOT_DIR}/.run"
-PID_FILE="${RUN_DIR}/prosepilot.pid"
-LOG_FILE="${RUN_DIR}/prosepilot.log"
+PID_FILE="${RUN_DIR}/fieldkit.pid"
+LOG_FILE="${RUN_DIR}/fieldkit.log"
 STATE_FILE="${RUN_DIR}/suite-cli.state"
 SERVICE_SCRIPT="${ROOT_DIR}/scripts/suite-service.sh"
-SERVICE_ENV_DIR="${HOME}/.config/prosepilot"
+SERVICE_ENV_DIR="${HOME}/.config/fieldkit"
 SERVICE_ENV_FILE="${SERVICE_ENV_DIR}/suite.env"
 USE_SERVICE_MODE="${SUITE_CLI_USE_SERVICE:-1}"
 
@@ -20,8 +20,8 @@ mkdir -p "${RUN_DIR}"
 
 find_suite_pids() {
   local pattern_dist pattern_root
-  pattern_dist="${ROOT_DIR}/dist/prosepilot-"
-  pattern_root="${ROOT_DIR}/prosepilot"
+  pattern_dist="${ROOT_DIR}/dist/fieldkit-"
+  pattern_root="${ROOT_DIR}/fieldkit"
   {
     pgrep -f "${pattern_dist}" || true
     pgrep -f "${pattern_root}" || true
@@ -79,7 +79,7 @@ binary_path() {
   local os arch bin
   os="$(detect_os)"
   arch="$(detect_arch)"
-  bin="${ROOT_DIR}/dist/prosepilot-${os}-${arch}"
+  bin="${ROOT_DIR}/dist/fieldkit-${os}-${arch}"
   if [[ "${os}" == "windows" ]]; then
     bin="${bin}.exe"
   fi
@@ -87,8 +87,8 @@ binary_path() {
     echo "${bin}"
     return
   fi
-  if [[ -x "${ROOT_DIR}/prosepilot" ]]; then
-    echo "${ROOT_DIR}/prosepilot"
+  if [[ -x "${ROOT_DIR}/fieldkit" ]]; then
+    echo "${ROOT_DIR}/fieldkit"
     return
   fi
   echo "${bin}"
@@ -164,7 +164,7 @@ status() {
     echo "Log:    ${LOG_FILE}"
   fi
   local listeners
-  listeners="$(ss -ltnp 2>/dev/null | grep prosepilot || true)"
+  listeners="$(ss -ltnp 2>/dev/null | grep fieldkit || true)"
   if [[ -n "${listeners}" ]]; then
     echo "Active listeners:"
     echo "${listeners}"

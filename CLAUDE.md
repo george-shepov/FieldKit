@@ -29,13 +29,13 @@ go run .
 ### Run with API Features
 
 ```bash
-./prosepilot --enable-api --api-key "your-secret-key"
+./fieldkit --enable-api --api-key "your-secret-key"
 ```
 
 ### Run with LAN Sharing (phone access)
 
 ```bash
-./prosepilot --share
+./fieldkit --share
 ```
 
 ### Other Flags

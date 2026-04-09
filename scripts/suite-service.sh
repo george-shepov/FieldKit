@@ -3,10 +3,10 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-SERVICE_NAME="prosepilot-suite.service"
+SERVICE_NAME="fieldkit.service"
 UNIT_DIR="${HOME}/.config/systemd/user"
 UNIT_FILE="${UNIT_DIR}/${SERVICE_NAME}"
-ENV_DIR="${HOME}/.config/prosepilot"
+ENV_DIR="${HOME}/.config/fieldkit"
 ENV_FILE="${ENV_DIR}/suite.env"
 
 ensure_files() {
@@ -25,7 +25,7 @@ EOF
 
   cat >"${UNIT_FILE}" <<EOF
 [Unit]
-Description=FieldKit Suite Launcher
+Description=FieldKit Launcher
 After=network.target
 
 [Service]

@@ -113,7 +113,7 @@
 </head>
 <body>
 <nav class="suite-nav">
-  <a href="../index.html">&larr; Back to Suite</a>
+  <a href="../index.html">&larr; Back to FieldKit</a>
   <span class="suite-name">FieldKit</span>
 </nav>
 
@@ -272,8 +272,8 @@
 
   function saveRules(message = "Saved.") {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(rules));
-    if (window.ProSePilotUITweaks && typeof window.ProSePilotUITweaks.applyNow === "function") {
-      window.ProSePilotUITweaks.applyNow();
+    if (window.FieldKitUITweaks && typeof window.FieldKitUITweaks.applyNow === "function") {
+      window.FieldKitUITweaks.applyNow();
     }
     setStatus(message);
   }

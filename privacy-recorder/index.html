@@ -158,7 +158,7 @@
 </head>
 <body>
 <nav class="top">
-  <a href="../index.html">&larr; Back to Suite</a>
+  <a href="../index.html">&larr; Back to FieldKit</a>
   <span>Privacy Video Recorder</span>
 </nav>
 <main class="wrap">
@@ -338,7 +338,7 @@
   }
 
   function getOrCreateDeviceId() {
-    const key = 'prosepilot.deviceId';
+    const key = 'fieldkit.deviceId';
     const existing = localStorage.getItem(key);
     if (existing) return existing;
     const generated = `device-${Math.random().toString(36).slice(2, 10)}`;

@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 DIST_DIR="${DIST_DIR:-${ROOT_DIR}/dist}"
 PKG_DIR="${PKG_DIR:-${DIST_DIR}/packages}"
-APP="${APP:-prosepilot}"
+APP=""
 VERSION="${VERSION:-$(date +%Y.%m.%d)}"
 BUILD_IF_MISSING="${BUILD_IF_MISSING:-0}"
 
@@ -89,10 +89,10 @@ EOF
     cat >"${bundle_root}/run-lan.bat" <<EOF
 @echo off
 set SCRIPT_DIR=%~dp0
-if "%PROSEPILOT_API_KEY%"=="" (
+if "%FIELDKIT_API_KEY%"=="" (
   "%SCRIPT_DIR%${APP}.exe" --share --enable-api
 ) else (
-  "%SCRIPT_DIR%${APP}.exe" --share --enable-api --api-key "%PROSEPILOT_API_KEY%"
+  "%SCRIPT_DIR%${APP}.exe" --share --enable-api --api-key "%FIELDKIT_API_KEY%"
 )
 EOF
   else
@@ -110,7 +110,7 @@ EOF
 #!/usr/bin/env bash
 set -euo pipefail
 DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
-API_KEY="\${PROSEPILOT_API_KEY:-}"
+API_KEY="\${FIELDKIT_API_KEY:-}"
 if [[ -n "\${API_KEY}" ]]; then
   exec "\${DIR}/${APP}" --share --enable-api --api-key "\${API_KEY}" "\$@"
 fi
@@ -132,7 +132,7 @@ Quick start:
 
 Important:
 - For public hosting, run behind HTTPS and set a strong API key.
-- To require API auth in run-lan scripts, set PROSEPILOT_API_KEY before launch.
+- To require API auth in run-lan scripts, set FIELDKIT_API_KEY before launch.
 - API endpoints include media sync, registration, heartbeat, wishlist, and support ticket intake.
 - Press F1 in launcher/apps for built-in help.
 EOF

@@ -25,7 +25,7 @@ jobs:
 
       - name: Build
         env:
-          BINARY_NAME: prosepilot
+          BINARY_NAME: fieldkit
         run: |
           mkdir -p dist
           GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
@@ -37,6 +37,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: dist/prosepilot-${{ matrix.goos }}-${{ matrix.goarch }}
-          asset_name: prosepilot-${{ matrix.goos }}-${{ matrix.goarch }}
+          asset_path: dist/fieldkit-${{ matrix.goos }}-${{ matrix.goarch }}
+          asset_name: fieldkit-${{ matrix.goos }}-${{ matrix.goarch }}
           asset_content_type: application/octet-stream

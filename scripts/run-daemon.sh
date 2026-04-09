@@ -11,7 +11,7 @@ ENABLE_API="${ENABLE_API:-0}"
 API_KEY="${API_KEY:-}"
 DATA_DIR="${DATA_DIR:-${ROOT_DIR}/data}"
 
-BIN="${ROOT_DIR}/dist/prosepilot-linux-amd64"
+BIN="${ROOT_DIR}/dist/fieldkit-linux-amd64"
 if [[ ! -x "${BIN}" ]]; then
   echo "Binary not found: ${BIN}" >&2
   echo "Run: ./scripts/build-release.sh" >&2

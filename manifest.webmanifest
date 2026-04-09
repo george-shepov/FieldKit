@@ -1,6 +1,6 @@
 {
   "id": "/",
-  "name": "FieldKit Suite",
+  "name": "FieldKit",
   "short_name": "FieldKit",
   "description": "Offline-ready productivity, education, and field tools.",
   "start_url": "/?source=pwa",
@@ -10,9 +10,21 @@
   "theme_color": "#0f172a",
   "icons": [
     {
-      "src": "/shared/icons/suite-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/shared/icons/tictak-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/shared/icons/tictak-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/shared/icons/tictak-icon-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
       "purpose": "any"
     }
   ],

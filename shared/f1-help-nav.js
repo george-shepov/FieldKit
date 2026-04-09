@@ -20,7 +20,7 @@
   })();
 
   (function ensureUITweaksInit() {
-    if (window.ProSePilotUITweaks) return;
+    if (window.FieldKitUITweaks) return;
     if (document.getElementById("suiteUiTweaksScript")) return;
     const script = document.createElement("script");
     script.id = "suiteUiTweaksScript";

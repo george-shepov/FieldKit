@@ -8,7 +8,7 @@ set -euo pipefail
 OWNER="${1:-}"
 REPO="${2:-}"
 APP="${3:-}"
-DEST="${4:-$HOME/prosepilot-apps}"
+DEST="${4:-$HOME/fieldkit-apps}"
 REF="${5:-main}"
 
 if [[ -z "$OWNER" || -z "$REPO" || -z "$APP" ]]; then
