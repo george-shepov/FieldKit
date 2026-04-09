@@ -20,6 +20,7 @@
   --ck-light:#c8a96e;
   --ck-dark:#7a4a20;
   --accent:#4a8a5a;
+  --ga-sq-size:54px;
 }
 body{
   min-height:100vh;
@@ -74,7 +75,7 @@ select{background:#0d120d;border:1px solid #1e2e1e;color:#b0a080;font-family:inh
 /* Chess board */
 #chess-board{display:grid;grid-template-columns:repeat(8,1fr);border:2px solid #2a1e10;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px #3a2a15,0 12px 40px rgba(0,0,0,.8);}
 .cs{
-  width:clamp(38px,6.2vw,54px);height:clamp(38px,6.2vw,54px);
+  width:var(--ga-sq-size);height:var(--ga-sq-size);
   display:flex;align-items:center;justify-content:center;
   cursor:default;position:relative;transition:background .1s;font-size:clamp(20px,3.5vw,32px);line-height:1;
   user-select:none;
@@ -95,7 +96,7 @@ select{background:#0d120d;border:1px solid #1e2e1e;color:#b0a080;font-family:inh
 /* Checkers board */
 #ck-board{display:grid;grid-template-columns:repeat(8,1fr);border:2px solid #4a2a10;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px #6a3a1a,0 12px 40px rgba(0,0,0,.8);}
 .cks{
-  width:clamp(38px,6.2vw,54px);height:clamp(38px,6.2vw,54px);
+  width:var(--ga-sq-size);height:var(--ga-sq-size);
   display:flex;align-items:center;justify-content:center;
   position:relative;cursor:default;transition:background .1s;
 }
@@ -132,7 +133,7 @@ select{background:#0d120d;border:1px solid #1e2e1e;color:#b0a080;font-family:inh
 .btn.go:hover:not(:disabled){border-color:#7ab87a;color:#9ad89a;}
 
 /* Teach panel */
-#teach-panel{margin-top:12px;width:100%;max-width:clamp(300px,calc(8 * clamp(38px,6.2vw,54px) + 14px),460px);}
+#teach-panel{margin-top:12px;width:100%;max-width:clamp(300px,calc(8 * var(--ga-sq-size) + 14px),640px);}
 .teach-tip{background:#0a120a;border:1px solid #1a2a1a;border-left:3px solid #3a6a3a;border-radius:4px;padding:8px 11px;margin-bottom:7px;font-size:11px;color:#4a7a4a;line-height:1.55;white-space:pre-line;}
 .teach-log{background:#080d08;border:1px solid #141e14;border-radius:5px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.5;scrollbar-width:thin;scrollbar-color:#1a2a1a #080d08;}
 .teach-log::-webkit-scrollbar{width:5px;}
@@ -162,7 +163,7 @@ select{background:#0d120d;border:1px solid #1e2e1e;color:#b0a080;font-family:inh
 </style>
 </head>
 <body data-app-key="game-academy">
-<nav class="suite-nav" data-suite-nav="1" style="width:min(780px,100%)">
+<nav class="suite-nav" data-suite-nav="1" style="width:min(1100px,100%)">
   <a href="../index.html">&larr; Back to FieldKit</a>
   <span>FieldKit</span>
 </nav>
@@ -642,10 +643,29 @@ let selectedSq=null, validMvsCache=[];
 let watchState=null, watchRunning=false, watchPaused=false, watchTimer=null, stepPending=false;
 const LVL_NAMES=['Rookie','Beginner','Student','Intermediate'];
 
+function fitBoardToViewport(){
+  const navH = document.querySelector('.suite-nav')?.offsetHeight || 0;
+  const titleH = document.querySelector('h1')?.offsetHeight || 0;
+  const tagH = document.querySelector('.tagline')?.offsetHeight || 0;
+  const tabsH = (document.querySelector('.game-tabs')?.offsetHeight || 0) + (document.querySelector('.mode-tabs')?.offsetHeight || 0);
+  const ctrlH = (document.getElementById('play-ctrl')?.offsetHeight || 0) + (document.getElementById('watch-ctrl')?.offsetHeight || 0);
+  const scoreH = document.querySelector('.scoreboard')?.offsetHeight || 0;
+  const msgH = document.getElementById('message')?.offsetHeight || 0;
+  const btnH = (document.getElementById('play-btns')?.offsetHeight || 0) + (document.getElementById('watch-btns')?.offsetHeight || 0);
+  const teachH = MODE==='watch' ? Math.min(130, document.getElementById('teach-panel')?.offsetHeight || 0) : 0;
+  const chrome = navH + titleH + tagH + tabsH + ctrlH + scoreH + msgH + btnH + teachH + 54;
+  const byHeight = Math.max(300, window.innerHeight - chrome);
+  const byWidth = Math.max(300, Math.floor(window.innerWidth * 0.96));
+  const boardEdge = Math.min(byHeight, byWidth, 780);
+  const sq = Math.max(34, Math.min(72, Math.floor((boardEdge - 10) / 8)));
+  document.documentElement.style.setProperty('--ga-sq-size', `${sq}px`);
+}
+
 // ════════════════════════════════════════════════════════════
 // RENDERING
 // ════════════════════════════════════════════════════════════
 function renderChess(state, highlights){
+  fitBoardToViewport();
   const el=document.getElementById('chess-board');
   el.innerHTML='';
   const hl=highlights||{};
@@ -688,6 +708,7 @@ function renderChess(state, highlights){
 }
 
 function renderCK(state, highlights){
+  fitBoardToViewport();
   const el=document.getElementById('ck-board');
   el.innerHTML='';
   const hl=highlights||{};
@@ -1095,6 +1116,7 @@ function switchGame(g){
   updateTeachTip();
   if(MODE==='play')startPlayMode();
   else resetWatch();
+  fitBoardToViewport();
 }
 
 function switchMode(m){
@@ -1109,6 +1131,7 @@ function switchMode(m){
   document.getElementById('teach-panel').style.display=m==='watch'?'block':'none';
   if(m==='play')startPlayMode();
   else resetWatch();
+  fitBoardToViewport();
 }
 
 function clearTimer(){if(watchTimer)clearTimeout(watchTimer);watchTimer=null;}
@@ -1120,10 +1143,12 @@ document.getElementById('wspeed').addEventListener('change',()=>{
 });
 document.getElementById('wl1').addEventListener('change',()=>{updateWatchLabels();updateTeachTip();});
 document.getElementById('wl2').addEventListener('change',()=>{updateWatchLabels();updateTeachTip();});
+window.addEventListener('resize', fitBoardToViewport);
 
 // Boot
 updateTeachTip();
 startPlayMode();
+fitBoardToViewport();
 </script>
 <script src="../shared/help-content.js"></script>
 <script src="../shared/f1-help-nav.js"></script>

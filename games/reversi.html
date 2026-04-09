@@ -8,6 +8,10 @@
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+:root {
+  --rv-cell-size: 54px;
+}
+
 body {
   min-height: 100vh;
   background: #0d1117;
@@ -143,8 +147,8 @@ select:hover { border-color: #444; }
   box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 16px 50px rgba(0,0,0,0.8);
 }
 .cell {
-  width: clamp(36px, 6.5vw, 54px);
-  height: clamp(36px, 6.5vw, 54px);
+  width: var(--rv-cell-size);
+  height: var(--rv-cell-size);
   background: #245233;
   border-radius: 3px;
   display: flex;
@@ -287,7 +291,7 @@ select:hover { border-color: #444; }
 </head>
 <body data-app-key="reversi">
 
-<nav class="suite-nav" data-suite-nav="1" style="width:min(780px,100%)">
+<nav class="suite-nav" data-suite-nav="1" style="width:min(1100px,100%)">
   <a href="../index.html">&larr; Back to FieldKit</a>
   <span>FieldKit</span>
 </nav>
@@ -407,6 +411,24 @@ const LEVEL_TIPS=[
   '♟ Intermediate uses positional strategy and looks 3 moves deep. Corners become a priority.',
   '🏆 Advanced looks 4 moves ahead with full strategy — corners, edge stability, and mobility all considered.'
 ];
+
+function fitBoardToViewport(){
+  const navH = document.querySelector('.suite-nav')?.offsetHeight || 0;
+  const titleH = document.querySelector('h1')?.offsetHeight || 0;
+  const subtitleH = document.querySelector('.subtitle')?.offsetHeight || 0;
+  const tabsH = document.querySelector('.mode-tabs')?.offsetHeight || 0;
+  const controlsH = (document.getElementById('play-controls')?.offsetHeight || 0) + (document.getElementById('watch-controls')?.offsetHeight || 0);
+  const scoreH = document.getElementById('scoreboard')?.offsetHeight || 0;
+  const msgH = document.getElementById('message')?.offsetHeight || 0;
+  const actionH = (document.getElementById('play-action')?.offsetHeight || 0) + (document.getElementById('watch-action')?.offsetHeight || 0);
+  const teachH = mode==='watch' ? Math.min(130, document.getElementById('teach-panel')?.offsetHeight || 0) : 0;
+  const chrome = navH + titleH + subtitleH + tabsH + controlsH + scoreH + msgH + actionH + teachH + 54;
+  const byHeight = Math.max(280, window.innerHeight - chrome);
+  const byWidth = Math.max(280, Math.floor(window.innerWidth * 0.96));
+  const boardEdge = Math.min(byHeight, byWidth, 760);
+  const cell = Math.max(32, Math.min(72, Math.floor((boardEdge - 24) / 8)));
+  document.documentElement.style.setProperty('--rv-cell-size', `${cell}px`);
+}
 
 let board, currentPlayer, gameOver, lastMove;
 let mode='play';
@@ -553,6 +575,7 @@ function analyzeMove(board,r,c,player,flips,level){
 
 // ─── Render ───────────────────────────────────────────────────────────────────
 function render(flashFlips,highlightCell){
+  fitBoardToViewport();
   const el=document.getElementById('board');
   el.innerHTML='';
   const validMoves=(!gameOver&&mode==='play'&&currentPlayer===HUMAN)?getValidMoves(board,HUMAN):[];
@@ -812,9 +835,13 @@ function switchMode(m){
   document.getElementById('teach-panel').style.display=m==='watch'?'block':'none';
   if(m==='play')newGame();
   else resetWatch();
+  fitBoardToViewport();
 }
 
+window.addEventListener('resize', fitBoardToViewport);
+
 newGame();
+fitBoardToViewport();
 </script>
 <script src="../shared/help-content.js"></script>
 <script src="../shared/f1-help-nav.js"></script>

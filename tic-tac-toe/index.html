@@ -32,7 +32,7 @@
     @media (prefers-reduced-motion: reduce){ *{ transition:none!important; animation:none!important; } }
 
     *{ box-sizing:border-box; margin:0; padding:0; }
-    body{ font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background:var(--bg); color:var(--fg); display:flex; flex-direction:column; align-items:center; gap:10px; padding:12px; }
+    body{ font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background:var(--bg); color:var(--fg); display:flex; flex-direction:column; align-items:center; gap:10px; padding:12px; min-height:100dvh; overflow:auto; }
 
     /* Controls */
     #controls{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; align-items:center; width:min(96vw,640px); background:var(--card); border:1px solid var(--panel-border); border-radius:10px; padding:10px 12px; box-shadow:0 1px 6px rgba(0,0,0,.25); }
@@ -52,7 +52,7 @@
     #turnbar{ font-size:.95rem; opacity:.85; }
 
     /* Board */
-    #board{ display:grid; gap:2px; width:min(96vw,640px); border-radius:12px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,.35); background:var(--grid); }
+    #board{ display:grid; gap:2px; width:min(96vw,840px); border-radius:12px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,.35); background:var(--grid); }
     .cell{ background:var(--control-bg); display:flex; align-items:center; justify-content:center; font-weight:800; cursor:pointer; -webkit-user-select:none; user-select:none; aspect-ratio:1; position:relative; font-size:clamp(.85rem, 1.8vw, 2.2rem); transition:background .15s ease, transform .15s ease; }
     .cell.disabled{ cursor:default; opacity:.95; }
     .cell:not(.disabled):hover{ background:#0f1b2f; }
@@ -256,6 +256,19 @@
 
     function tierLabel(v){ return TIERS[(v-1)|0] || '—'; }
 
+    function fitBoardToViewport(){
+      const navH = document.querySelector('.suite-nav')?.offsetHeight || 0;
+      const titleH = document.querySelector('h1')?.offsetHeight || 0;
+      const controlsH = document.getElementById('controls')?.offsetHeight || 0;
+      const presetsH = document.getElementById('presets')?.offsetHeight || 0;
+      const messageH = (document.getElementById('message')?.offsetHeight || 0) + (document.getElementById('turnbar')?.offsetHeight || 0);
+      const scoreboardH = document.getElementById('scoreboard')?.offsetHeight || 0;
+      const chrome = navH + titleH + controlsH + presetsH + messageH + scoreboardH + 56;
+      const byHeight = Math.max(220, Math.min(900, window.innerHeight - chrome));
+      const byWidth = Math.max(220, Math.min(900, Math.floor(window.innerWidth * 0.96)));
+      boardEl.style.width = `${Math.floor(Math.min(byHeight, byWidth))}px`;
+    }
+
     function getTierParams(v){
       // Scales: depth (lookahead), nearRadius (candidate neighborhood), weights
       const clamp = (n,min,max)=>Math.max(min,Math.min(max,n|0));
@@ -334,6 +347,7 @@
       currentPlayer = 'X'; gameOver = false; moveHistory = [];
       messageEl.textContent = 'Your turn (X).'; turnWhoEl.textContent = 'X';
       renderBoard();
+      fitBoardToViewport();
     }
 
     function renderBoard(){
@@ -488,8 +502,10 @@
     function sendScore(){ try{ window.parent?.postMessage({ type:'score_update', score: scoreboard.xWins }, '*'); }catch{} }
     function sendGameOver(result){ const tierNext = result==='win'?Math.min(10,tier+1):result==='loss'?Math.max(1,tier-1):tier; try{ window.parent?.postMessage({ type:'game_over', result, tierNext }, '*'); }catch{} }
 
+    window.addEventListener('resize', fitBoardToViewport);
+
     /** Boot **/
-    function boot(){ loadState(); updateTierPill(); resetGame(); updateScores(); sendMeta(); }
+    function boot(){ loadState(); updateTierPill(); resetGame(); updateScores(); fitBoardToViewport(); sendMeta(); }
     boot();
   })();
   </script>

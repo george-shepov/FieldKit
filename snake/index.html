@@ -22,7 +22,7 @@ body{min-height:100vh;min-height:100dvh;-webkit-font-smoothing:antialiased;overf
 .suite-nav a:hover{color:var(--accent)}
 .suite-nav .suite-name{color:var(--text3);font-family:var(--mono);font-size:11px}
 
-.wrap{display:flex;flex-direction:column;align-items:center;padding:12px;height:calc(100vh - 37px);height:calc(100dvh - 37px)}
+.wrap{display:flex;flex-direction:column;align-items:center;padding:12px;height:calc(100vh - 37px);height:calc(100dvh - 37px);width:min(100%,980px);margin:0 auto}
 
 /* HUD */
 .hud{display:flex;gap:16px;align-items:center;padding:8px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:10px;flex-wrap:wrap;justify-content:center}
@@ -137,8 +137,13 @@ canvas=document.getElementById('game');
 ctx=canvas.getContext('2d');
 
 function sizeCanvas(){
-  const maxW=Math.min(window.innerWidth-24,400);
-  const maxH=window.innerHeight-260;
+  const navH=document.querySelector('.suite-nav')?.offsetHeight||37;
+  const hudH=document.querySelector('.hud')?.offsetHeight||0;
+  const dpadH=document.getElementById('dpad')?.offsetHeight||0;
+  const tipH=document.querySelector('.tip')?.offsetHeight||0;
+  const verticalPadding=52;
+  const maxW=Math.min(window.innerWidth-24,700);
+  const maxH=Math.max(220, window.innerHeight-(navH+hudH+dpadH+tipH+verticalPadding));
   const s=Math.min(maxW,maxH);
   cellSize=Math.floor(s/GRID);
   const px=cellSize*GRID;
