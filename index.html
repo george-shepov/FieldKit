@@ -692,8 +692,8 @@
     }
     function getOfflineBadgeHTML(app) {
       const mode = getConnectivityMode(app);
-      if (mode === 'wifi') return '<span class="s-badge s-badge-outline badge-connectivity" style="border-color: rgba(239, 68, 68, 0.4); color: #f87171;">WI-FI / CELL</span>';
-      return '<span class="s-badge s-badge-outline badge-connectivity" style="border-color: rgba(74, 222, 128, 0.4); color: #4ade80;">AIRPLANE MODE</span>';
+      if (mode === 'wifi') return '<span class="s-badge s-badge-outline badge badge-connectivity online" style="border-color: rgba(239, 68, 68, 0.4); color: #f87171;">WI-FI / CELL</span>';
+      return '<span class="s-badge s-badge-outline badge badge-connectivity offline" style="border-color: rgba(74, 222, 128, 0.4); color: #4ade80;">AIRPLANE MODE</span>';
     }
     function getTierBadgeHTML(app) {
       if (app.demo) return '<span class="s-badge s-badge-secondary">DEMO</span>';

@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 DIST_DIR="${DIST_DIR:-${ROOT_DIR}/dist}"
 PKG_DIR="${PKG_DIR:-${DIST_DIR}/packages}"
-APP=""
+APP="${APP:-fieldkit}"
 VERSION="${VERSION:-$(date +%Y.%m.%d)}"
 BUILD_IF_MISSING="${BUILD_IF_MISSING:-0}"
 

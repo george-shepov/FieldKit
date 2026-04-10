@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 OUT_DIR="${OUT_DIR:-${ROOT_DIR}/dist}"
 VERSION="${VERSION:-$(date +%Y.%m.%d)}"
-APP=""
+APP="${APP:-fieldkit}"
 
 mkdir -p "${OUT_DIR}"
 
