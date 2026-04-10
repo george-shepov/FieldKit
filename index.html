@@ -7,9 +7,9 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="icon" type="image/png" sizes="192x192" href="/shared/icons/tictak-icon-192.png">
-  <link rel="apple-touch-icon" href="/shared/icons/tictak-icon-512.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="shared/icons/tictak-icon-192.png">
+  <link rel="apple-touch-icon" href="shared/icons/tictak-icon-512.png">
   <link rel="stylesheet" href="shared/shadcn.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <title>FieldKit</title>
@@ -680,6 +680,15 @@
       } else {
         btn.style.display = '';
       }
+    }
+    function getConnectivityMode(app) {
+      if (!app || typeof app !== 'object') return 'airplane';
+      const offlineMode = typeof app.offline === 'string' ? app.offline.toLowerCase() : '';
+      if (offlineMode === 'hybrid' || offlineMode === 'wifi' || offlineMode === 'online' || offlineMode === 'network') {
+        return 'wifi';
+      }
+      if (app.offline === false) return 'wifi';
+      return 'airplane';
     }
     function getOfflineBadgeHTML(app) {
       const mode = getConnectivityMode(app);
