@@ -1,0 +1,19 @@
+{
+  "name": "fieldkit",
+  "version": "1.0.0",
+  "description": "FieldKit - Offline-first PWA suite with 40+ productivity, learning, and field tools",
+  "main": "sw.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "playwright test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "playwright": "^1.58.2"
+  }
+}

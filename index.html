@@ -7,384 +7,357 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="apple-touch-icon" href="/shared/icons/suite-icon.svg">
-  <title>ProSe Pilot Suite</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="shared/icons/tictak-icon-192.png">
+  <link rel="apple-touch-icon" href="shared/icons/tictak-icon-512.png">
+  <link rel="stylesheet" href="shared/shadcn.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <title>FieldKit</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #0f172a;
-      color: #e2e8f0;
       min-height: 100vh;
-      padding: 20px;
+      padding: 24px;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(244, 244, 245, 0.05) 0%, rgba(244, 244, 245, 0) 34%),
+        radial-gradient(circle at 88% 0%, rgba(99, 102, 241, 0.12) 0%, rgba(99, 102, 241, 0) 40%),
+        linear-gradient(180deg, #09090b 0%, #0d0d10 100%);
     }
-    .container { max-width: 800px; margin: 0 auto; }
+    .container { max-width: 1040px; margin: 0 auto; }
+    
     .header {
       text-align: center;
-      padding: 40px 0;
-      border-bottom: 2px solid #1e293b;
-      margin-bottom: 30px;
+      padding: 48px 24px;
+      margin-bottom: 24px;
     }
     .header h1 {
-      font-size: 2.5em;
-      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 10px;
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      margin-bottom: 12px;
     }
-    .header p { color: #94a3b8; font-size: 1.1em; }
-    .header-tools {
-      margin-top: 16px;
+    .header p { color: var(--muted-foreground); font-size: 1.125rem; }
+
+    .launcher-controls {
+      margin-bottom: 24px;
+      padding: 16px;
       display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 12px;
+      gap: 16px;
       flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
     }
-    .help-btn {
-      border: 1px solid #334155;
-      border-radius: 10px;
-      background: #111b30;
-      color: #e2e8f0;
-      padding: 9px 14px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .help-btn:hover { background: #1d2a46; }
-    .install-btn {
-      border-color: #14532d;
-      background: #0d2f1b;
-    }
-    .install-btn:hover { background: #134429; }
-    .help-hint { color: #94a3b8; font-size: 0.95em; }
     
     .category {
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 12px;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      background-color: hsl(var(--card) / 0.5);
+      backdrop-filter: blur(4px);
       overflow: hidden;
     }
     .category-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 20px;
+      padding: 16px 20px;
       cursor: pointer;
       transition: background 0.2s;
     }
-    .category-header:hover { background: #334155; }
+    .category-header:hover { background: hsl(var(--accent)); }
     .category-title {
-      font-size: 1.2em;
+      font-size: 1.125rem;
       font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
-    .category-count {
-      background: #334155;
-      padding: 4px 12px;
-      border-radius: 999px;
-      font-size: 0.9em;
-      color: #94a3b8;
+    .category-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: hsl(var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: hsl(var(--foreground));
     }
-    .category-icon { font-size: 1.5em; }
-    .chevron {
-      transition: transform 0.3s;
-      font-size: 1.2em;
-      color: #64748b;
-    }
-    .category.open .chevron { transform: rotate(180deg); }
     
-    .apps-list {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease-out;
-    }
-    .category.open .apps-list {
-      max-height: 1000px;
-      transition: max-height 0.5s ease-in;
-    }
     .app-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 16px 20px;
-      border-top: 1px solid #334155;
+      padding: 12px 20px;
+      border-top: 1px solid hsl(var(--border));
       transition: background 0.2s;
       text-decoration: none;
       color: inherit;
     }
-    .app-item:hover { background: #334155; }
+    .app-item:hover { background: hsl(var(--accent) / 0.5); }
     .app-info {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
     }
     .app-icon {
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       border-radius: 10px;
-      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      background: hsl(var(--secondary));
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.3em;
+      flex-shrink: 0;
     }
-    .app-name { font-weight: 500; }
-    .app-desc { font-size: 0.9em; color: #94a3b8; }
-    .badge {
-      padding: 4px 12px;
-      border-radius: 999px;
-      font-size: 0.85em;
-      font-weight: 600;
+    .app-icon img {
+      width: 24px;
+      height: 24px;
+      filter: brightness(0) invert(1);
     }
-    .badge.demo { background: #fbbf24; color: #000; }
-    .badge.full { background: #10b981; color: #000; }
-    .badge.free { background: #6366f1; color: #fff; }
     
-    .loading {
-      text-align: center;
-      padding: 60px 20px;
-      color: #64748b;
+    .app-name { font-weight: 600; font-size: 1rem; }
+    .app-desc { font-size: 0.875rem; color: hsl(var(--muted-foreground)); }
+
+    /* Custom overrides for shadcn look */
+    .badge-connectivity {
+      font-size: 10px;
+      padding: 2px 8px;
+      letter-spacing: 0.05em;
     }
-    .spinner {
-      border: 3px solid #334155;
-      border-top: 3px solid #3b82f6;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 20px;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+    
     .help-overlay {
       position: fixed;
       inset: 0;
       display: none;
-      background: rgba(2, 6, 23, 0.78);
-      backdrop-filter: blur(2px);
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
       padding: 20px;
-      z-index: 50;
+      z-index: 100;
     }
-    .help-overlay.open {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-    }
+    .help-overlay.open { display: flex; justify-content: center; align-items: center; }
     .help-dialog {
-      width: min(1100px, 100%);
-      max-height: calc(100vh - 40px);
+      width: min(800px, 100%);
+      max-height: 90vh;
       overflow: auto;
-      background: #0b1221;
-      border: 1px solid #334155;
-      border-radius: 14px;
-      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.5);
     }
-    .help-head {
-      position: sticky;
-      top: 0;
-      background: #0f172a;
-      border-bottom: 1px solid #334155;
-      padding: 16px 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      z-index: 2;
-    }
-    .help-head h2 { font-size: 1.15em; }
-    .help-head p { color: #94a3b8; font-size: 0.92em; margin-top: 4px; }
-    .help-close {
-      border: 1px solid #334155;
-      background: #111827;
-      color: #e2e8f0;
-      border-radius: 8px;
-      padding: 6px 10px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    .help-close:hover { background: #1f2937; }
-    .help-body { padding: 16px; display: grid; gap: 14px; }
-    .help-section {
-      background: #0f172a;
-      border: 1px solid #273549;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    .help-section-head {
-      padding: 12px 14px;
-      font-weight: 700;
-      border-bottom: 1px solid #1f2b3f;
-      background: #111c31;
-    }
-    .help-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 10px;
-      padding: 12px;
-    }
-    .help-card {
-      background: #101826;
-      border: 1px solid #2a3850;
-      border-radius: 10px;
-      padding: 10px;
-    }
-    .help-card h3 { font-size: 0.98em; margin-bottom: 6px; }
-    .help-card p { font-size: 0.88em; color: #cbd5e1; line-height: 1.45; }
-    .help-card p + p { margin-top: 6px; }
-    .help-card strong { color: #93c5fd; }
-    
+
     @media (max-width: 640px) {
-      .header h1 { font-size: 2em; }
-      .category-header { padding: 16px; }
-      .app-item { padding: 14px 16px; }
       .app-desc { display: none; }
-      .help-overlay { padding: 10px; }
-      .help-dialog { max-height: calc(100vh - 20px); }
-      .help-grid { grid-template-columns: 1fr; }
+      .launcher-controls { flex-direction: column; align-items: stretch; }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>ProSe Pilot</h1>
-      <p>Your Personal Productivity Suite</p>
-      <div class="header-tools">
-        <button id="openHelpBtn" class="help-btn" type="button">? Help</button>
-        <button id="installAppBtn" class="help-btn install-btn" type="button">Install</button>
-        <span class="help-hint">Press <strong>F1</strong> anywhere on this page</span>
-        <span id="installHint" class="help-hint"></span>
+      <h1>FieldKit</h1>
+      <p>Offline-first lobby for tools, training, and field workflows</p>
+      <div class="header-tools flex items-center justify-center gap-2 m-b-4" style="margin-top: 24px;">
+        <button id="openHelpBtn" class="s-btn s-btn-outline" type="button"><i data-lucide="help-circle" size="18"></i> Help</button>
+        <button id="installAppBtn" class="s-btn s-btn-primary" type="button"><i data-lucide="download" size="18"></i> Install</button>
+        <button id="signOutBtn" class="s-btn s-btn-outline" type="button" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.2);"><i data-lucide="log-out" size="18"></i> Sign Out</button>
+      </div>
+      <div class="flex items-center justify-center gap-2 text-muted" style="font-size: 0.875rem;">
+        <span>Press <kbd class="s-badge s-badge-outline" style="border-radius: 4px; padding: 0 4px;">F1</kbd> anywhere</span>
+        <span id="installHint"></span>
       </div>
     </div>
     
+    <div class="launcher-controls s-card" aria-label="Launcher controls">
+      <div class="flex items-center gap-4 flex-wrap">
+        <div class="flex items-center gap-2">
+          <label class="text-muted font-semibold" style="font-size: 0.75rem; text-transform: uppercase;">View</label>
+          <select id="sortModeSelect" class="s-select" style="width: auto;">
+            <option value="categories">By Category</option>
+            <option value="az">A-Z</option>
+            <option value="za">Z-A</option>
+            <option value="recent">Most Recent</option>
+            <option value="favorites">Favorites Only</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-muted font-semibold" style="font-size: 0.75rem; text-transform: uppercase;">Connectivity</label>
+          <select id="connectivityFilterSelect" class="s-select" style="width: auto;">
+            <option value="all">All</option>
+            <option value="airplane">Airplane Mode</option>
+            <option value="wifi">Wi-Fi / Cell</option>
+          </select>
+        </div>
+        <button id="clearRecentBtn" class="s-btn s-btn-ghost s-btn-sm" type="button">Clear Recent</button>
+      </div>
+    </div>
+
     <div id="content">
-      <div class="loading">
-        <div class="spinner"></div>
-        <p>Scanning for apps...</p>
+      <div class="loading flex flex-direction-column items-center justify-center p-4" style="padding: 100px 0;">
+        <div class="spinner m-b-4"></div>
+        <p class="text-muted">Scanning for apps...</p>
       </div>
     </div>
   </div>
+  
   <div id="helpOverlay" class="help-overlay" aria-hidden="true">
-    <div class="help-dialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
-      <div class="help-head">
+    <div class="help-dialog s-card" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <div class="s-card-header flex-direction-row justify-between items-center" style="border-bottom: 1px solid hsl(var(--border));">
         <div>
-          <h2 id="helpTitle">Suite Help (F1)</h2>
-          <p>Main features and main scenarios for each app</p>
+          <h2 id="helpTitle" class="s-card-title">Suite Help</h2>
+          <p class="s-card-description">Main features and scenarios for each app</p>
         </div>
-        <button id="closeHelpBtn" class="help-close" type="button" aria-label="Close help">X Clear</button>
+        <button id="closeHelpBtn" class="s-btn s-btn-ghost s-btn-icon" type="button" aria-label="Close help"><i data-lucide="x"></i></button>
       </div>
-      <div id="helpBody" class="help-body"></div>
+      <div id="helpBody" class="help-body" style="padding: 20px;"></div>
     </div>
   </div>
 
   <script src="./shared/privacy-mode.js"></script>
   <script src="./shared/pwa-init.js"></script>
+  <script src="./shared/global-auth.js"></script>
   <script>
     const APP_REGISTRY = {
       finance: {
-        title: '💰 Finance',
-        icon: '💰',
+        title: '🧾 Money & Ops',
+        icon: 'calculator.svg',
         apps: {
-          'gigtax': { name: 'GigTax', desc: '1099 tax calculator', icon: '📊' },
-          'receipt-tracker': { name: 'Receipt Tracker', desc: 'Expense tracking', icon: '🧾' },
-          'inventory': { name: 'Inventory Manager', desc: 'Marketplace listings', icon: '📦' }
+          'gigtax': { name: 'GigTax', desc: '1099 tax calculator', icon: 'calculator.svg' },
+          'receipt-tracker': { name: 'Receipt Tracker', desc: 'Expense tracking', icon: 'receipt-text.svg' },
+          'inventory': { name: 'Inventory Manager', desc: 'Stock + software offers + GitHub intake', icon: 'package.svg' }
         }
       },
       legal: {
-        title: '⚖️ Legal',
-        icon: '⚖️',
+        title: '⚖️ Legal & Records',
+        icon: 'shield-alert.svg',
         apps: {
-          'docketpro': { name: 'DocketPro', desc: 'Legal docket manager', icon: '📁' },
-          'legal-library': { name: 'Legal Library', desc: 'Offline refs + import/search docs', icon: '📚' },
-          'authority-assistant': { name: 'Legal Assistant', desc: 'Consent gate + voice clips + emergency alerts', icon: '🚨' }
+          'docketpro': { name: 'DocketPro', desc: 'Legal docket manager', icon: 'folder-kanban.svg' },
+          'legal-library': { name: 'Legal Library', desc: 'Offline refs + import/search docs', icon: 'library.svg' },
+          'authority-assistant': {
+            name: 'Legal Assistant',
+            desc: 'Consent gate + voice clips + emergency alerts',
+            icon: 'shield-alert.svg',
+            offline: 'hybrid'
+          }
         }
       },
       productivity: {
-        title: '⚡ Productivity',
-        icon: '⚡',
+        title: '📈 Execution',
+        icon: 'kanban.svg',
         apps: {
-          'pomodoro': { name: 'Pomodoro Timer', desc: 'Focus sessions with audio', icon: '🍅' },
-          'kanban': { name: 'Kanban Board', desc: 'Visual task management', icon: '📋' },
-          'time-tracker': { name: 'Time Tracker', desc: 'Activity logging', icon: '⏱️' },
-          'habit-tracker': { name: 'Habit Tracker', desc: 'Build better habits', icon: '✅' },
-          'snippet-board': { name: 'Snippet Board', desc: 'Code snippets', icon: '💾' }
+          'pomodoro': { name: 'Pomodoro Timer', desc: 'Focus sessions with audio', icon: 'timer.svg' },
+          'kanban': { name: 'Kanban Board', desc: 'Visual task management', icon: 'kanban.svg' },
+          'time-tracker': { name: 'Time Tracker', desc: 'Activity logging', icon: 'clock.svg' },
+          'habit-tracker': { name: 'Habit Tracker', desc: 'Build better habits', icon: 'check-circle.svg' },
+          'snippet-board': { name: 'Snippet Board', desc: 'Code snippets', icon: 'code-2.svg' }
         }
       },
-      health: {
-        title: '🏃 Health',
-        icon: '🏃',
+      field: {
+        title: '🩺 Field & Safety',
+        icon: 'briefcase-medical.svg',
         apps: {
-          'cns-tap-test': { name: 'CNS Tap Test', desc: 'Readiness + load guidance', icon: '⚡' },
-          'first-aid': { name: 'First Aid & CPR', desc: 'Offline emergency guide', icon: '🩺' },
-          'meal-tracker': { name: 'Meal Tracker', desc: 'Nutrition logging', icon: '🍽️' }
+          'outdoor-kit': {
+            name: 'Outdoor Kit',
+            desc: 'Compass, sun, SOS, chat, scientific calc',
+            icon: 'compass.svg',
+            offline: 'hybrid'
+          },
+          'field-checkin': {
+            name: 'Field Check-In',
+            desc: 'Registration + emergency heartbeat',
+            icon: 'map-pin.svg',
+            offline: 'hybrid'
+          },
+          'cns-tap-test': { name: 'CNS Tap Test', desc: 'Readiness + load guidance', icon: 'activity.svg' },
+          'first-aid': { name: 'First Aid & CPR', desc: 'Offline emergency guide', icon: 'briefcase-medical.svg' }
         }
       },
       education: {
-        title: '📚 Education',
-        icon: '📚',
+        title: '🎓 Training Lab',
+        icon: 'terminal.svg',
         apps: {
-          'linux-trainer': { name: 'Linux Trainer', desc: '163 terminal questions', icon: '🐧' },
-          'js-trainer': { name: 'JavaScript Trainer', desc: 'Live REPL', icon: '🟨' },
-          'math-trainer': { name: 'Math Trainer', desc: 'Practice drills', icon: '🔢' },
-          'drivers-license': { name: 'Driver License Study', desc: 'Multilingual digest + flashcards', icon: '🚗' },
-          'music-trainer': { name: 'Music Theory', desc: 'Ear training', icon: '🎵' },
-          'midi-note-helper': { name: 'MIDI Note Helper', desc: 'Map MIDI numbers to notes/octaves', icon: '🎹' },
-          'quiz-builder': { name: 'Quiz Builder', desc: 'Create quizzes', icon: '❓' },
-          'online-academy': { name: 'Online Academy', desc: 'Learning platform', icon: '🎓' }
+          'linux-trainer': { name: 'Linux Trainer', desc: '163 terminal questions', icon: 'terminal.svg' },
+          'js-trainer': { name: 'JavaScript Trainer', desc: 'Live REPL', icon: 'javascript.svg' },
+          'math-trainer': { name: 'Math Trainer', desc: 'Practice drills', icon: 'calculator.svg' },
+          'drivers-license': { name: 'Driver License Study', desc: 'Digest-driven permit prep with extended card bank', icon: 'id-card.svg' },
+          'music-trainer': { name: 'Music Theory', desc: 'Ear training', icon: 'music-2.svg' },
+          'midi-note-helper': { name: 'MIDI Note Helper', desc: 'Map MIDI numbers to notes/octaves', icon: 'piano.svg' }
+        }
+      },
+      media: {
+        title: '🎬 Media & Capture',
+        icon: 'camera.svg',
+        apps: {
+          'privacy-camera': {
+            name: 'Privacy Camera',
+            desc: 'In-memory photo capture',
+            icon: 'camera.svg',
+            offline: 'hybrid'
+          },
+          'privacy-recorder': {
+            name: 'Privacy Recorder',
+            desc: 'In-memory video recorder',
+            icon: 'video.svg',
+            offline: 'hybrid'
+          },
+          'audio-notes': {
+            name: 'Audio Notes Recorder',
+            desc: 'Voice notes + optional sync',
+            icon: 'mic.svg',
+            offline: 'hybrid'
+          },
+          'music-player': { name: 'Music Player', desc: 'Offline local audio player', icon: 'list-music.svg' },
+          'image-rater': {
+            name: 'Image Rater Lab',
+            desc: 'Rate images + learn preferences',
+            icon: 'image.svg',
+            offline: 'hybrid'
+          },
+          'accent-speaker': { name: 'Accent Voice Lab', desc: 'Style voices + phrase playback', icon: 'volume-2.svg' }
         }
       },
       business: {
-        title: '💼 Business',
-        icon: '💼',
+        title: '🤝 Customer Ops',
+        icon: 'users.svg',
         apps: {
-          'employee-skills': { name: 'Employee Skills', desc: 'Skills matrix', icon: '👥' },
-          'acronym-list': { name: 'Acronym List', desc: 'Corporate acronyms', icon: '🔤' },
-          'wishlist': { name: 'Wishlist Studio', desc: 'Request custom apps/features', icon: '💡' },
-          'support': { name: 'Support Desk', desc: 'Ticket queue + support intake', icon: '🎧' }
+          'employee-skills': { name: 'Employee Skills', desc: 'Skills matrix', icon: 'users.svg' },
+          'acronym-list': { name: 'Acronym List', desc: 'Corporate acronyms', icon: 'languages.svg' },
+          'wishlist': {
+            name: 'Wishlist Studio',
+            desc: 'Request custom apps/features',
+            icon: 'lightbulb.svg',
+            offline: 'hybrid'
+          },
+          'support': { name: 'Support Desk', desc: 'Ticket queue + support intake', icon: 'headset.svg', offline: 'hybrid' }
         }
       },
-      utilities: {
-        title: '🛠️ Utilities',
-        icon: '🛠️',
+      communications: {
+        title: '📡 Communications',
+        icon: 'radio.svg',
         apps: {
-          'outdoor-kit': { name: 'Outdoor Kit', desc: 'Compass, sun, SOS, chat, scientific calc', icon: '🧭' },
-          'field-checkin': { name: 'Field Check-In', desc: 'Registration + emergency heartbeat', icon: '🛰️' },
-          'privacy-camera': { name: 'Privacy Camera', desc: 'In-memory photo capture', icon: '📷' },
-          'privacy-recorder': { name: 'Privacy Recorder', desc: 'In-memory video recorder', icon: '🎥' },
-          'accent-speaker': { name: 'Accent Voice Lab', desc: 'Style voices + phrase playback', icon: '🗣️' },
-          'image-rater': { name: 'Image Rater Lab', desc: 'Rate images + learn preferences', icon: '🖼️' },
-          'light-messenger': { name: 'Light Messenger', desc: 'Offline flash messaging', icon: '📡' },
-          'music-player': { name: 'Music Player', desc: 'Offline local audio player', icon: '🎼' },
-          'audio-notes': { name: 'Audio Notes Recorder', desc: 'Voice notes + optional sync', icon: '🎙️' },
-          'clock': { name: 'Clock', desc: 'Alarm, timer, stopwatch', icon: '🕐' },
-          'chatgpt-viewer': { name: 'ChatGPT Viewer', desc: 'Chat log viewer', icon: '💬' },
-          'qr-generator': { name: 'QR Generator', desc: 'QR code creator', icon: '📱' },
-          'markdown-slides': { name: 'Markdown Slides', desc: 'Presentations', icon: '📊' },
-          'ui-tweaker': { name: 'UI Tweaker', desc: 'Save CSS tweaks per app/path', icon: '🎛️' }
+          'light-messenger': { name: 'Light Messenger', desc: 'Offline flash messaging', icon: 'radio.svg' }
+        }
+      },
+      tools: {
+        title: '🧰 Tools',
+        icon: 'settings-2.svg',
+        apps: {
+          'profile': { name: 'User Profile', desc: 'Global username/password manager', icon: 'id-card.svg' },
+          'clock': { name: 'Clock', desc: 'Alarm, timer, stopwatch', icon: 'alarm-clock.svg' },
+          'ui-tweaker': { name: 'UI Tweaker', desc: 'Save CSS tweaks per app/path', icon: 'settings-2.svg' }
         }
       },
       games: {
-        title: '🎮 Games',
-        icon: '🎮',
+        title: '🧠 Drills & Games',
+        icon: 'trophy.svg',
         apps: {
-          'battleship': { name: 'Battleship', desc: 'Naval strategy board game', icon: '🚢', free: true },
-          'positive-iq': { name: 'Positive IQ Test', desc: 'Cognitive challenge set', icon: '🧠', free: true },
-          'math-raindrops': { name: 'Math Raindrops', desc: 'Adaptive mental math game', icon: '🌧️', free: true },
-          'tic-tac-toe': { name: 'Tic-Tac-Toe', desc: 'Classic strategy', icon: '❌', free: true },
-          'snake': { name: 'Snake', desc: 'Classic arcade', icon: '🐍', free: true },
-          'pattern-mirror': { name: 'Pattern Mirror', desc: 'Memory challenge', icon: '🔲', free: true },
-          'odd-one-out': { name: 'Odd One Out', desc: 'Logic puzzle', icon: '🎯', free: true }
+          'game-academy': { name: 'Game Academy', desc: 'Chess & Checkers — Play & Learn', icon: 'trophy.svg', free: true, path: 'games/game-academy.html' },
+          'reversi': { name: 'Reversi', desc: 'Classic disc-flipping strategy game', icon: 'circle-check-big.svg', free: true, path: 'games/reversi.html' },
+          'battleship': { name: 'Battleship', desc: 'Naval strategy board game', icon: 'ship.svg', free: true },
+          'positive-iq': { name: 'Positive IQ Test', desc: 'Cognitive challenge set', icon: 'brain.svg', free: true },
+          'math-raindrops': { name: 'Math Raindrops', desc: 'Adaptive mental math game', icon: 'cloud-rain.svg', free: true },
+          'tic-tac-toe': { name: 'Tic-Tac-Toe', desc: 'Classic strategy', icon: 'grid-3x3.svg', free: true },
+          'snake': { name: 'Snake', desc: 'Classic arcade', icon: 'gamepad-2.svg', free: true },
+          'pattern-mirror': { name: 'Pattern Mirror', desc: 'Memory challenge', icon: 'layout-dashboard.svg', free: true },
+          'odd-one-out': { name: 'Odd One Out', desc: 'Logic puzzle', icon: 'target.svg', free: true }
         }
       }
     };
-    const APP_NAV_VERSION = '2026.02.17.7';
+    const APP_NAV_VERSION = '2026.02.18.13';
     const APP_HELP = {
       'gigtax': {
         feature: 'Estimate self-employment taxes from 1099 income and deductions.',
@@ -403,8 +376,8 @@
         scenario: 'Use as your standalone legal reference shelf before or during stressful encounters.'
       },
       'inventory': {
-        feature: 'Manage item records and listing metadata.',
-        scenario: 'Use to keep marketplace inventory synchronized.'
+        feature: 'Track stock and software offerings (modules/packages/customizations) with GitHub issue handoff from support/wishlist intake.',
+        scenario: 'Use as your pre-sales catalog plus build pipeline bridge to paid customization work.'
       },
       'pomodoro': {
         feature: 'Run focus cycles with configurable timers and stats.',
@@ -451,7 +424,7 @@
         scenario: 'Use for daily warmups and foundational skill sharpening.'
       },
       'drivers-license': {
-        feature: 'Driving digest in 6 languages with Q&A and flashcards.',
+        feature: 'Driving digest in 6 languages with an expanded ~80-card Q&A + flashcard bank.',
         scenario: 'Use for permit prep or repurpose for any study topic.'
       },
       'music-trainer': {
@@ -546,6 +519,18 @@
         feature: 'Edit selector/property/value tweaks, save per path, and auto-apply on next app load.',
         scenario: 'Use to customize launcher icons/layout and keep your preferred UI style persistent.'
       },
+      'profile': {
+        feature: 'Set and rotate one global username/password used by protected apps.',
+        scenario: 'Use before opening GigTax or Snippet Board, and sign out quickly from shared devices.'
+      },
+      'game-academy': {
+        feature: '2-in-1 strategy trainer with Chess and Checkers in Play mode or Watch & Learn AI commentary mode.',
+        scenario: 'Use to study tactics and positional ideas while watching different skill levels explain moves.'
+      },
+      'reversi': {
+        feature: 'Play classic Reversi against configurable AI or watch AI-vs-AI with move-by-move teaching notes.',
+        scenario: 'Use to learn positional strategy: corners, mobility, and avoiding dangerous squares.'
+      },
       'battleship': {
         feature: 'Turn-based battleship board game with tactical targeting.',
         scenario: 'Use for strategy gameplay and short challenge sessions.'
@@ -577,6 +562,282 @@
     };
     let cachedApps = null;
     let deferredInstallPrompt = null;
+    const RECENT_APPS_KEY = 'suite_recent_apps_v1';
+    const SORT_MODE_KEY = 'suite_sort_mode_v1';
+    const FAVORITE_APPS_KEY = 'suite_favorite_apps_v1';
+    const CONNECTIVITY_FILTER_KEY = 'suite_connectivity_filter_v1';
+    const INSTALL_ACK_KEY = 'suite_install_ack_v1';
+    const SORT_MODES = ['categories', 'az', 'za', 'recent', 'favorites'];
+    const CONNECTIVITY_FILTERS = ['all', 'airplane', 'wifi'];
+
+    function loadRecentMap() {
+      try {
+        const raw = localStorage.getItem(RECENT_APPS_KEY);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') return {};
+        const normalized = {};
+        for (const [k, v] of Object.entries(parsed)) {
+          if (typeof k === 'string' && typeof v === 'number' && Number.isFinite(v)) {
+            normalized[k] = v;
+          }
+        }
+        return normalized;
+      } catch (_) {
+        return {};
+      }
+    }
+    function saveRecentMap(map) {
+      try {
+        localStorage.setItem(RECENT_APPS_KEY, JSON.stringify(map));
+      } catch (_) {}
+    }
+    function loadFavoriteMap() {
+      try {
+        const raw = localStorage.getItem(FAVORITE_APPS_KEY);
+        const parsed = raw ? JSON.parse(raw) : {};
+        if (!parsed || typeof parsed !== 'object') return {};
+        const normalized = {};
+        for (const [k, v] of Object.entries(parsed)) {
+          if (typeof k === 'string' && v === true) normalized[k] = true;
+        }
+        return normalized;
+      } catch (_) {
+        return {};
+      }
+    }
+    function saveFavoriteMap(map) {
+      try {
+        localStorage.setItem(FAVORITE_APPS_KEY, JSON.stringify(map));
+      } catch (_) {}
+    }
+    function isFavoriteApp(appKey) {
+      return Boolean(loadFavoriteMap()[appKey]);
+    }
+    function toggleFavoriteApp(appKey) {
+      if (!appKey) return false;
+      const map = loadFavoriteMap();
+      const next = !map[appKey];
+      if (next) map[appKey] = true;
+      else delete map[appKey];
+      saveFavoriteMap(map);
+      return next;
+    }
+    function markRecentApp(appKey) {
+      if (!appKey) return;
+      const map = loadRecentMap();
+      map[appKey] = Date.now();
+      saveRecentMap(map);
+    }
+    function getSortMode() {
+      try {
+        const mode = (localStorage.getItem(SORT_MODE_KEY) || '').toLowerCase();
+        return SORT_MODES.includes(mode) ? mode : 'categories';
+      } catch (_) {
+        return 'categories';
+      }
+    }
+    function setSortMode(mode) {
+      const safeMode = SORT_MODES.includes(mode) ? mode : 'categories';
+      try {
+        localStorage.setItem(SORT_MODE_KEY, safeMode);
+      } catch (_) {}
+      return safeMode;
+    }
+    function hasInstallAck() {
+      try {
+        return localStorage.getItem(INSTALL_ACK_KEY) === '1';
+      } catch (_) {
+        return false;
+      }
+    }
+    function getConnectivityFilter() {
+      try {
+        const mode = (localStorage.getItem(CONNECTIVITY_FILTER_KEY) || '').toLowerCase();
+        return CONNECTIVITY_FILTERS.includes(mode) ? mode : 'all';
+      } catch (_) {
+        return 'all';
+      }
+    }
+    function setConnectivityFilter(mode) {
+      const safeMode = CONNECTIVITY_FILTERS.includes(mode) ? mode : 'all';
+      try {
+        localStorage.setItem(CONNECTIVITY_FILTER_KEY, safeMode);
+      } catch (_) {}
+      return safeMode;
+    }
+    function setInstallAck(value) {
+      try {
+        if (value) localStorage.setItem(INSTALL_ACK_KEY, '1');
+        else localStorage.removeItem(INSTALL_ACK_KEY);
+      } catch (_) {}
+    }
+    function refreshInstallButton() {
+      const btn = document.getElementById('installAppBtn');
+      if (!btn) return;
+      if (isStandaloneMode() || hasInstallAck()) {
+        btn.style.display = 'none';
+      } else {
+        btn.style.display = '';
+      }
+    }
+    function getConnectivityMode(app) {
+      if (!app || typeof app !== 'object') return 'airplane';
+      const offlineMode = typeof app.offline === 'string' ? app.offline.toLowerCase() : '';
+      if (offlineMode === 'hybrid' || offlineMode === 'wifi' || offlineMode === 'online' || offlineMode === 'network') {
+        return 'wifi';
+      }
+      if (app.offline === false) return 'wifi';
+      return 'airplane';
+    }
+    function getOfflineBadgeHTML(app) {
+      const mode = getConnectivityMode(app);
+      if (mode === 'wifi') return '<span class="s-badge s-badge-outline badge badge-connectivity online" style="border-color: rgba(239, 68, 68, 0.4); color: #f87171;">WI-FI / CELL</span>';
+      return '<span class="s-badge s-badge-outline badge badge-connectivity offline" style="border-color: rgba(74, 222, 128, 0.4); color: #4ade80;">AIRPLANE MODE</span>';
+    }
+    function getTierBadgeHTML(app) {
+      if (app.demo) return '<span class="s-badge s-badge-secondary">DEMO</span>';
+      if (app.free) return '<span class="s-badge s-badge-default" style="background: #6366f1; color: white;">FREE</span>';
+      return '<span class="s-badge s-badge-default">FULL</span>';
+    }
+    function getAllApps(foundApps) {
+      const all = [];
+      for (const [categoryKey, category] of Object.entries(foundApps)) {
+        for (const app of category.found) {
+          all.push({
+            ...app,
+            categoryKey,
+            categoryTitle: category.title
+          });
+        }
+      }
+      return all;
+    }
+    function includeByConnectivityFilter(app, mode) {
+      if (mode === 'all') return true;
+      const appMode = getConnectivityMode(app);
+      if (mode === 'airplane') return appMode === 'airplane';
+      if (mode === 'wifi') return appMode === 'wifi';
+      return true;
+    }
+    function applyConnectivityFilter(foundApps) {
+      const mode = getConnectivityFilter();
+      if (mode === 'all') return foundApps;
+      const filtered = {};
+      for (const [categoryKey, category] of Object.entries(foundApps)) {
+        filtered[categoryKey] = {
+          ...category,
+          found: category.found.filter(app => includeByConnectivityFilter(app, mode))
+        };
+      }
+      return filtered;
+    }
+    function sortAppsForMode(apps, mode) {
+      const sorted = [...apps];
+      if (mode === 'favorites') {
+        return sorted
+          .filter(app => isFavoriteApp(app.key))
+          .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+      }
+      if (mode === 'az' || mode === 'za') {
+        sorted.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+        if (mode === 'za') sorted.reverse();
+        return sorted;
+      }
+      if (mode === 'recent') {
+        const recent = loadRecentMap();
+        sorted.sort((a, b) => {
+          const diff = (recent[b.key] || 0) - (recent[a.key] || 0);
+          if (diff !== 0) return diff;
+          return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+        });
+      }
+      return sorted;
+    }
+    function appItemHTML(app, categoryKey, includeCategoryTag) {
+      const categoryTitle = APP_REGISTRY[categoryKey]?.title || categoryKey;
+      const cleanTitle = categoryTitle.includes(' ') ? categoryTitle.split(' ').slice(1).join(' ') : categoryTitle;
+      const categoryBadge = includeCategoryTag
+        ? `<span class="s-badge s-badge-outline text-muted">${cleanTitle}</span>`
+        : '';
+      const favoriteState = isFavoriteApp(app.key);
+      const favoriteLabel = favoriteState ? 'Unfavorite app' : 'Add to favorites';
+      return `
+        <a href="${toAppHref(app)}" class="app-item" data-app-key="${app.key}" data-category-key="${categoryKey}">
+          <div class="app-info">
+            <div class="app-icon" data-app-key="${app.key}">
+              <img src="shared/icons/${app.icon}" alt="" onerror="this.style.display='none'" aria-hidden="true">
+            </div>
+            <div>
+              <div class="app-name">${app.name}</div>
+              <div class="app-desc text-muted">${app.desc}</div>
+              <div class="app-meta">${categoryBadge}</div>
+            </div>
+          </div>
+          <div class="badges flex items-center gap-2">
+            ${getOfflineBadgeHTML(app)}
+            ${getTierBadgeHTML(app)}
+            <button class="s-btn s-btn-ghost s-btn-icon ${favoriteState ? 'is-favorite' : ''}" type="button" data-favorite-btn="1" data-app-key="${app.key}" aria-label="${favoriteLabel}" title="${favoriteLabel}" style="width: 32px; height: 32px; border-radius: 999px;">
+              <i data-lucide="star" ${favoriteState ? 'fill="#f59e0b" color="#f59e0b"' : ''}></i>
+            </button>
+          </div>
+        </a>
+      `;
+    }
+    function renderFavoritesSectionHTML(foundApps) {
+      const favorites = sortAppsForMode(getAllApps(foundApps).filter(app => isFavoriteApp(app.key)), 'az');
+      if (!favorites.length) {
+        return `
+          <div class="category" data-category="favorites">
+            <div class="category-header" onclick="toggleCategory('favorites')">
+              <div class="category-title">
+                <div class="category-icon" style="background: hsl(var(--secondary) / 0.5);">
+                  <i data-lucide="star"></i>
+                </div>
+                <span>Favorites</span>
+                <span class="s-badge s-badge-secondary" style="margin-left: 8px;">0</span>
+              </div>
+              <i data-lucide="chevron-down" class="chevron"></i>
+            </div>
+            <div class="apps-list">
+              <div class="favorites-empty p-4 text-muted" style="font-size: 0.875rem;">Pin your go-to apps with the star button and they will stay here.</div>
+            </div>
+          </div>
+        `;
+      }
+      return `
+        <div class="category open" data-category="favorites">
+          <div class="category-header" onclick="toggleCategory('favorites')">
+            <div class="category-title">
+              <div class="category-icon" style="background: hsl(45 93% 47% / 0.2); color: #f59e0b;">
+                <i data-lucide="star" fill="#f59e0b"></i>
+              </div>
+              <span>Favorites</span>
+              <span class="s-badge s-badge-secondary" style="margin-left: 8px;">${favorites.length}</span>
+            </div>
+            <i data-lucide="chevron-down" class="chevron"></i>
+          </div>
+          <div class="apps-list">
+            ${favorites.map(app => appItemHTML(app, app.categoryKey, true)).join('')}
+          </div>
+        </div>
+      `;
+    }
+    function renderCurrentLauncher(foundApps) {
+      const filteredApps = applyConnectivityFilter(foundApps);
+      const mode = getSortMode();
+      if (mode === 'categories') {
+        renderLauncher(filteredApps);
+        return;
+      }
+      if (mode === 'favorites') {
+        const favoriteApps = sortAppsForMode(getAllApps(filteredApps), 'favorites');
+        renderFlatLauncher(favoriteApps, mode, filteredApps, { showFavoritesSection: false });
+        return;
+      }
+      const allApps = sortAppsForMode(getAllApps(filteredApps), mode);
+      renderFlatLauncher(allApps, mode, filteredApps);
+    }
 
     function scanApps() {
       // Use static registry - assume all registered apps exist
@@ -619,22 +880,28 @@
           const cards = category.found.map(app => {
             const help = getAppHelp(app);
             return `
-              <article class="help-card">
-                <h3>${app.icon} ${app.name}</h3>
-                <p><strong>Main feature:</strong> ${help.feature}</p>
-                <p><strong>Main scenario:</strong> ${help.scenario}</p>
+              <article class="s-card" style="padding: 16px;">
+                <div class="flex items-center gap-2 m-b-4">
+                  <div class="app-icon" style="width: 32px; height: 32px; border-radius: 6px;">
+                    <img src="shared/icons/${app.icon}" style="width: 18px; height: 18px; filter: brightness(0) invert(1);" onerror="this.style.display='none'" aria-hidden="true">
+                  </div>
+                  <h3 class="font-semibold">${app.name}</h3>
+                </div>
+                <p style="font-size: 0.875rem; line-height: 1.5;"><strong class="text-muted">Feature:</strong> ${help.feature}</p>
+                <p style="font-size: 0.875rem; line-height: 1.5; margin-top: 8px;"><strong class="text-muted">Scenario:</strong> ${help.scenario}</p>
               </article>
             `;
           }).join('');
           return `
-            <section class="help-section">
-              <div class="help-section-head">${category.title}</div>
-              <div class="help-grid">${cards}</div>
+            <section style="margin-bottom: 32px;">
+              <h4 class="text-muted font-semibold" style="font-size: 0.75rem; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.05em;">${category.title.split(' ').slice(1).join(' ')}</h4>
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">${cards}</div>
             </section>
           `;
         })
         .join('');
       document.getElementById('helpBody').innerHTML = html;
+      lucide.createIcons();
     }
     function openHelp() {
       const ov = document.getElementById('helpOverlay');
@@ -664,6 +931,7 @@
         const choice = await deferredInstallPrompt.userChoice.catch(() => null);
         deferredInstallPrompt = null;
         if (choice && choice.outcome === 'accepted') {
+          setInstallAck(true);
           setInstallHint('Installed. You can launch it from your home screen.');
           if (btn) btn.style.display = 'none';
         } else {
@@ -672,7 +940,9 @@
         return;
       }
       if (isStandaloneMode()) {
+        setInstallAck(true);
         setInstallHint('Already installed on this device.');
+        refreshInstallButton();
         return;
       }
       if (isIOS()) {
@@ -687,38 +957,67 @@
     }
 
     function renderLauncher(foundApps) {
+      const favoritesSection = renderFavoritesSectionHTML(foundApps);
       const html = Object.entries(foundApps)
         .filter(([_, category]) => category.found.length > 0)
         .map(([categoryKey, category], index) => `
           <div class="category ${index === 0 ? 'open' : ''}" data-category="${categoryKey}">
             <div class="category-header" onclick="toggleCategory('${categoryKey}')">
               <div class="category-title">
-                <span class="category-icon">${category.icon}</span>
+                <div class="category-icon">
+                  <img src="shared/icons/${category.icon}" alt="" onerror="this.style.display='none'" aria-hidden="true" style="width: 18px; height: 18px; filter: brightness(0) invert(1);">
+                </div>
                 <span>${category.title.split(' ').slice(1).join(' ')}</span>
-                <span class="category-count">${category.found.length}</span>
+                <span class="s-badge s-badge-secondary" style="margin-left: 8px;">${category.found.length}</span>
               </div>
-              <span class="chevron">▼</span>
+              <i data-lucide="chevron-down" class="chevron"></i>
             </div>
             <div class="apps-list">
-              ${category.found.map(app => `
-                <a href="${toAppHref(app)}" class="app-item" data-app-key="${app.key}" data-category-key="${categoryKey}">
-                  <div class="app-info">
-                    <div class="app-icon" data-app-key="${app.key}">${app.icon}</div>
-                    <div>
-                      <div class="app-name">${app.name}</div>
-                      <div class="app-desc">${app.desc}</div>
-                    </div>
-                  </div>
-                  ${app.demo ? '<span class="badge demo">DEMO</span>' : 
-                    app.free ? '<span class="badge free">FREE</span>' : 
-                    '<span class="badge full">FULL</span>'}
-                </a>
-              `).join('')}
+              ${category.found
+                .slice()
+                .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+                .map(app => appItemHTML(app, categoryKey, false))
+                .join('')}
             </div>
           </div>
         `).join('');
       
-      document.getElementById('content').innerHTML = html;
+      document.getElementById('content').innerHTML = favoritesSection + html;
+      lucide.createIcons();
+    }
+    function renderFlatLauncher(apps, mode, foundApps, options) {
+      const opts = options || {};
+      const modeTitle = mode === 'recent'
+        ? 'Most Recently Used'
+        : mode === 'favorites'
+          ? 'Favorite Apps'
+          : (mode === 'za' ? 'All Apps (Z-A)' : 'All Apps (A-Z)');
+      const modeIcon = mode === 'recent' ? 'clock' : (mode === 'favorites' ? 'star' : 'layout-grid');
+      const html = `
+        <div class="category open" data-category="all-apps">
+          <div class="category-header">
+            <div class="category-title">
+              <div class="category-icon">
+                <i data-lucide="${modeIcon}"></i>
+              </div>
+              <span>${modeTitle}</span>
+              <span class="s-badge s-badge-secondary" style="margin-left: 8px;">${apps.length}</span>
+            </div>
+            <i data-lucide="chevron-down" class="chevron"></i>
+          </div>
+          <div class="apps-list">
+            ${apps.length
+              ? apps.map(app => appItemHTML(app, app.categoryKey, true)).join('')
+              : '<div class="favorites-empty p-4 text-muted">No apps to show for this view yet.</div>'}
+          </div>
+        </div>
+      `;
+      if (opts.showFavoritesSection === false) {
+        document.getElementById('content').innerHTML = html;
+      } else {
+        document.getElementById('content').innerHTML = renderFavoritesSectionHTML(foundApps) + html;
+      }
+      lucide.createIcons();
     }
     function toAppHref(app) {
       const raw = app.path || (app.key + '/index.html');
@@ -729,12 +1028,86 @@
       return url.pathname + url.search;
     }
 
+    function normalizeHandle(value) {
+      const v = String(value || '').trim().toLowerCase();
+      return /^[a-z0-9._-]{3,64}$/.test(v) ? v : '';
+    }
+
+    function captureReferralHandleFromURL() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const handle = normalizeHandle(params.get('u') || params.get('user'));
+        if (!handle) return;
+        localStorage.setItem('suite_ref_user', handle);
+        sessionStorage.setItem('suite_ref_user', handle);
+      } catch (_) {}
+    }
+
+    function hasLegacyLogin() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('login') === '1') {
+          sessionStorage.setItem('suite_logged_in', '1');
+        }
+      } catch (_) {}
+
+      let localFlag = false;
+      let sessionFlag = false;
+      try { localFlag = localStorage.getItem('suite_logged_in') === '1'; } catch (_) {}
+      try { sessionFlag = sessionStorage.getItem('suite_logged_in') === '1'; } catch (_) {}
+      return localFlag || sessionFlag;
+    }
+
+    function isSignedIn() {
+      const legacy = hasLegacyLogin();
+      let modern = false;
+      try {
+        modern = !!(window.SuiteAuth && typeof window.SuiteAuth.isSignedIn === 'function' && window.SuiteAuth.isSignedIn());
+      } catch (_) {}
+      return legacy || modern;
+    }
+
+    function clearLoginState() {
+      try { localStorage.removeItem('suite_logged_in'); } catch (_) {}
+      try { sessionStorage.removeItem('suite_logged_in'); } catch (_) {}
+      try {
+        if (window.SuiteAuth && typeof window.SuiteAuth.signOut === 'function') {
+          window.SuiteAuth.signOut();
+        }
+      } catch (_) {}
+    }
+
+    function goToLandingForAuth() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const ref = normalizeHandle(params.get('u') || params.get('user'));
+        const next = new URLSearchParams();
+        next.set('next', 'index');
+        if (ref) next.set('u', ref);
+        window.location.href = `landing.html?${next.toString()}`;
+      } catch (_) {
+        window.location.href = 'landing.html?next=index';
+      }
+    }
+
     function toggleCategory(categoryKey) {
       const category = document.querySelector(`[data-category="${categoryKey}"]`);
+      if (!category) return;
       category.classList.toggle('open');
     }
 
     function init() {
+      captureReferralHandleFromURL();
+      if (!isSignedIn()) {
+        goToLandingForAuth();
+        return;
+      }
+
+      const controls = document.querySelector('.launcher-controls');
+      if (controls) controls.style.display = 'flex';
+      const signOutBtnVisible = document.getElementById('signOutBtn');
+      if (signOutBtnVisible) signOutBtnVisible.style.display = 'inline-flex';
+
       const foundApps = scanApps();
       cachedApps = foundApps;
       renderHelp(foundApps);
@@ -763,17 +1136,65 @@
           window.location.href = toAppHref(singleApp);
         }, 500);
       } else {
-        renderLauncher(foundApps);
+        renderCurrentLauncher(foundApps);
+      }
+      const sortModeSelect = document.getElementById('sortModeSelect');
+      if (sortModeSelect) {
+        sortModeSelect.value = getSortMode();
+        sortModeSelect.addEventListener('change', () => {
+          setSortMode(sortModeSelect.value);
+          if (cachedApps) renderCurrentLauncher(cachedApps);
+        });
+      }
+      const connectivityFilterSelect = document.getElementById('connectivityFilterSelect');
+      if (connectivityFilterSelect) {
+        connectivityFilterSelect.value = getConnectivityFilter();
+        connectivityFilterSelect.addEventListener('change', () => {
+          setConnectivityFilter(connectivityFilterSelect.value);
+          if (cachedApps) renderCurrentLauncher(cachedApps);
+        });
+      }
+      const clearRecentBtn = document.getElementById('clearRecentBtn');
+      if (clearRecentBtn) {
+        clearRecentBtn.addEventListener('click', () => {
+          saveRecentMap({});
+          if (cachedApps && getSortMode() === 'recent') renderCurrentLauncher(cachedApps);
+        });
+      }
+      const contentEl = document.getElementById('content');
+      if (contentEl) {
+        contentEl.addEventListener('click', e => {
+          const favBtn = e.target.closest('button.favorite-btn[data-favorite-btn="1"]');
+          if (favBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleFavoriteApp(favBtn.getAttribute('data-app-key'));
+            if (cachedApps) renderCurrentLauncher(cachedApps);
+            return;
+          }
+          const link = e.target.closest('a.app-item[data-app-key]');
+          if (!link) return;
+          markRecentApp(link.getAttribute('data-app-key'));
+        });
       }
       document.getElementById('openHelpBtn').addEventListener('click', openHelp);
       const installBtn = document.getElementById('installAppBtn');
       if (installBtn) {
         installBtn.addEventListener('click', handleInstallClick);
       }
+      const signOutBtn = document.getElementById('signOutBtn');
+      if (signOutBtn) {
+        signOutBtn.addEventListener('click', () => {
+          clearLoginState();
+          window.location.href = 'landing.html?signed_out=1';
+        });
+      }
       if (isStandaloneMode()) {
+        setInstallAck(true);
         if (installBtn) installBtn.style.display = 'none';
       } else {
-        setInstallHint('Tip: use Install for app icon on your phone.');
+        refreshInstallButton();
+        setInstallHint('Tip: for compass/GPS on iPhone use HTTPS, then Add to Home Screen.');
       }
       document.getElementById('closeHelpBtn').addEventListener('click', closeHelp);
       document.getElementById('helpOverlay').addEventListener('click', e => {
@@ -785,9 +1206,17 @@
         setInstallHint('Ready: tap Install to add app icon.');
       });
       window.addEventListener('appinstalled', () => {
+        setInstallAck(true);
         setInstallHint('Installed successfully.');
         if (installBtn) installBtn.style.display = 'none';
       });
+      const displayModeMedia = window.matchMedia('(display-mode: standalone)');
+      if (displayModeMedia && typeof displayModeMedia.addEventListener === 'function') {
+        displayModeMedia.addEventListener('change', () => {
+          if (isStandaloneMode()) setInstallAck(true);
+          refreshInstallButton();
+        });
+      }
       document.addEventListener('keydown', e => {
         if (e.key === 'F1') {
           e.preventDefault();

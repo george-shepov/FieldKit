@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 OUT_DIR="${OUT_DIR:-${ROOT_DIR}/dist}"
 VERSION="${VERSION:-$(date +%Y.%m.%d)}"
-APP="${APP:-prosepilot}"
+APP="${APP:-fieldkit}"
 
 mkdir -p "${OUT_DIR}"
 
@@ -20,7 +20,7 @@ TARGETS=(
 
 LDFLAGS="-s -w -X main.buildVersion=${VERSION}"
 
-echo "Building ProSe Pilot launcher"
+echo "Building FieldKit launcher"
 echo "Version: ${VERSION}"
 echo "Output:  ${OUT_DIR}"
 echo ""

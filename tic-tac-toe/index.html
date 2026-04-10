@@ -3,57 +3,195 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script src="../shared/components.js"></script>
   <title>Generalized Tic-Tac-Toe — Enhanced</title>
   <style>
     :root{
-      --bg:#0f172a; --fg:#e5e7eb; --primary:#38bdf8; --danger:#f87171; --grid:#1f2937; --card:#0b1220;
-      --last-move-bg:#0b2a3a; --last-move-scale:1.18;
-      --win-bg:#0b3a1a; --win-border:#34d399;
-      --overlay-bg: rgba(3,7,18,.72);
-      --control-bg:#0d1528; --control-fg:#e5e7eb; --control-border:#475569;
-      --secondary-bg:#64748b; --secondary-fg:#0c1117;
-      --panel-border:#334155;
+      --background: 240 10% 3.9%;
+      --foreground: 0 0% 98%;
+      --card: 240 10% 3.9%;
+      --border: 240 3.7% 15.9%;
+      --primary: 199 89% 48%;
+      --radius: 0.75rem;
+      
+      --bg: hsl(var(--background));
+      --fg: hsl(var(--foreground));
+      --grid: hsl(var(--border));
+      
+      --last-move-bg: hsl(199 89% 48% / 0.2);
+      --last-move-scale: 1.05;
+      --win-bg: hsl(142 71% 45% / 0.2);
+      --win-border: hsl(142 71% 45%);
     }
-    @media (prefers-color-scheme: light){
-      :root{
-        --bg:#f5f5f5; --fg:#111827; --grid:#d1d5db; --card:#ffffff;
-        --last-move-bg:#e3f2fd; --win-bg:#ecfff5; --win-border:#10b981;
-        --control-bg:#ffffff; --control-fg:#111827; --control-border:#cbd5e1;
-        --secondary-bg:#e5e7eb; --secondary-fg:#111827; --panel-border:#cbd5e1;
-      }
-    }
-    @media (prefers-reduced-motion: reduce){ *{ transition:none!important; animation:none!important; } }
 
-    *{ box-sizing:border-box; margin:0; padding:0; }
-    body{ font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background:var(--bg); color:var(--fg); display:flex; flex-direction:column; align-items:center; gap:10px; padding:12px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Inter", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 0 0 40px 0;
+      min-height: 100vh;
+    }
 
     /* Controls */
-    #controls{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; align-items:center; width:min(96vw,640px); background:var(--card); border:1px solid var(--panel-border); border-radius:10px; padding:10px 12px; box-shadow:0 1px 6px rgba(0,0,0,.25); }
-    #controls label{ font-size:.95rem; display:flex; align-items:center; gap:6px; }
-    #controls input, #controls select{ padding:6px 8px; font-size:.95rem; text-align:center; border:1px solid var(--control-border); border-radius:8px; background:var(--control-bg); color:var(--control-fg); }
-    #controls input[type="number"]{ width:72px; }
-    #controls button{ padding:8px 14px; font-size:.98rem; cursor:pointer; border:none; border-radius:8px; background:var(--primary); color:#06131a; font-weight:700; }
-    #controls button.secondary{ background:var(--secondary-bg); color:var(--secondary-fg); }
-
-    /* Presets */
-    #presets{ display:flex; flex-wrap:wrap; gap:6px; }
-    .preset-btn{ padding:6px 10px; font-size:.9rem; border:1px solid var(--panel-border); border-radius:8px; background:var(--control-bg); color:var(--control-fg); cursor:pointer; }
-    .preset-btn:hover{ outline:2px solid #22d3ee44; }
-
-    /* Status */
-    #message{ margin:6px 0 2px; font-size:1.05rem; min-height:1.4em; opacity:.9; }
-    #turnbar{ font-size:.95rem; opacity:.85; }
+    #controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      width: min(96vw, 640px);
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    #controls label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: hsl(240 5% 64.9%);
+    }
+    #controls input, #controls select {
+      padding: 8px 12px;
+      font-size: 0.875rem;
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      background: hsl(240 3.7% 10%);
+      color: var(--fg);
+      outline: none;
+    }
+    #controls input[type="number"] { width: 80px; }
+    #controls button {
+      height: 2.5rem;
+      padding: 0 1.25rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background: hsl(var(--primary));
+      color: #000;
+      font-weight: 600;
+    }
+    #controls button.secondary {
+      background: hsl(240 3.7% 15.9%);
+      color: white;
+    }
 
     /* Board */
-    #board{ display:grid; gap:2px; width:min(96vw,640px); border-radius:12px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,.35); background:var(--grid); }
-    .cell{ background:var(--control-bg); display:flex; align-items:center; justify-content:center; font-weight:800; cursor:pointer; -webkit-user-select:none; user-select:none; aspect-ratio:1; position:relative; color:var(--primary); font-size:clamp(.85rem, 1.8vw, 2.2rem); transition:background .15s ease, transform .15s ease; }
-    .cell.O{ color:var(--danger); }
-    .cell.disabled{ cursor:default; opacity:.95; }
-    .cell:not(.disabled):hover{ background:#0f1b2f; }
+    #board {
+      display: grid;
+      gap: 4px;
+      width: min(96vw, 840px);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--grid);
+      padding: 4px;
+    }
+    .cell {
+      background: hsl(var(--card));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      cursor: pointer;
+      aspect-ratio: 1;
+      position: relative;
+      transition: background 0.15s ease;
+    }
+    .cell.disabled { cursor: default; }
+    .cell:not(.disabled):hover { background: hsl(240 3.7% 15.9%); }
+
+    /* Scoreboard */
+    #scoreboard {
+      width: min(96vw, 460px);
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    #scoreboard h3 {
+      margin-bottom: 12px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-align: center;
+      color: hsl(240 5% 64.9%);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .score-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 0.95rem; }
+    .score-row span { font-weight: 700; color: hsl(var(--primary)); }
+    .score-actions { margin-top: 16px; display: flex; gap: 10px; }
+    #scoreboard button {
+      flex: 1;
+      height: 2.25rem;
+      font-size: 0.875rem;
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      background: transparent;
+      color: var(--fg);
+    }
+
+    .cell .mark{
+      width:72%;
+      height:72%;
+      position:relative;
+      display:block;
+      --mark-color: var(--neon-cyan);
+      --mark-glow: color-mix(in srgb, var(--mark-color) 75%, white 25%);
+      filter: drop-shadow(0 0 5px var(--mark-glow)) drop-shadow(0 0 10px var(--mark-color));
+    }
+    .mark.neon-purple{ --mark-color: var(--neon-purple); }
+    .mark.neon-cyan{ --mark-color: var(--neon-cyan); }
+    .mark.neon-yellow{ --mark-color: var(--neon-yellow); }
+    .mark.neon-lime{ --mark-color: var(--neon-lime); }
+    .mark.neon-orange{ --mark-color: var(--neon-orange); }
+    .mark.neon-red{ --mark-color: var(--neon-red); }
+    .mark.neon-blue{ --mark-color: var(--neon-blue); }
+
+    .mark.x::before,
+    .mark.x::after{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:88%;
+      height:14%;
+      border-radius:999px;
+      background: var(--mark-color);
+      transform-origin:center;
+      box-shadow: 0 0 10px var(--mark-glow), 0 0 20px var(--mark-color), 0 0 30px var(--mark-color);
+    }
+    .mark.x::before{ transform:translate(-50%,-50%) rotate(45deg); }
+    .mark.x::after{ transform:translate(-50%,-50%) rotate(-45deg); }
+
+    .mark.o::before{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:82%;
+      height:82%;
+      transform:translate(-50%,-50%);
+      border-radius:50%;
+      border:0.42rem solid var(--mark-color);
+      box-shadow: 0 0 12px var(--mark-glow), inset 0 0 12px var(--mark-color), 0 0 22px var(--mark-color), 0 0 32px var(--mark-color);
+    }
 
     .cell.last-move{ background:var(--last-move-bg)!important; transform:scale(var(--last-move-scale)); z-index:2; }
 
-    .cell.ghost::before{ content:attr(data-ghost); opacity:.35; }
+    .cell.ghost::before{
+      content:attr(data-ghost);
+      opacity:.35;
+      font-size:clamp(.95rem, 2vw, 2.2rem);
+      text-shadow: 0 0 10px var(--primary);
+    }
 
     .cell.win{ background:var(--win-bg); }
     .cell.win::after{ content:""; position:absolute; inset:0; border:3px solid var(--win-border); border-radius:10px; pointer-events:none; box-shadow:0 0 14px 2px var(--win-border); animation:winPulse .9s ease-in-out 4 alternate; }
@@ -68,14 +206,14 @@
     #scoreboard button{ flex:1; padding:8px; font-size:.95rem; border:none; border-radius:8px; background:var(--primary); color:#06131a; font-weight:800; min-height:40px; }
 
     /* Overlay */
-    #overlay{ position:fixed; inset:0; display:none; place-items:center; background:var(--overlay-bg); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
-    .modal{ background:var(--card); border:1px solid #334155; border-radius:14px; padding:18px; width:min(92vw, 520px); box-shadow:0 10px 30px rgba(0,0,0,.4); }
-    .modal h2{ font-size:1.4rem; margin-bottom:6px; }
-    .modal p{ opacity:.9; margin-bottom:12px; }
-    .modal .row{ display:flex; gap:8px; flex-wrap:wrap; }
-    .modal button{ flex:1; padding:10px 12px; border:none; border-radius:10px; font-weight:800; cursor:pointer; }
-    .btn-primary{ background:var(--primary); color:#06131a; }
-    .btn-ghost{ background:var(--control-bg); color:var(--control-fg); border:1px solid var(--panel-border); }
+    #overlay{ position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 100; }
+    .modal{ background:hsl(var(--card)); border:1px solid hsl(var(--border)); border-radius:var(--radius); padding:24px; width:min(92vw, 400px); box-shadow:0 20px 50px rgba(0,0,0,.6); text-align: center; }
+    .modal h2{ font-size:1.5rem; font-weight: 700; margin-bottom:8px; letter-spacing: -0.02em; }
+    .modal p{ color: hsl(240 5% 64.9%); margin-bottom:20px; font-size: 0.95rem; }
+    .modal .row{ display:flex; flex-direction: column; gap:8px; }
+    .modal button{ width: 100%; height: 2.75rem; border:none; border-radius:10px; font-weight:600; cursor:pointer; font-size: 0.95rem; }
+    .btn-primary{ background:hsl(var(--primary)); color:#000; }
+    .btn-ghost{ background:hsl(240 3.7% 15.9%); color:white; }
 
     /* Tier pill */
     #tierPill{ padding:6px 10px; border-radius:999px; background:var(--control-bg); border:1px solid var(--panel-border); font-weight:700; color:var(--control-fg); }
@@ -96,12 +234,7 @@
 </style>
 </head>
 <body>
-<nav class="suite-nav">
-  <a href="../index.html">← Back to Suite</a>
-  <span class="suite-name">ProSe Pilot</span>
-</nav>
-
-  <h1 style="font-size:1.2rem;font-weight:800">Generalized Tic-Tac-Toe</h1>
+  <h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:12px;">Generalized Tic-Tac-Toe</h1>
 
   <div id="controls">
     <label>Board <input id="boardSize" type="number" min="3" max="50" value="10"/></label>
@@ -199,6 +332,19 @@
 
     function tierLabel(v){ return TIERS[(v-1)|0] || '—'; }
 
+    function fitBoardToViewport(){
+      const navH = document.querySelector('.suite-nav')?.offsetHeight || 0;
+      const titleH = document.querySelector('h1')?.offsetHeight || 0;
+      const controlsH = document.getElementById('controls')?.offsetHeight || 0;
+      const presetsH = document.getElementById('presets')?.offsetHeight || 0;
+      const messageH = (document.getElementById('message')?.offsetHeight || 0) + (document.getElementById('turnbar')?.offsetHeight || 0);
+      const scoreboardH = document.getElementById('scoreboard')?.offsetHeight || 0;
+      const chrome = navH + titleH + controlsH + presetsH + messageH + scoreboardH + 56;
+      const byHeight = Math.max(220, Math.min(900, window.innerHeight - chrome));
+      const byWidth = Math.max(220, Math.min(900, Math.floor(window.innerWidth * 0.96)));
+      boardEl.style.width = `${Math.floor(Math.min(byHeight, byWidth))}px`;
+    }
+
     function getTierParams(v){
       // Scales: depth (lookahead), nearRadius (candidate neighborhood), weights
       const clamp = (n,min,max)=>Math.max(min,Math.min(max,n|0));
@@ -277,6 +423,7 @@
       currentPlayer = 'X'; gameOver = false; moveHistory = [];
       messageEl.textContent = 'Your turn (X).'; turnWhoEl.textContent = 'X';
       renderBoard();
+      fitBoardToViewport();
     }
 
     function renderBoard(){
@@ -311,7 +458,12 @@
     function makeMove(r,c,sym){
       boardState[r][c]=sym; moveHistory.push({r,c,sym}); const cell=cellEls[r][c];
       clearLastMove();
-      cell.textContent=sym; cell.classList.add('disabled',sym,'last-move');
+      cell.textContent='';
+      const mark = document.createElement('span');
+      const neonClass = getNeonClass(r,c,sym);
+      mark.className = `mark ${sym==='X' ? 'x' : 'o'} ${neonClass}`;
+      cell.appendChild(mark);
+      cell.classList.add('disabled',sym,'last-move');
       cell.setAttribute('aria-label',`Row ${r+1}, Column ${c+1}, ${sym}`);
 
       clearWinHighlights();
@@ -331,6 +483,12 @@
 
     function clearLastMove(){ document.querySelectorAll('.last-move').forEach(el=>{ el.classList.remove('last-move'); }); }
     function clearWinHighlights(){ document.querySelectorAll('.cell.win').forEach(el=>el.classList.remove('win')); }
+    function getNeonClass(r,c,sym){
+      const xPalette = ['neon-blue','neon-red','neon-cyan'];
+      const oPalette = ['neon-lime','neon-yellow','neon-purple','neon-cyan','neon-orange'];
+      const palette = sym === 'X' ? xPalette : oPalette;
+      return palette[(r*boardSize + c + moveHistory.length) % palette.length];
+    }
 
     function disableAll(){ document.querySelectorAll('.cell').forEach(c=>c.classList.add('disabled')); }
     function isFull(){ for(let r=0;r<boardSize;r++) for(let c=0;c<boardSize;c++) if(!boardState[r][c]) return false; return true; }
@@ -420,8 +578,10 @@
     function sendScore(){ try{ window.parent?.postMessage({ type:'score_update', score: scoreboard.xWins }, '*'); }catch{} }
     function sendGameOver(result){ const tierNext = result==='win'?Math.min(10,tier+1):result==='loss'?Math.max(1,tier-1):tier; try{ window.parent?.postMessage({ type:'game_over', result, tierNext }, '*'); }catch{} }
 
+    window.addEventListener('resize', fitBoardToViewport);
+
     /** Boot **/
-    function boot(){ loadState(); updateTierPill(); resetGame(); updateScores(); sendMeta(); }
+    function boot(){ loadState(); updateTierPill(); resetGame(); updateScores(); fitBoardToViewport(); sendMeta(); }
     boot();
   })();
   </script>

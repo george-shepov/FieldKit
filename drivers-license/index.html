@@ -1,12 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Driver License Study Lab</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0b1116;
@@ -90,7 +87,7 @@
     box-shadow: var(--shadow);
     padding: 14px;
     display: grid;
-    grid-template-columns: 1fr 1fr auto;
+    grid-template-columns: 1fr 1fr 1fr auto;
     gap: 10px;
     align-items: end;
   }
@@ -204,6 +201,32 @@
     color: #d7e8f7;
   }
   .qa-answer.open { display: block; }
+  .qa-options {
+    display: grid;
+    gap: 8px;
+    margin: 10px 0 8px;
+  }
+  .qa-option {
+    width: 100%;
+    text-align: left;
+  }
+  .qa-option.correct {
+    border-color: #167a4b;
+    background: #123227;
+    color: #d9ffe9;
+  }
+  .qa-option.wrong {
+    border-color: #9f3440;
+    background: #3c1820;
+    color: #ffd7df;
+  }
+  .qa-option.locked {
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .qa-feedback {
+    min-height: 20px;
+  }
   .row {
     margin-top: 12px;
     display: flex;
@@ -269,28 +292,120 @@
   }
   .status.ok { color: #86efac; }
   .status.err { color: #fca5a5; }
+  .manual-grid {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 12px;
+  }
+  .manual-card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #0f1b27;
+    padding: 10px;
+  }
+  .manual-controls {
+    display: grid;
+    grid-template-columns: 1fr 110px auto auto auto;
+    gap: 8px;
+    align-items: end;
+  }
+  .manual-controls input, .manual-side input, .manual-side textarea {
+    width: 100%;
+    border: 1px solid #35506a;
+    background: #0f1b27;
+    color: var(--text);
+    border-radius: 10px;
+    font-size: 14px;
+    padding: 9px 10px;
+    font-family: var(--sans);
+  }
+  .manual-side textarea {
+    min-height: 88px;
+    resize: vertical;
+    line-height: 1.35;
+  }
+  .manual-controls input:focus, .manual-side input:focus, .manual-side textarea:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.16);
+  }
+  .manual-frame {
+    margin-top: 10px;
+    width: 100%;
+    min-height: 600px;
+    border: 1px solid #35506a;
+    border-radius: 12px;
+    background: #0b121a;
+  }
+  .manual-side {
+    display: grid;
+    gap: 10px;
+  }
+  .manual-list {
+    margin-top: 8px;
+    display: grid;
+    gap: 8px;
+    max-height: 250px;
+    overflow: auto;
+    padding-right: 4px;
+  }
+  .manual-item {
+    border: 1px solid var(--line-soft);
+    border-radius: 10px;
+    background: #101f2d;
+    padding: 8px;
+    display: grid;
+    gap: 6px;
+  }
+  .manual-item h4 {
+    font-size: 13px;
+    line-height: 1.35;
+  }
+  .manual-item p {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.35;
+  }
+  .manual-item .row {
+    margin-top: 0;
+  }
+  .manual-empty {
+    color: var(--muted);
+    font-size: 13px;
+  }
 
   @media (max-width: 900px) {
     .controls { grid-template-columns: 1fr; }
+    .manual-grid { grid-template-columns: 1fr; }
+    .manual-controls { grid-template-columns: 1fr 1fr; }
   }
 </style>
 </head>
 <body>
   <nav class="suite-nav">
-    <a href="../index.html">&larr; Back to Suite</a>
-    <span>ProSe Pilot</span>
+    <a href="../index.html">&larr; Back to FieldKit</a>
+    <span>FieldKit</span>
   </nav>
 
   <main class="wrap">
     <header class="hero">
-      <h1>Driver License Study Lab</h1>
-      <p>
+      <h1 id="heroTitle">Driver License Study Lab</h1>
+      <p id="heroCopy">
         <strong>Built for permit prep:</strong> read a short driving digest, practice questions, and memorize via flashcards.
         You can also paste any study material and convert it into Q&amp;A cards.
       </p>
     </header>
 
     <section class="controls">
+      <div class="control">
+        <label for="trackSelect">Exam Product</label>
+        <select id="trackSelect">
+          <option value="driver">Driver License Prep</option>
+          <option value="motorcycle">Motorcycle Permit Prep</option>
+          <option value="cdl">CDL Prep</option>
+        </select>
+      </div>
       <div class="control">
         <label for="langSelect">Language</label>
         <select id="langSelect"></select>
@@ -309,6 +424,7 @@
       <button type="button" class="tab active" data-tab="digest">Driving Digest</button>
       <button type="button" class="tab" data-tab="qa">Questions &amp; Answers</button>
       <button type="button" class="tab" data-tab="cards">Flashcards</button>
+      <button type="button" class="tab" data-tab="manuals">Manuals</button>
       <button type="button" class="tab" data-tab="custom">Custom Material</button>
     </section>
 
@@ -321,6 +437,8 @@
       <p id="qaProgress" class="subtle"></p>
       <div class="qa-box">
         <p id="qaQuestion" class="qa-question"></p>
+        <div id="qaOptions" class="qa-options" role="group" aria-label="Answer options"></div>
+        <p id="qaFeedback" class="subtle qa-feedback"></p>
         <p id="qaAnswer" class="qa-answer"></p>
       </div>
       <div class="row">
@@ -363,6 +481,49 @@
         <button id="sampleCustom" class="btn" type="button">Insert Sample</button>
       </div>
       <p id="customStatus" class="status"></p>
+    </section>
+
+    <section class="view" id="view-manuals">
+      <p class="subtle">Open official manuals, keep bookmarks, and save highlight notes by page.</p>
+      <div class="manual-grid">
+        <div class="manual-card">
+          <div class="manual-controls">
+            <div class="control">
+              <label for="manualDocSelect">Manual</label>
+              <select id="manualDocSelect"></select>
+            </div>
+            <div class="control">
+              <label for="manualPageInput">Page</label>
+              <input id="manualPageInput" type="number" min="1" step="1" value="1">
+            </div>
+            <button id="manualOpenBtn" class="btn primary" type="button">Open</button>
+            <button id="manualPrevBtn" class="btn" type="button">Prev</button>
+            <button id="manualNextBtn" class="btn" type="button">Next</button>
+          </div>
+          <p id="manualStatus" class="subtle" style="margin-top:8px"></p>
+          <iframe id="manualFrame" class="manual-frame" title="Manual PDF viewer"></iframe>
+        </div>
+        <div class="manual-side">
+          <div class="manual-card">
+            <label for="bmLabelInput">Bookmark Label</label>
+            <input id="bmLabelInput" type="text" placeholder="e.g. Road Signs Section">
+            <div class="row">
+              <button id="bmSaveBtn" class="btn primary" type="button">Save Bookmark</button>
+            </div>
+            <div id="bmList" class="manual-list"></div>
+          </div>
+          <div class="manual-card">
+            <label for="hlTextInput">Highlight Text</label>
+            <textarea id="hlTextInput" placeholder="Paste key sentence from this page"></textarea>
+            <label for="hlNoteInput" style="margin-top:8px">Note (optional)</label>
+            <input id="hlNoteInput" type="text" placeholder="Why this matters on test day">
+            <div class="row">
+              <button id="hlSaveBtn" class="btn primary" type="button">Save Highlight</button>
+            </div>
+            <div id="hlList" class="manual-list"></div>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -510,24 +671,410 @@ const PACKS = {
   }
 };
 
+const EXTENDED_EN_QA = [
+  { q: "What does a steady yellow traffic light mean?", a: "The light is about to turn red; stop safely if you can." },
+  { q: "What does a green arrow at an intersection mean?", a: "You may turn in the arrow direction while yielding to legal cross traffic." },
+  { q: "What does a double solid yellow center line mean?", a: "No passing in either direction." },
+  { q: "What does a broken white line between lanes mean?", a: "Lane changes are permitted when safe." },
+  { q: "When should you check your blind spot?", a: "Before every lane change and merge." },
+  { q: "What is the safest way to merge onto a highway?", a: "Use the acceleration lane, match traffic speed, then merge when there is a gap." },
+  { q: "If you miss your exit, what should you do?", a: "Continue to the next exit and reroute safely." },
+  { q: "What should you do at a four-way stop?", a: "First vehicle to stop goes first; if tied, yield to the vehicle on your right." },
+  { q: "Who has the right-of-way when entering from a driveway?", a: "Traffic already on the road and pedestrians on the sidewalk." },
+  { q: "What should you do before backing up?", a: "Check all mirrors, look over your shoulder, and move slowly." },
+  { q: "Why is tailgating dangerous?", a: "It leaves too little stopping distance and increases rear-end crash risk." },
+  { q: "When should you increase following distance beyond 3 seconds?", a: "In rain, fog, snow, darkness, heavy traffic, or when towing." },
+  { q: "What does hydroplaning mean?", a: "Your tires lose contact with the road on water." },
+  { q: "What should you do if your vehicle starts to hydroplane?", a: "Ease off the gas, steer straight, and avoid hard braking." },
+  { q: "What is the safest speed in fog?", a: "A reduced speed that lets you stop within visible distance." },
+  { q: "When using high beams, when should you dim them?", a: "When approaching oncoming traffic or following another vehicle closely." },
+  { q: "What should you do if your headlights fail at night?", a: "Turn on hazard lights, slow down, and pull off the road safely." },
+  { q: "If a tire blows out, what is the first response?", a: "Grip the wheel firmly, ease off gas, and steer straight until controlled." },
+  { q: "What does a red curb usually indicate?", a: "No stopping, standing, or parking." },
+  { q: "What does a blue curb usually indicate?", a: "Parking reserved for disabled permit holders." },
+  { q: "What should you do before opening your parked car door into traffic?", a: "Check mirrors and look over your shoulder for cyclists and vehicles." },
+  { q: "When parallel parking, how close should you be to the curb?", a: "Close enough to avoid blocking traffic, typically within a short legal distance." },
+  { q: "When parking downhill with a curb, wheels should point:", a: "Toward the curb." },
+  { q: "When parking uphill without a curb, wheels should point:", a: "Toward the edge of the road." },
+  { q: "What should you do when an ambulance approaches with lights and siren?", a: "Yield right-of-way, move right, and stop when safe." },
+  { q: "Can you drive through an intersection while blocking it?", a: "No; do not enter unless you can clear it." },
+  { q: "What is a common sign of aggressive driving?", a: "Excessive speeding, weaving, tailgating, or frequent unsafe lane changes." },
+  { q: "How should you respond to an aggressive driver?", a: "Do not engage; create space and let them pass." },
+  { q: "Why should both hands stay available on the wheel?", a: "It improves control and reaction in emergencies." },
+  { q: "What should you do before turning left across traffic?", a: "Yield to oncoming vehicles and pedestrians, then turn when clear." },
+  { q: "What does a railroad crossbuck sign indicate?", a: "A railroad crossing ahead; be prepared to stop." },
+  { q: "When must you stop at railroad tracks?", a: "When signals flash, gates are down, a train is visible, or required by law." },
+  { q: "If your vehicle stalls on railroad tracks, what should you do?", a: "Exit immediately and move away from tracks; call emergency services." },
+  { q: "What is the safest way to hold speed on long downhills?", a: "Use lower gear and controlled braking, not continuous hard brake pressure." },
+  { q: "Why are work zones high risk?", a: "Lane shifts, workers nearby, reduced space, and sudden slowdowns." },
+  { q: "How should you drive in a work zone?", a: "Slow down, follow signs, keep extra distance, and avoid distractions." },
+  { q: "What does a school zone sign imply?", a: "Reduced speed and heightened pedestrian caution when active." },
+  { q: "When are seat belts required?", a: "For drivers and passengers as required by state law; safest practice is always." },
+  { q: "Why should children use proper car seats/boosters?", a: "They provide correct restraint fit and reduce injury risk." },
+  { q: "What is the risk of driving while sleepy?", a: "Impaired judgment and delayed reaction similar to intoxication." },
+  { q: "What should you do if you feel drowsy while driving?", a: "Pull over safely and rest before continuing." },
+  { q: "Can medications affect driving ability?", a: "Yes; some reduce alertness, coordination, or judgment." },
+  { q: "What is the legal drinking age relation to DUI limits?", a: "Underage drivers often have stricter zero/low tolerance BAC limits." },
+  { q: "What is implied consent in DUI law?", a: "By driving, you consent to lawful chemical testing; refusal carries penalties." },
+  { q: "What should you do if traffic signals are out?", a: "Treat the intersection as an all-way stop and proceed carefully." },
+  { q: "What does a lane-use control sign with arrows mean?", a: "Only certain movements are allowed from that lane." },
+  { q: "How should you position your vehicle for a right turn?", a: "Approach in the rightmost practical lane and turn into the nearest lane when legal." },
+  { q: "How should you position your vehicle for a left turn on a two-way road?", a: "Approach near the center line and turn into the proper lane when clear." },
+  { q: "When passing a bicyclist, what is the safe rule?", a: "Leave ample space and pass only when legal and safe." },
+  { q: "Who is most vulnerable in traffic?", a: "Pedestrians, cyclists, and motorcyclists." },
+  { q: "Why should you avoid stopping in crosswalks?", a: "It blocks pedestrian right-of-way and sight lines." },
+  { q: "What does a triangular red-and-white sign usually mean?", a: "Yield." },
+  { q: "What does a pentagon-shaped road sign usually indicate?", a: "School zone or school crossing." },
+  { q: "What should you do before entering a roundabout?", a: "Yield to traffic already in the roundabout." },
+  { q: "How should you signal in a roundabout?", a: "Signal your exit as you prepare to leave." },
+  { q: "What is the purpose of ABS brakes?", a: "They help maintain steering control during hard braking." },
+  { q: "How should you brake with ABS?", a: "Press firmly and hold; do not pump repeatedly." },
+  { q: "What should you do if your accelerator sticks?", a: "Shift to neutral, steer safely, and brake to a controlled stop." },
+  { q: "After a minor collision with no injuries, what is the priority?", a: "Move to a safe location if possible and exchange required information." },
+  { q: "What documents should drivers generally carry?", a: "Valid license, registration, and proof of insurance." },
+  { q: "What is defensive driving?", a: "Anticipating hazards and making safe, legal choices to prevent crashes." },
+  { q: "Why should mirrors be adjusted before driving?", a: "To reduce blind spots and improve awareness." },
+  { q: "When should hazard lights be used?", a: "For emergencies or disabled vehicle warnings, not routine driving." },
+  { q: "What should you do at an uncontrolled intersection?", a: "Slow down, yield as needed, and proceed only when safe." },
+  { q: "What does a no-passing zone marking mean?", a: "Do not cross into opposing lane to pass." },
+  { q: "How should you handle a yellow line with one broken and one solid side?", a: "Only the side with the broken line may pass when safe." },
+  { q: "What is the safest habit at green lights?", a: "Scan left-right-left before entering the intersection." },
+  { q: "Why should speed match conditions, not just limits?", a: "Legal limits assume ideal conditions; weather/traffic may require slower speeds." },
+  { q: "What is lane discipline?", a: "Staying in your lane and changing only when necessary and safe." },
+  { q: "How should you react to skid on ice?", a: "Look where you want to go and steer gently in that direction." },
+  { q: "What should you do if another driver is signaling but not moving?", a: "Do not assume their intent; wait for actual movement and safe gap." },
+  { q: "What does right-of-way mean in practice?", a: "The legal priority to proceed first, but never force it unsafely." },
+  { q: "Why is it unsafe to rely only on GPS directions?", a: "Road signs, conditions, and legal rules can override route instructions." },
+  { q: "What is a key rule near pedestrians at night?", a: "Reduce speed and be prepared to stop immediately." },
+  { q: "How should you pass parked emergency or service vehicles when required by law?", a: "Move over when safe, or slow significantly if changing lanes is not possible." }
+];
+
+function digestToCards(lines) {
+  return lines.map((line, idx) => ({
+    q: `Digest check ${idx + 1}: ${String(line || "").replace(/[.!?]+$/, "")}?`,
+    a: String(line || "").trim()
+  }));
+}
+
+function normalizeCardQuestion(value) {
+  return String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function dedupeCards(cards) {
+  const out = [];
+  const seen = new Set();
+  for (const card of cards) {
+    if (!card || !card.q || !card.a) continue;
+    const q = String(card.q).trim();
+    const a = String(card.a).trim();
+    if (!q || !a) continue;
+    if (normalizeCardQuestion(q) === normalizeCardQuestion(a)) continue;
+    const key = normalizeCardQuestion(card.q);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ q, a });
+  }
+  return out;
+}
+
+function dedupeTextLines(lines) {
+  const out = [];
+  const seen = new Set();
+  for (const raw of lines || []) {
+    const line = String(raw || '').replace(/\s+/g, ' ').trim();
+    if (!line) continue;
+    const key = line.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(line);
+  }
+  return out;
+}
+
+for (const [lang, pack] of Object.entries(PACKS)) {
+  const extra = lang === 'en' ? EXTENDED_EN_QA : [];
+  pack.qa = dedupeCards([...pack.qa, ...digestToCards(pack.digest), ...extra]);
+}
+
+const MOTORCYCLE_PACKS = {
+  en: {
+    label: 'English',
+    digest: [
+      'Wear a DOT-compliant helmet and eye protection every ride.',
+      'Use both brakes progressively; avoid panic grabs.',
+      'Look through turns and countersteer at speed.',
+      'Increase following distance; bikes stop and react differently than cars.',
+      'Be visible: lane position, reflective gear, and early signaling matter.',
+      'Avoid blind spots of cars and trucks, especially at intersections.',
+      'Slow before curves; accelerate smoothly after apex.',
+      'Ride sober and rested. Fatigue and alcohol are high-risk multipliers.'
+    ],
+    qa: [
+      { q: 'What is countersteering?', a: 'At speed, press left to go left, press right to go right.' },
+      { q: 'Where do most motorcycle crashes happen?', a: 'At intersections due to visibility and right-of-way conflicts.' },
+      { q: 'How should you enter a blind curve?', a: 'Slow before entry and choose a lane position that improves view.' },
+      { q: 'Why use both front and rear brakes?', a: 'Balanced braking gives shorter, more stable stops.' },
+      { q: 'What is the SEE strategy?', a: 'Search, Evaluate, Execute to manage hazards continuously.' },
+      { q: 'What lane position helps visibility?', a: 'A position that maximizes sight lines and escape space.' },
+      { q: 'When is target fixation dangerous?', a: 'When staring at hazards causes you to steer into them.' },
+      { q: 'How can riders improve conspicuity?', a: 'Use bright gear, daytime lights, and clear turn signals.' }
+    ]
+  }
+};
+
+const CDL_PACKS = {
+  en: {
+    label: 'English',
+    digest: [
+      'Complete a full pre-trip inspection before operating.',
+      'Manage following distance and speed with heavy loads.',
+      'Use proper mirror scanning every few seconds.',
+      'Secure cargo and verify weight/distribution compliance.',
+      'Use proper downshifting and brake technique on grades.',
+      'Account for off-tracking in turns and intersections.',
+      'Observe HOS rules and avoid fatigue driving.',
+      'Perform safe lane changes with long vehicle blind spots.'
+    ],
+    qa: [
+      { q: 'Why is pre-trip inspection critical for CDL drivers?', a: 'It finds safety defects before road operation and is legally required.' },
+      { q: 'What is off-tracking?', a: 'Rear wheels follow a tighter path than front wheels in turns.' },
+      { q: 'How does load weight affect stopping distance?', a: 'Heavier loads increase stopping distance significantly.' },
+      { q: 'Why is mirror scanning essential in CMVs?', a: 'Large blind spots require frequent checks to track traffic around the unit.' },
+      { q: 'What is a key rule before descending long grades?', a: 'Select proper gear and control speed before the descent starts.' },
+      { q: 'What is brake fade?', a: 'Reduced braking effectiveness from overheated brakes.' },
+      { q: 'Why are right turns high-risk for tractor-trailers?', a: 'Trailer off-tracking can squeeze curb lanes and pedestrians.' },
+      { q: 'What must be verified for cargo securement?', a: 'Tie-down condition, count, placement, and periodic re-checks.' }
+    ]
+  }
+};
+
+const EXTENDED_MOTORCYCLE_QA = [
+  { q: 'What is the safest way to cross railroad tracks on a motorcycle?', a: 'Slow down and cross at as close to a right angle as practical.' },
+  { q: 'How should you handle gravel in a turn?', a: 'Reduce lean, slow smoothly, and avoid sudden inputs.' },
+  { q: 'Why is the front brake powerful on a motorcycle?', a: 'Weight transfer loads the front tire during braking.' },
+  { q: 'What is an escape route in riding?', a: 'A planned open space to steer into if traffic conflicts occur.' },
+  { q: 'When riding in rain, what should change first?', a: 'Increase following distance and reduce speed.' },
+  { q: 'Why avoid riding next to cars for long periods?', a: 'You stay in blind spots and lose escape options.' },
+  { q: 'What does progressive throttle mean?', a: 'Smoothly increasing power instead of abrupt twists.' },
+  { q: 'How should a rider approach a stale green light?', a: 'Cover controls, scan, and be ready for sudden change or red-light runners.' },
+  { q: 'What is lane splitting legal status?', a: 'It varies by state; follow local law.' },
+  { q: 'Why are painted road markings slippery?', a: 'They can have less traction, especially when wet.' }
+];
+
+const EXTENDED_CDL_QA = [
+  { q: 'What is the purpose of an air brake leak test?', a: 'To confirm the system holds pressure within legal limits.' },
+  { q: 'Why should CDL drivers avoid hard steering corrections?', a: 'Abrupt inputs can destabilize tall or heavy vehicles.' },
+  { q: 'How does load shift affect control?', a: 'It changes balance and can increase rollover risk.' },
+  { q: 'What is a no-zone around large trucks?', a: 'Blind spot areas where nearby vehicles are hard to see.' },
+  { q: 'What should be done before backing a CMV?', a: 'Get out and look, then back slowly with continuous checks.' },
+  { q: 'Why is route planning important for CDL operations?', a: 'It avoids low bridges, restricted roads, and hazardous turns.' },
+  { q: 'What does proper space management mean for CMV drivers?', a: 'Maintaining cushion front, rear, and sides to handle hazards.' },
+  { q: 'When should hazard flashers be used on grades?', a: 'When climbing/descending slowly and required by local rules.' },
+  { q: 'How often should cargo securement be rechecked?', a: 'As required by regulation and after initial miles in transit.' },
+  { q: 'What is the main safety goal during lane changes?', a: 'Avoid side-swipe/merge conflicts by full mirror and signal sequence.' }
+];
+
+for (const pack of Object.values(MOTORCYCLE_PACKS)) {
+  pack.qa = dedupeCards([...pack.qa, ...digestToCards(pack.digest), ...EXTENDED_MOTORCYCLE_QA]);
+}
+for (const pack of Object.values(CDL_PACKS)) {
+  pack.qa = dedupeCards([...pack.qa, ...digestToCards(pack.digest), ...EXTENDED_CDL_QA]);
+}
+
+const TRACKS = {
+  driver: {
+    label: 'Driver License Prep',
+    title: 'Driver License Study Lab',
+    summary: 'State permit fundamentals: signs, right-of-way, safe habits, and exam-style Q&A.',
+    packs: PACKS,
+    defaultLang: 'en',
+    sample: [
+      'What does a flashing yellow traffic signal mean? || Slow down and proceed with caution.',
+      'Q: What should you do before changing lanes?',
+      'A: Check mirrors, blind spot, and signal before moving.'
+    ]
+  },
+  motorcycle: {
+    label: 'Motorcycle Permit Prep',
+    title: 'Motorcycle Study Lab',
+    summary: 'Two-wheel safety focus: lane position, countersteering, braking, visibility, and hazard response.',
+    packs: MOTORCYCLE_PACKS,
+    defaultLang: 'en',
+    sample: [
+      'What is countersteering? || Press left to go left, press right to go right at speed.',
+      'Q: What is the SEE strategy?',
+      'A: Search, Evaluate, Execute.'
+    ]
+  },
+  cdl: {
+    label: 'CDL Prep',
+    title: 'CDL Study Lab',
+    summary: 'Commercial driving fundamentals: pre-trip, air brakes, space management, and cargo/grade safety.',
+    packs: CDL_PACKS,
+    defaultLang: 'en',
+    sample: [
+      'Why is a pre-trip inspection mandatory? || It identifies safety defects before operation and is legally required.',
+      'Q: What is off-tracking?',
+      'A: Rear wheels follow a tighter path than front wheels in turns.'
+    ]
+  }
+};
+
+const MANUAL_LIBRARY = {
+  driver: {
+    en: [
+      { id: 'driver-manual-en', label: 'Ohio Driver Manual (English PDF)', path: './DriversLicensePrep_files/Ohio Driver Manual English - HSY 7607 (PDF).pdf' },
+      { id: 'driver-digest-laws', label: 'Digest of Motor Vehicle Laws (HTML)', path: './DriversLicensePrep_files/Digest of Motor Vehicle Laws _ Department of Public Safety.html' },
+      { id: 'driver-digest-section1', label: 'Digest Section 1 (HTML)', path: './DriversLicensePrep_files/Digest Section 1_ How to get your driver license _ Department of Public Safety.html' }
+    ],
+    es: [
+      { id: 'driver-manual-es', label: 'Manual del Conductor de Ohio (Español PDF)', path: './DriversLicensePrep_files/Ohio Driver Manual Spanish - HSY 0008 (PDF).pdf' }
+    ],
+    ru: [
+      { id: 'driver-manual-ru-fallback', label: 'Ohio Driver Manual (English PDF)', path: './DriversLicensePrep_files/Ohio Driver Manual English - HSY 7607 (PDF).pdf' }
+    ]
+  },
+  motorcycle: {
+    en: [
+      { id: 'motorcycle-manual-en', label: 'Motorcycle Operator Manual (English PDF)', path: './DriversLicensePrep_files/Motorcycle Operator Manual - MOP 0001 (PDF).pdf' }
+    ],
+    es: [
+      { id: 'motorcycle-manual-es', label: 'Manual de Motocicleta (Español PDF)', path: './DriversLicensePrep_files/Motorcycle Operator Manual (Spanish) - MOP 0041 (PDF).pdf' }
+    ],
+    ru: [
+      { id: 'motorcycle-manual-ru-fallback', label: 'Motorcycle Operator Manual (English PDF)', path: './DriversLicensePrep_files/Motorcycle Operator Manual - MOP 0001 (PDF).pdf' }
+    ]
+  },
+  cdl: {
+    en: [
+      { id: 'cdl-manual-en', label: 'Commercial Driver License Manual (English PDF)', path: './DriversLicensePrep_files/Commercial Driver License Manual- HSY 7605 (PDF).pdf' }
+    ],
+    es: [
+      { id: 'cdl-manual-es', label: 'Manual CDL (Español PDF)', path: './DriversLicensePrep_files/Commercial Driver License Manual (Spanish)- HSY 7606 (PDF).pdf' }
+    ],
+    ru: [
+      { id: 'cdl-manual-ru-fallback', label: 'Commercial Driver License Manual (English PDF)', path: './DriversLicensePrep_files/Commercial Driver License Manual- HSY 7605 (PDF).pdf' }
+    ]
+  }
+};
+
+const MANUAL_DIGEST_FILES = {
+  driver: {
+    en: './manual_digest_driver_en.json',
+    es: './manual_digest_driver_es.json',
+    ru: './manual_digest_driver_ru.json'
+  },
+  motorcycle: {
+    en: './manual_digest_motorcycle_en.json',
+    es: './manual_digest_motorcycle_es.json',
+    ru: './manual_digest_motorcycle_ru.json'
+  },
+  cdl: {
+    en: './manual_digest_cdl_en.json',
+    es: './manual_digest_cdl_es.json',
+    ru: './manual_digest_cdl_ru.json'
+  }
+};
+
+const LANGUAGE_LABELS = {
+  en: 'English',
+  es: 'Español',
+  ru: 'Русский',
+  uk: 'Українська',
+  fr: 'Français',
+  de: 'Deutsch'
+};
+
+function normalizeManualLines(lines) {
+  const cleaned = [];
+  for (const raw of lines || []) {
+    let line = String(raw || '').replace(/\s+/g, ' ').trim();
+    if (!line) continue;
+    if (line.length < 35 || line.length > 220) continue;
+    if (!/\p{L}/u.test(line)) continue;
+    // Keep accented/non-English characters; only strip control chars.
+    line = line.replace(/[\u0000-\u001F\u007F]/g, '');
+    line = line.replace(/\s+/g, ' ').trim();
+    if (!line) continue;
+    if (!/[.!?]$/.test(line)) line += '.';
+    cleaned.push(line);
+  }
+  return dedupeTextLines(cleaned);
+}
+
+function ensureTrackPack(track, lang) {
+  if (!track.packs[lang]) {
+    track.packs[lang] = {
+      label: LANGUAGE_LABELS[lang] || lang.toUpperCase(),
+      digest: [],
+      qa: []
+    };
+  }
+  return track.packs[lang];
+}
+
+function applyManualDigest(trackKey, lang, lines) {
+  const track = TRACKS[trackKey];
+  if (!track || !track.packs) return;
+
+  const additions = normalizeManualLines(lines);
+  if (!additions.length) return;
+
+  const pack = ensureTrackPack(track, lang);
+  pack.digest = dedupeTextLines([...(pack.digest || []), ...additions]);
+  pack.qa = dedupeCards([...(pack.qa || []), ...digestToCards(additions)]);
+}
+
+async function loadManualDigests() {
+  const loads = [];
+  for (const [trackKey, byLang] of Object.entries(MANUAL_DIGEST_FILES)) {
+    for (const [lang, path] of Object.entries(byLang || {})) {
+      loads.push((async () => {
+        try {
+          const res = await fetch(path, { cache: 'no-store' });
+          if (!res.ok) return;
+          const lines = await res.json();
+          applyManualDigest(trackKey, lang, lines);
+        } catch (_) {
+          // Optional material; skip if unavailable.
+        }
+      })());
+    }
+  }
+  await Promise.all(loads);
+}
+
 const state = {
+  track: 'driver',
   lang: 'en',
+  langByTrack: { driver: 'en', motorcycle: 'en', cdl: 'en' },
   deck: 'builtin',
   customDeck: [],
   order: [],
   qaIndex: 0,
+  qaChoices: [],
+  qaAnswered: false,
   cardIndex: 0,
   cardFlipped: false,
-  activeTab: 'digest'
+  activeTab: 'digest',
+  manualDocID: '',
+  manualPage: 1,
+  manualBookmarks: [],
+  manualHighlights: []
 };
 
 const el = {
+  trackSelect: document.getElementById('trackSelect'),
   langSelect: document.getElementById('langSelect'),
   deckSelect: document.getElementById('deckSelect'),
   shuffleBtn: document.getElementById('shuffleBtn'),
+  heroTitle: document.getElementById('heroTitle'),
+  heroCopy: document.getElementById('heroCopy'),
   digestList: document.getElementById('digestList'),
   qaProgress: document.getElementById('qaProgress'),
   qaQuestion: document.getElementById('qaQuestion'),
+  qaOptions: document.getElementById('qaOptions'),
+  qaFeedback: document.getElementById('qaFeedback'),
   qaAnswer: document.getElementById('qaAnswer'),
   qaPrev: document.getElementById('qaPrev'),
   qaShow: document.getElementById('qaShow'),
@@ -544,13 +1091,44 @@ const el = {
   clearCustom: document.getElementById('clearCustom'),
   sampleCustom: document.getElementById('sampleCustom'),
   customStatus: document.getElementById('customStatus'),
+  manualDocSelect: document.getElementById('manualDocSelect'),
+  manualPageInput: document.getElementById('manualPageInput'),
+  manualOpenBtn: document.getElementById('manualOpenBtn'),
+  manualPrevBtn: document.getElementById('manualPrevBtn'),
+  manualNextBtn: document.getElementById('manualNextBtn'),
+  manualStatus: document.getElementById('manualStatus'),
+  manualFrame: document.getElementById('manualFrame'),
+  bmLabelInput: document.getElementById('bmLabelInput'),
+  bmSaveBtn: document.getElementById('bmSaveBtn'),
+  bmList: document.getElementById('bmList'),
+  hlTextInput: document.getElementById('hlTextInput'),
+  hlNoteInput: document.getElementById('hlNoteInput'),
+  hlSaveBtn: document.getElementById('hlSaveBtn'),
+  hlList: document.getElementById('hlList'),
   tabs: Array.from(document.querySelectorAll('.tab')),
   views: Array.from(document.querySelectorAll('.view'))
 };
 
+function currentTrack() {
+  return TRACKS[state.track] || TRACKS.driver;
+}
+
+function currentPacks() {
+  return currentTrack().packs || {};
+}
+
+function activePack() {
+  const packs = currentPacks();
+  return packs[state.lang] || packs[currentTrack().defaultLang] || Object.values(packs)[0] || { digest: [], qa: [] };
+}
+
+function storageKey() {
+  return `${STORAGE_KEY}:${state.track}`;
+}
+
 function activeDeck() {
   if (state.deck === 'custom') return state.customDeck;
-  return PACKS[state.lang].qa;
+  return activePack().qa || [];
 }
 
 function currentCardFrom(deckIndex) {
@@ -578,19 +1156,124 @@ function shuffleOrder() {
   state.cardFlipped = false;
 }
 
+function syncHero() {
+  const track = currentTrack();
+  el.heroTitle.textContent = track.title;
+  el.heroCopy.innerHTML = `<strong>${track.label}:</strong> ${track.summary} You can also paste your own source material and convert it into Q&amp;A cards.`;
+}
+
+function syncDeckLabel() {
+  const builtinOption = el.deckSelect.querySelector('option[value="builtin"]');
+  if (builtinOption) builtinOption.textContent = `Built-in ${currentTrack().label} deck`;
+}
+
+function syncLanguageOptions() {
+  const packs = currentPacks();
+  const entries = Object.entries(packs);
+  if (!entries.length) {
+    el.langSelect.innerHTML = '<option value="en">English</option>';
+    state.lang = 'en';
+    return;
+  }
+
+  const fallbackLang = currentTrack().defaultLang || entries[0][0];
+  if (!packs[state.lang]) state.lang = fallbackLang;
+
+  el.langSelect.innerHTML = entries
+    .map(([key, item]) => `<option value="${key}">${item.label || key.toUpperCase()}</option>`)
+    .join('');
+  el.langSelect.value = state.lang;
+}
+
 function renderDigest() {
-  const digest = PACKS[state.lang].digest;
+  const digest = activePack().digest || [];
   el.digestList.innerHTML = digest.map(line => `<li>${line}</li>`).join('');
 }
 
 function showNoDeck(message) {
   el.qaProgress.textContent = message;
   el.qaQuestion.textContent = 'No cards available.';
-  el.qaAnswer.textContent = 'Load a custom deck, or switch to the built-in driver deck.';
+  el.qaOptions.innerHTML = '';
+  el.qaFeedback.textContent = '';
+  el.qaAnswer.textContent = `Load a custom deck, or switch back to the built-in ${currentTrack().label} deck.`;
   el.qaAnswer.classList.add('open');
   el.cardProgress.textContent = message;
   el.cardFront.textContent = 'No flashcards available.';
   el.cardBack.textContent = 'Open Custom Material to load cards.';
+}
+
+function shuffleCopy(items) {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function buildQuestionChoices(deck, card) {
+  const correct = String(card?.a || '').trim();
+  if (!correct) return [];
+  const correctKey = normalizeCardQuestion(correct);
+
+  const wrongPool = [];
+  const seenWrong = new Set();
+  for (const row of deck) {
+    const candidate = String(row?.a || '').trim();
+    if (!candidate) continue;
+    const key = normalizeCardQuestion(candidate);
+    if (!key || key === correctKey || seenWrong.has(key)) continue;
+    seenWrong.add(key);
+    wrongPool.push(candidate);
+  }
+
+  const fallbackWrong = [
+    'Only in rare situations.',
+    'Only when traffic is light.',
+    'Only if another driver signals first.',
+    'Only outside city limits.',
+    'No action is required.'
+  ];
+  for (const item of fallbackWrong) {
+    const key = normalizeCardQuestion(item);
+    if (key !== correctKey && !seenWrong.has(key)) wrongPool.push(item);
+  }
+
+  const pickedWrong = shuffleCopy(wrongPool).slice(0, 3);
+  return shuffleCopy([correct, ...pickedWrong]).slice(0, 4);
+}
+
+function lockQuestionChoices() {
+  Array.from(el.qaOptions.querySelectorAll('.qa-option')).forEach(btn => btn.classList.add('locked'));
+}
+
+function evaluateQuestionChoice(button, card) {
+  if (state.qaAnswered) return;
+  const deck = activeDeck();
+  if (!deck.length) return;
+
+  state.qaAnswered = true;
+  const selected = String(button.textContent || '').trim();
+  const selectedKey = normalizeCardQuestion(selected);
+  const correctKey = normalizeCardQuestion(card.a);
+  const isCorrect = selectedKey === correctKey;
+
+  if (isCorrect) {
+    button.classList.add('correct');
+    el.qaFeedback.textContent = 'Correct.';
+    el.qaFeedback.className = 'subtle qa-feedback';
+  } else {
+    button.classList.add('wrong');
+    el.qaFeedback.textContent = 'Not quite. Review the correct answer below.';
+    el.qaFeedback.className = 'subtle qa-feedback';
+    const correctBtn = Array.from(el.qaOptions.querySelectorAll('.qa-option')).find(
+      btn => normalizeCardQuestion(btn.textContent || '') === correctKey
+    );
+    if (correctBtn) correctBtn.classList.add('correct');
+  }
+
+  lockQuestionChoices();
+  el.qaAnswer.classList.add('open');
 }
 
 function renderQA() {
@@ -604,9 +1287,19 @@ function renderQA() {
   if (state.qaIndex >= deck.length) state.qaIndex = 0;
 
   const card = currentCardFrom(state.qaIndex);
+  state.qaChoices = buildQuestionChoices(deck, card);
+  state.qaAnswered = false;
   el.qaProgress.textContent = `${state.qaIndex + 1} / ${deck.length} cards`;
   el.qaQuestion.textContent = card.q;
-  el.qaAnswer.textContent = card.a;
+  el.qaOptions.innerHTML = state.qaChoices
+    .map(choice => `<button type="button" class="btn qa-option">${escapeHTML(choice)}</button>`)
+    .join('');
+  Array.from(el.qaOptions.querySelectorAll('.qa-option')).forEach(btn => {
+    btn.addEventListener('click', () => evaluateQuestionChoice(btn, card));
+  });
+  el.qaFeedback.textContent = 'Pick one answer.';
+  el.qaFeedback.className = 'subtle qa-feedback';
+  el.qaAnswer.textContent = `Answer: ${card.a}`;
   el.qaAnswer.classList.remove('open');
 }
 
@@ -621,9 +1314,11 @@ function renderCards() {
   if (state.cardIndex >= deck.length) state.cardIndex = 0;
 
   const card = currentCardFrom(state.cardIndex);
+  const front = String(card.q || '').trim();
+  const back = String(card.a || '').trim();
   el.cardProgress.textContent = `${state.cardIndex + 1} / ${deck.length} cards`;
-  el.cardFront.textContent = card.q;
-  el.cardBack.textContent = card.a;
+  el.cardFront.textContent = front || 'Question unavailable.';
+  el.cardBack.textContent = back || 'Answer unavailable.';
   el.flashcard.classList.toggle('flipped', state.cardFlipped);
 }
 
@@ -675,12 +1370,14 @@ function parseCustomDeck(raw) {
 }
 
 function saveCustomDeck(raw, deck) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ raw, deck }));
+  localStorage.setItem(storageKey(), JSON.stringify({ raw, deck }));
 }
 
 function loadCustomDeck() {
+  state.customDeck = [];
+  el.customInput.value = '';
   try {
-    const payload = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    const payload = JSON.parse(localStorage.getItem(storageKey()) || '{}');
     if (payload.raw) el.customInput.value = payload.raw;
     if (Array.isArray(payload.deck)) {
       state.customDeck = payload.deck.filter(row => row && row.q && row.a);
@@ -688,6 +1385,174 @@ function loadCustomDeck() {
   } catch (_) {
     state.customDeck = [];
   }
+}
+
+function escapeHTML(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function manualDocsForCurrentContext() {
+  const byTrack = MANUAL_LIBRARY[state.track] || {};
+  return byTrack[state.lang] || byTrack.en || Object.values(byTrack).find(list => Array.isArray(list) && list.length) || [];
+}
+
+function activeManualDoc() {
+  const docs = manualDocsForCurrentContext();
+  if (!docs.length) return null;
+  return docs.find(doc => doc.id === state.manualDocID) || docs[0];
+}
+
+function manualStorageKey(kind) {
+  const doc = activeManualDoc();
+  if (!doc) return '';
+  return `${STORAGE_KEY}:manual:${kind}:${state.track}:${doc.id}`;
+}
+
+function parseManualPage(raw) {
+  const n = Number.parseInt(String(raw || '').trim(), 10);
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return n;
+}
+
+function manualDocURL(doc, page) {
+  const base = encodeURI(doc.path);
+  if (doc.path.toLowerCase().endsWith('.pdf')) {
+    return `${base}#page=${page}`;
+  }
+  return base;
+}
+
+function renderManualStatus(message) {
+  el.manualStatus.textContent = message;
+}
+
+function loadManualState() {
+  const bmKey = manualStorageKey('bookmarks');
+  const hlKey = manualStorageKey('highlights');
+  state.manualBookmarks = [];
+  state.manualHighlights = [];
+
+  if (bmKey) {
+    try {
+      const raw = JSON.parse(localStorage.getItem(bmKey) || '[]');
+      if (Array.isArray(raw)) {
+        state.manualBookmarks = raw
+          .filter(item => item && item.id && item.page)
+          .map(item => ({
+            id: String(item.id),
+            page: parseManualPage(item.page),
+            label: String(item.label || '')
+          }));
+      }
+    } catch (_) {}
+  }
+
+  if (hlKey) {
+    try {
+      const raw = JSON.parse(localStorage.getItem(hlKey) || '[]');
+      if (Array.isArray(raw)) {
+        state.manualHighlights = raw
+          .filter(item => item && item.id && item.page && item.text)
+          .map(item => ({
+            id: String(item.id),
+            page: parseManualPage(item.page),
+            text: String(item.text || ''),
+            note: String(item.note || '')
+          }));
+      }
+    } catch (_) {}
+  }
+}
+
+function saveManualState(kind) {
+  const key = manualStorageKey(kind);
+  if (!key) return;
+  if (kind === 'bookmarks') {
+    localStorage.setItem(key, JSON.stringify(state.manualBookmarks));
+    return;
+  }
+  if (kind === 'highlights') {
+    localStorage.setItem(key, JSON.stringify(state.manualHighlights));
+  }
+}
+
+function renderManualBookmarks() {
+  if (!state.manualBookmarks.length) {
+    el.bmList.innerHTML = '<p class="manual-empty">No bookmarks yet.</p>';
+    return;
+  }
+  el.bmList.innerHTML = state.manualBookmarks.map(item => `
+    <article class="manual-item">
+      <h4>${escapeHTML(item.label || `Page ${item.page}`)}</h4>
+      <p>Page ${item.page}</p>
+      <div class="row">
+        <button class="btn" type="button" data-bm-go="${escapeHTML(item.id)}">Go to</button>
+        <button class="btn warn" type="button" data-bm-del="${escapeHTML(item.id)}">Delete</button>
+      </div>
+    </article>
+  `).join('');
+}
+
+function renderManualHighlights() {
+  if (!state.manualHighlights.length) {
+    el.hlList.innerHTML = '<p class="manual-empty">No highlights yet.</p>';
+    return;
+  }
+  el.hlList.innerHTML = state.manualHighlights.map(item => `
+    <article class="manual-item">
+      <h4>Page ${item.page}</h4>
+      <p>${escapeHTML(item.text)}</p>
+      ${item.note ? `<p>${escapeHTML(item.note)}</p>` : ''}
+      <div class="row">
+        <button class="btn" type="button" data-hl-go="${escapeHTML(item.id)}">Go to</button>
+        <button class="btn warn" type="button" data-hl-del="${escapeHTML(item.id)}">Delete</button>
+      </div>
+    </article>
+  `).join('');
+}
+
+function openManual(page) {
+  const doc = activeManualDoc();
+  if (!doc) {
+    renderManualStatus('No manual files available for this product/language.');
+    el.manualFrame.removeAttribute('src');
+    return;
+  }
+
+  state.manualPage = parseManualPage(page);
+  el.manualPageInput.value = String(state.manualPage);
+  el.manualFrame.src = manualDocURL(doc, state.manualPage);
+  renderManualStatus(`Opened: ${doc.label} (page ${state.manualPage})`);
+}
+
+function hydrateManualContext() {
+  const docs = manualDocsForCurrentContext();
+  el.manualDocSelect.innerHTML = docs.map(doc => `<option value="${doc.id}">${doc.label}</option>`).join('');
+
+  if (!docs.length) {
+    state.manualDocID = '';
+    state.manualBookmarks = [];
+    state.manualHighlights = [];
+    renderManualBookmarks();
+    renderManualHighlights();
+    openManual(1);
+    return;
+  }
+
+  if (!docs.some(doc => doc.id === state.manualDocID)) {
+    state.manualDocID = docs[0].id;
+  }
+  el.manualDocSelect.value = state.manualDocID;
+  state.manualPage = parseManualPage(el.manualPageInput.value || state.manualPage);
+  loadManualState();
+  renderManualBookmarks();
+  renderManualHighlights();
+  openManual(state.manualPage);
 }
 
 function switchTab(tab) {
@@ -698,33 +1563,50 @@ function switchTab(tab) {
   });
 }
 
-function bootLanguageOptions() {
-  const options = Object.entries(PACKS)
-    .map(([key, item]) => `<option value="${key}">${item.label}</option>`)
-    .join('');
-  el.langSelect.innerHTML = options;
-  el.langSelect.value = state.lang;
-}
-
 function refreshAll() {
   renderDigest();
   renderQA();
   renderCards();
 }
 
+function hydrateTrackContext() {
+  state.lang = state.langByTrack[state.track] || currentTrack().defaultLang || 'en';
+  syncHero();
+  syncDeckLabel();
+  syncLanguageOptions();
+  state.langByTrack[state.track] = state.lang;
+  loadCustomDeck();
+  if (state.deck === 'custom' && !state.customDeck.length) {
+    state.deck = 'builtin';
+    el.deckSelect.value = 'builtin';
+  }
+  rebuildOrder();
+  refreshAll();
+  hydrateManualContext();
+}
+
+el.trackSelect.addEventListener('change', () => {
+  state.langByTrack[state.track] = state.lang;
+  state.track = el.trackSelect.value;
+  hydrateTrackContext();
+  if (state.customDeck.length) {
+    renderCustomStatus(`Loaded ${state.customDeck.length} saved custom cards for ${currentTrack().label}.`, 'ok');
+  } else {
+    renderCustomStatus(`No custom deck loaded yet for ${currentTrack().label}.`, '');
+  }
+});
+
 el.langSelect.addEventListener('change', () => {
   state.lang = el.langSelect.value;
+  state.langByTrack[state.track] = state.lang;
   if (state.deck === 'builtin') rebuildOrder();
-  renderDigest();
-  renderQA();
-  renderCards();
+  refreshAll();
 });
 
 el.deckSelect.addEventListener('change', () => {
   state.deck = el.deckSelect.value;
   rebuildOrder();
-  renderQA();
-  renderCards();
+  refreshAll();
   if (state.deck === 'custom' && !state.customDeck.length) {
     renderCustomStatus('Custom deck is empty. Add lines in Custom Material and click "Load Custom Deck".', 'err');
   }
@@ -749,6 +1631,9 @@ el.qaNext.addEventListener('click', () => {
 
 el.qaShow.addEventListener('click', () => {
   el.qaAnswer.classList.toggle('open');
+  if (!state.qaAnswered) {
+    el.qaFeedback.textContent = 'Answer revealed. You can still choose an option.';
+  }
 });
 
 function flipCard() {
@@ -791,29 +1676,122 @@ el.loadCustom.addEventListener('click', () => {
   el.deckSelect.value = 'custom';
   rebuildOrder();
   refreshAll();
-  renderCustomStatus(`Loaded ${parsed.length} cards into the custom deck.`, 'ok');
+  renderCustomStatus(`Loaded ${parsed.length} cards into the ${currentTrack().label} custom deck.`, 'ok');
 });
 
 el.clearCustom.addEventListener('click', () => {
   state.customDeck = [];
   el.customInput.value = '';
-  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(storageKey());
   if (state.deck === 'custom') {
     state.deck = 'builtin';
     el.deckSelect.value = 'builtin';
   }
   rebuildOrder();
   refreshAll();
-  renderCustomStatus('Custom deck cleared.', 'ok');
+  renderCustomStatus(`Custom deck cleared for ${currentTrack().label}.`, 'ok');
 });
 
 el.sampleCustom.addEventListener('click', () => {
-  el.customInput.value = [
-    'What does a flashing yellow traffic signal mean? || Slow down and proceed with caution.',
-    'Q: What should you do before changing lanes?',
-    'A: Check mirrors, blind spot, and signal before moving.'
-  ].join('\n');
-  renderCustomStatus('Sample inserted. Click "Load Custom Deck" to activate it.');
+  el.customInput.value = currentTrack().sample.join('\n');
+  renderCustomStatus('Sample inserted. Click "Load Custom Deck" to activate it.', '');
+});
+
+el.manualDocSelect.addEventListener('change', () => {
+  state.manualDocID = el.manualDocSelect.value;
+  state.manualPage = 1;
+  el.manualPageInput.value = '1';
+  loadManualState();
+  renderManualBookmarks();
+  renderManualHighlights();
+  openManual(1);
+});
+
+el.manualOpenBtn.addEventListener('click', () => {
+  openManual(el.manualPageInput.value);
+});
+
+el.manualPrevBtn.addEventListener('click', () => {
+  openManual(parseManualPage(el.manualPageInput.value) - 1);
+});
+
+el.manualNextBtn.addEventListener('click', () => {
+  openManual(parseManualPage(el.manualPageInput.value) + 1);
+});
+
+el.manualPageInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    openManual(el.manualPageInput.value);
+  }
+});
+
+el.bmSaveBtn.addEventListener('click', () => {
+  const label = el.bmLabelInput.value.trim();
+  const page = parseManualPage(el.manualPageInput.value || state.manualPage);
+  const id = `bm-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  state.manualBookmarks.unshift({ id, page, label: label || `Page ${page}` });
+  saveManualState('bookmarks');
+  renderManualBookmarks();
+  el.bmLabelInput.value = '';
+  renderManualStatus(`Bookmark saved for page ${page}.`);
+});
+
+el.hlSaveBtn.addEventListener('click', () => {
+  const text = el.hlTextInput.value.trim();
+  const note = el.hlNoteInput.value.trim();
+  if (!text) {
+    renderManualStatus('Enter highlight text before saving.');
+    return;
+  }
+  const page = parseManualPage(el.manualPageInput.value || state.manualPage);
+  const id = `hl-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  state.manualHighlights.unshift({ id, page, text, note });
+  saveManualState('highlights');
+  renderManualHighlights();
+  el.hlTextInput.value = '';
+  el.hlNoteInput.value = '';
+  renderManualStatus(`Highlight saved for page ${page}.`);
+});
+
+el.bmList.addEventListener('click', (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return;
+  const goID = target.getAttribute('data-bm-go');
+  const delID = target.getAttribute('data-bm-del');
+
+  if (goID) {
+    const item = state.manualBookmarks.find(entry => entry.id === goID);
+    if (!item) return;
+    openManual(item.page);
+    return;
+  }
+  if (delID) {
+    state.manualBookmarks = state.manualBookmarks.filter(entry => entry.id !== delID);
+    saveManualState('bookmarks');
+    renderManualBookmarks();
+    renderManualStatus('Bookmark removed.');
+  }
+});
+
+el.hlList.addEventListener('click', (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return;
+  const goID = target.getAttribute('data-hl-go');
+  const delID = target.getAttribute('data-hl-del');
+
+  if (goID) {
+    const item = state.manualHighlights.find(entry => entry.id === goID);
+    if (!item) return;
+    openManual(item.page);
+    return;
+  }
+  if (delID) {
+    state.manualHighlights = state.manualHighlights.filter(entry => entry.id !== delID);
+    saveManualState('highlights');
+    renderManualHighlights();
+    renderManualStatus('Highlight removed.');
+  }
 });
 
 el.tabs.forEach(btn => {
@@ -849,16 +1827,14 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
-function init() {
-  bootLanguageOptions();
-  loadCustomDeck();
-  rebuildOrder();
-  refreshAll();
-
+async function init() {
+  el.trackSelect.value = state.track;
+  await loadManualDigests();
+  hydrateTrackContext();
   if (state.customDeck.length) {
     renderCustomStatus(`Loaded saved custom deck with ${state.customDeck.length} cards.`, 'ok');
   } else {
-    renderCustomStatus('No custom deck loaded yet.');
+    renderCustomStatus('No custom deck loaded yet for this product.', '');
   }
 }
 

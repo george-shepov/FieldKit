@@ -3,10 +3,10 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-SERVICE_NAME="prosepilot-suite.service"
+SERVICE_NAME="fieldkit.service"
 UNIT_DIR="${HOME}/.config/systemd/user"
 UNIT_FILE="${UNIT_DIR}/${SERVICE_NAME}"
-ENV_DIR="${HOME}/.config/prosepilot"
+ENV_DIR="${HOME}/.config/fieldkit"
 ENV_FILE="${ENV_DIR}/suite.env"
 
 ensure_files() {
@@ -18,14 +18,14 @@ PORT=8787
 HOST=0.0.0.0
 SHARE=1
 ENABLE_API=0
-API_KEY=change-me
+API_KEY=
 DATA_DIR=${ROOT_DIR}/data
 EOF
   fi
 
   cat >"${UNIT_FILE}" <<EOF
 [Unit]
-Description=ProSe Pilot Suite Launcher
+Description=FieldKit Launcher
 After=network.target
 
 [Service]
@@ -106,4 +106,3 @@ case "${cmd}" in
   uninstall) uninstall_service ;;
   *) usage; exit 1 ;;
 esac
-

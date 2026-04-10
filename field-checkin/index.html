@@ -93,8 +93,14 @@
   .status.err { border-color: #944653; color: #ffb1b7; }
   .status.warn { border-color: #9d7431; color: #ffd18b; }
 </style>
+  <link rel="stylesheet" href="../shared/suite-nav.css" />
 </head>
 <body>
+<nav class="suite-nav" data-suite-nav="1">
+  <a href="../index.html">&larr; Back to FieldKit</a>
+  <span>FieldKit</span>
+</nav>
+
 <div class="wrap">
   <div class="card">
     <h1>Field Check-In</h1>
@@ -274,12 +280,31 @@
   }
 
   function getOrCreateDeviceId() {
-    const key = 'prosepilot.deviceId';
+    const key = 'fieldkit.deviceId';
     const existing = localStorage.getItem(key);
     if (existing) return existing;
     const generated = `device-${Math.random().toString(36).slice(2, 10)}`;
     localStorage.setItem(key, generated);
     return generated;
+  }
+
+  function normalizeHandle(value) {
+    const v = String(value || '').trim().toLowerCase();
+    return /^[a-z0-9._-]{3,64}$/.test(v) ? v : '';
+  }
+
+  function getPreferredOwnerName() {
+    try {
+      const fromRef = normalizeHandle(localStorage.getItem('suite_ref_user'));
+      if (fromRef) return fromRef;
+    } catch (_) {}
+    try {
+      const raw = localStorage.getItem('suite_global_profile_v1');
+      if (!raw) return '';
+      const profile = JSON.parse(raw);
+      return normalizeHandle(profile && profile.username);
+    } catch (_) {}
+    return '';
   }
 
   function authHeaders() {
@@ -318,6 +343,7 @@
     const defaults = {
       apiBase: normalizeApiBase(''),
       deviceId: getOrCreateDeviceId(),
+      ownerName: getPreferredOwnerName(),
       platform: /android|iphone|ipad/i.test(navigator.userAgent) ? 'mobile-web' : 'desktop-web'
     };
     let cfg = defaults;
@@ -330,7 +356,7 @@
     el.apiKey.value = cfg.apiKey || '';
     el.deviceId.value = cfg.deviceId || defaults.deviceId;
     el.appVersion.value = cfg.appVersion || '';
-    el.ownerName.value = cfg.ownerName || '';
+    el.ownerName.value = cfg.ownerName || defaults.ownerName || '';
     el.ownerEmail.value = cfg.ownerEmail || '';
     el.platform.value = cfg.platform || defaults.platform;
     el.emergencyName.value = cfg.emergencyName || '';

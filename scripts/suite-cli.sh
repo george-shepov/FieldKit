@@ -4,24 +4,24 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 RUN_DIR="${ROOT_DIR}/.run"
-PID_FILE="${RUN_DIR}/prosepilot.pid"
-LOG_FILE="${RUN_DIR}/prosepilot.log"
+PID_FILE="${RUN_DIR}/fieldkit.pid"
+LOG_FILE="${RUN_DIR}/fieldkit.log"
 STATE_FILE="${RUN_DIR}/suite-cli.state"
 SERVICE_SCRIPT="${ROOT_DIR}/scripts/suite-service.sh"
-SERVICE_ENV_DIR="${HOME}/.config/prosepilot"
+SERVICE_ENV_DIR="${HOME}/.config/fieldkit"
 SERVICE_ENV_FILE="${SERVICE_ENV_DIR}/suite.env"
 USE_SERVICE_MODE="${SUITE_CLI_USE_SERVICE:-1}"
 
 DEFAULT_PORT="${PORT:-8787}"
 DEFAULT_HOST="${HOST:-127.0.0.1}"
-DEFAULT_API_KEY="${API_KEY:-change-me}"
+DEFAULT_API_KEY="${API_KEY:-}"
 
 mkdir -p "${RUN_DIR}"
 
 find_suite_pids() {
   local pattern_dist pattern_root
-  pattern_dist="${ROOT_DIR}/dist/prosepilot-"
-  pattern_root="${ROOT_DIR}/prosepilot"
+  pattern_dist="${ROOT_DIR}/dist/fieldkit-"
+  pattern_root="${ROOT_DIR}/fieldkit"
   {
     pgrep -f "${pattern_dist}" || true
     pgrep -f "${pattern_root}" || true
@@ -79,7 +79,7 @@ binary_path() {
   local os arch bin
   os="$(detect_os)"
   arch="$(detect_arch)"
-  bin="${ROOT_DIR}/dist/prosepilot-${os}-${arch}"
+  bin="${ROOT_DIR}/dist/fieldkit-${os}-${arch}"
   if [[ "${os}" == "windows" ]]; then
     bin="${bin}.exe"
   fi
@@ -87,8 +87,8 @@ binary_path() {
     echo "${bin}"
     return
   fi
-  if [[ -x "${ROOT_DIR}/prosepilot" ]]; then
-    echo "${ROOT_DIR}/prosepilot"
+  if [[ -x "${ROOT_DIR}/fieldkit" ]]; then
+    echo "${ROOT_DIR}/fieldkit"
     return
   fi
   echo "${bin}"
@@ -119,6 +119,9 @@ read_state() {
   if [[ -f "${STATE_FILE}" ]]; then
     # shellcheck disable=SC1090
     source "${STATE_FILE}"
+  fi
+  if [[ "${API_KEY_VALUE}" == "change-me" ]]; then
+    API_KEY_VALUE=""
   fi
 }
 
@@ -161,7 +164,7 @@ status() {
     echo "Log:    ${LOG_FILE}"
   fi
   local listeners
-  listeners="$(ss -ltnp 2>/dev/null | grep prosepilot || true)"
+  listeners="$(ss -ltnp 2>/dev/null | grep fieldkit || true)"
   if [[ -n "${listeners}" ]]; then
     echo "Active listeners:"
     echo "${listeners}"
@@ -239,7 +242,10 @@ start() {
     args+=("--share")
   fi
   if [[ "${API_VALUE}" == "1" ]]; then
-    args+=("--enable-api" "--api-key" "${API_KEY_VALUE}")
+    args+=("--enable-api")
+    if [[ -n "${API_KEY_VALUE}" ]]; then
+      args+=("--api-key" "${API_KEY_VALUE}")
+    fi
   fi
 
   echo "" >>"${LOG_FILE}"
@@ -306,12 +312,12 @@ stop_all() {
   local pids
   pids="$(find_suite_pids)"
   if [[ -z "${pids}" ]]; then
-    echo "No ProSe Pilot processes found for this suite."
+    echo "No FieldKit processes found for this suite."
     rm -f "${PID_FILE}"
     return
   fi
 
-  echo "Stopping all suite ProSe Pilot processes..."
+  echo \"Stopping all suite FieldKit processes...\"
   while IFS= read -r pid; do
     [[ -z "${pid}" ]] && continue
     echo "  -> PID ${pid}"
@@ -403,7 +409,7 @@ logs() {
 menu() {
   while true; do
     echo ""
-    echo "ProSe Pilot Control"
+    echo "FieldKit Control"
     echo "1) Start (desktop)"
     echo "2) Start (LAN)"
     echo "3) Start (LAN + API)"

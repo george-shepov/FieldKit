@@ -2,6 +2,16 @@
   if (window.__suitePWAInit) return;
   window.__suitePWAInit = true;
   const params = new URLSearchParams(window.location.search);
+  const currentScript = document.currentScript;
+  const scriptURL = currentScript && currentScript.src
+    ? new URL(currentScript.src, window.location.href)
+    : new URL("shared/pwa-init.js", document.baseURI);
+  const appRootURL = new URL("../", scriptURL);
+
+  function resolveAssetURL(path) {
+    const normalized = String(path || "").replace(/^\/+/, "");
+    return new URL(normalized, appRootURL).toString();
+  }
 
   function ensureMeta(name, content) {
     if (document.querySelector(`meta[name="${name}"]`)) return;
@@ -12,7 +22,11 @@
   }
 
   function ensureLink(rel, href) {
-    if (document.querySelector(`link[rel="${rel}"]`)) return;
+    const existing = document.querySelector(`link[rel="${rel}"]`);
+    if (existing) {
+      existing.setAttribute("href", href);
+      return;
+    }
     const link = document.createElement("link");
     link.setAttribute("rel", rel);
     link.setAttribute("href", href);
@@ -20,8 +34,8 @@
   }
 
   if (document.head) {
-    ensureLink("manifest", "/manifest.webmanifest");
-    ensureLink("apple-touch-icon", "/shared/icons/suite-icon.svg");
+    ensureLink("manifest", resolveAssetURL("manifest.webmanifest"));
+    ensureLink("apple-touch-icon", resolveAssetURL("shared/icons/tictak-icon-512.png"));
     ensureMeta("theme-color", "#0f172a");
     ensureMeta("mobile-web-app-capable", "yes");
     ensureMeta("apple-mobile-web-app-capable", "yes");
@@ -68,7 +82,7 @@
   }
 
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("/sw.js").catch(function (err) {
+    navigator.serviceWorker.register(resolveAssetURL("sw.js")).catch(function (err) {
       console.warn("[PWA] Service worker registration failed:", err);
     });
   });

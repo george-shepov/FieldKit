@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Inventory Manager</title>
+<title>Inventory & Offerings Manager</title>
 <style>
   :root {
     --bg: #0f1320;
@@ -14,6 +14,7 @@
     --ok: #1bc488;
     --warn: #f0b34f;
     --bad: #ef6b78;
+    --accent: #6cb8ff;
   }
   * { box-sizing: border-box; }
   body {
@@ -37,7 +38,7 @@
   .suite-nav a { color: #8ea8cd; text-decoration: none; }
   .suite-nav a:hover { color: #c9dbf5; }
   .wrap {
-    max-width: 1100px;
+    max-width: 1180px;
     margin: 14px auto;
     padding: 0 14px 24px;
     display: grid;
@@ -86,6 +87,7 @@
   .btn.ok { background: #0f6846; border-color: #1f946c; }
   .btn.warn { background: #765b22; border-color: #bd9440; }
   .btn.bad { background: #7b3341; border-color: #b95a67; }
+  .btn.ghost { background: #1a3151; border-color: #3d5f8f; }
   .status {
     margin-top: 10px;
     border: 1px solid var(--line);
@@ -99,7 +101,7 @@
   .status.bad { border-color: #8f4b56; color: #ffc0c7; }
   .stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
     gap: 8px;
   }
   .stat {
@@ -133,23 +135,33 @@
   .badge.ok { border-color: #2b8f69; background: #113527; color: #b1f5d8; }
   .badge.warn { border-color: #9a7c3f; background: #3a2c13; color: #ffe1a8; }
   .badge.bad { border-color: #a45862; background: #3d161b; color: #ffc9d0; }
+  .badge.info { border-color: #4c79b8; background: #142944; color: #c3ddff; }
   .table-wrap { overflow-x: auto; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
+  .split {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 10px;
+  }
+  @media (max-width: 980px) {
+    .split { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
 <nav class="suite-nav">
-  <a href="../index.html">&lt;- Back to Suite</a>
+  <a href="../index.html">&lt;- Back to FieldKit</a>
   <span>Inventory Manager</span>
 </nav>
 
 <div class="wrap">
   <div class="card">
-    <h1>Inventory Manager</h1>
-    <div class="muted">Track SKU, quantity, price, and stock status locally. Export/import JSON for backup.</div>
+    <h1>Inventory & Offerings Manager</h1>
+    <div class="muted">Track physical stock plus software modules/packages/customizations, then convert support and feature intake into GitHub issues with your reward policy.</div>
   </div>
 
   <div class="card">
-    <h2>Add / Edit Item</h2>
+    <h2>Add / Edit Offering</h2>
     <div class="grid">
       <div>
         <label for="sku">SKU</label>
@@ -157,44 +169,104 @@
       </div>
       <div>
         <label for="name">Name</label>
-        <input id="name" type="text" placeholder="Item name" />
+        <input id="name" type="text" placeholder="Offer name" />
       </div>
       <div>
         <label for="category">Category</label>
-        <input id="category" type="text" placeholder="Tools / Apparel / etc." />
+        <input id="category" type="text" placeholder="Tools / SaaS / Custom / etc." />
       </div>
       <div>
-        <label for="qty">Quantity</label>
-        <input id="qty" type="number" min="0" step="1" value="0" />
+        <label for="type">Offer Type</label>
+        <select id="type">
+          <option value="physical">Physical Product</option>
+          <option value="module">Software Module</option>
+          <option value="package">Bundle Package</option>
+          <option value="customization">Customization Service</option>
+          <option value="service">General Service</option>
+        </select>
       </div>
       <div>
-        <label for="price">Unit Price</label>
+        <label for="billing">Billing Model</label>
+        <select id="billing">
+          <option value="one-time">One-Time</option>
+          <option value="subscription">Subscription (monthly)</option>
+          <option value="hourly">Hourly</option>
+          <option value="revenue-share">Revenue Share</option>
+        </select>
+      </div>
+      <div>
+        <label for="active">Lifecycle Status</label>
+        <select id="active">
+          <option value="live">Live</option>
+          <option value="draft">Draft</option>
+          <option value="paused">Paused</option>
+          <option value="retired">Retired</option>
+        </select>
+      </div>
+      <div>
+        <label for="qty">Quantity / Seats</label>
+        <input id="qty" type="number" min="0" step="1" value="1" />
+      </div>
+      <div>
+        <label for="price">Unit Price (USD)</label>
         <input id="price" type="number" min="0" step="0.01" value="0" />
       </div>
       <div>
-        <label for="lowAt">Low Stock Threshold</label>
+        <label for="lowAt">Low Stock Threshold (physical)</label>
         <input id="lowAt" type="number" min="0" step="1" value="3" />
+      </div>
+      <div>
+        <label for="moduleId">Module / Package ID</label>
+        <input id="moduleId" type="text" placeholder="@scope/module-name" />
+      </div>
+      <div>
+        <label for="deliveryUrl">Checkout / Delivery URL</label>
+        <input id="deliveryUrl" type="text" placeholder="https://oneof.store/..." />
       </div>
     </div>
     <div style="margin-top:10px;">
       <label for="notes">Notes</label>
-      <textarea id="notes" placeholder="Supplier, shelf location, listing URL, etc."></textarea>
+      <textarea id="notes" placeholder="Contract terms, install notes, repo links, onboarding steps, etc."></textarea>
     </div>
     <div class="row" style="margin-top:10px;">
-      <button id="saveBtn" class="btn ok" type="button">Save Item</button>
+      <button id="saveBtn" class="btn ok" type="button">Save Offer</button>
       <button id="clearFormBtn" class="btn warn" type="button">Clear Form</button>
-      <button id="clearAllBtn" class="btn bad" type="button">Clear All Items</button>
+      <button id="clearAllBtn" class="btn bad" type="button">Clear All Offers</button>
     </div>
     <div id="status" class="status">Ready.</div>
   </div>
 
-  <div class="card">
-    <h2>Search / Backup</h2>
-    <div class="row">
-      <input id="search" type="text" placeholder="Search SKU, name, category, notes..." style="flex:1;min-width:240px;" />
-      <button id="exportBtn" class="btn" type="button">Export JSON</button>
-      <button id="importBtn" class="btn" type="button">Import JSON</button>
-      <input id="importFile" type="file" accept="application/json" style="display:none;" />
+  <div class="card split">
+    <div>
+      <h2>Search / Backup</h2>
+      <div class="row">
+        <input id="search" type="text" placeholder="Search SKU, name, category, module ID, notes..." style="flex:1;min-width:240px;" />
+        <button id="exportBtn" class="btn" type="button">Export JSON</button>
+        <button id="importBtn" class="btn" type="button">Import JSON</button>
+        <input id="importFile" type="file" accept="application/json" style="display:none;" />
+      </div>
+    </div>
+    <div>
+      <h2>GitHub Pipeline Config</h2>
+      <div class="grid" style="grid-template-columns: 1fr 1fr;">
+        <div style="grid-column: span 2;">
+          <label for="ghRepo">GitHub Repository (owner/repo)</label>
+          <input id="ghRepo" type="text" placeholder="george-shepov/FieldKit" />
+        </div>
+        <div>
+          <label for="ghLabels">Default Labels (comma-separated)</label>
+          <input id="ghLabels" type="text" placeholder="triage,market-ready" />
+        </div>
+        <div>
+          <label for="rewardSplit">Winning PR Reward %</label>
+          <input id="rewardSplit" type="number" min="1" max="100" step="1" value="50" />
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <button id="savePipelineBtn" class="btn">Save Pipeline Config</button>
+        <button id="refreshIntakeBtn" class="btn ghost">Refresh Intake</button>
+      </div>
+      <div id="pipelineStatus" class="status">Pipeline not configured yet.</div>
     </div>
   </div>
 
@@ -204,17 +276,18 @@
   </div>
 
   <div class="card">
-    <h2>Items</h2>
+    <h2>Offers</h2>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
             <th>SKU</th>
             <th>Name</th>
-            <th>Category</th>
-            <th>Qty</th>
+            <th>Type</th>
+            <th>Billing</th>
+            <th>Qty/Seats</th>
             <th>Price</th>
-            <th>Value</th>
+            <th>Revenue Proxy</th>
             <th>Status</th>
             <th>Updated</th>
             <th>Actions</th>
@@ -224,22 +297,61 @@
       </table>
     </div>
   </div>
+
+  <div class="card">
+    <h2>Support + Feature Intake to GitHub</h2>
+    <div class="muted">Pulls local queue from <span class="mono">Support Desk</span> and <span class="mono">Wishlist Studio</span>, then opens prefilled GitHub issues with your customization payout policy.</div>
+    <div class="table-wrap" style="margin-top:10px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Source</th>
+            <th>Title</th>
+            <th>Priority</th>
+            <th>Budget</th>
+            <th>Created</th>
+            <th>State</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="intakeRows"></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <script>
 (() => {
-  const KEY = 'inventory.manager.v1';
+  const KEY = 'inventory.manager.v2';
+  const CFG_KEY = 'inventory.manager.cfg.v1';
+  const INTAKE_SENT_KEY = 'inventory.intake.sent.v1';
+  const SUPPORT_KEY = 'support.tickets.v1';
+  const WISHLIST_KEY = 'wishlist.items.v1';
+
   const state = {
     items: [],
-    editId: ''
+    editId: '',
+    cfg: {
+      ghRepo: '',
+      ghLabels: 'triage',
+      rewardSplit: 50
+    },
+    intakeSent: {},
+    intake: []
   };
+
   const el = {
     sku: document.getElementById('sku'),
     name: document.getElementById('name'),
     category: document.getElementById('category'),
+    type: document.getElementById('type'),
+    billing: document.getElementById('billing'),
+    active: document.getElementById('active'),
     qty: document.getElementById('qty'),
     price: document.getElementById('price'),
     lowAt: document.getElementById('lowAt'),
+    moduleId: document.getElementById('moduleId'),
+    deliveryUrl: document.getElementById('deliveryUrl'),
     notes: document.getElementById('notes'),
     saveBtn: document.getElementById('saveBtn'),
     clearFormBtn: document.getElementById('clearFormBtn'),
@@ -250,13 +362,33 @@
     importBtn: document.getElementById('importBtn'),
     importFile: document.getElementById('importFile'),
     rows: document.getElementById('rows'),
-    stats: document.getElementById('stats')
+    stats: document.getElementById('stats'),
+    intakeRows: document.getElementById('intakeRows'),
+    ghRepo: document.getElementById('ghRepo'),
+    ghLabels: document.getElementById('ghLabels'),
+    rewardSplit: document.getElementById('rewardSplit'),
+    savePipelineBtn: document.getElementById('savePipelineBtn'),
+    refreshIntakeBtn: document.getElementById('refreshIntakeBtn'),
+    pipelineStatus: document.getElementById('pipelineStatus')
   };
 
   function setStatus(msg, kind) {
     el.status.textContent = msg;
     el.status.className = 'status';
     if (kind) el.status.classList.add(kind);
+  }
+
+  function setPipelineStatus(msg, kind) {
+    el.pipelineStatus.textContent = msg;
+    el.pipelineStatus.className = 'status';
+    if (kind) el.pipelineStatus.classList.add(kind);
+  }
+
+  function esc(s) {
+    return String(s || '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;');
   }
 
   function currency(v) {
@@ -267,26 +399,121 @@
     return new Date().toISOString();
   }
 
-  function statusFor(item) {
-    const q = Number(item.qty || 0);
-    const low = Number(item.lowAt || 0);
-    if (q <= 0) return { key: 'out', label: 'Out', className: 'bad' };
-    if (q <= low) return { key: 'low', label: 'Low', className: 'warn' };
-    return { key: 'in', label: 'In Stock', className: 'ok' };
+  function parseJsonSafe(raw, fallback) {
+    try {
+      const out = JSON.parse(raw);
+      return out;
+    } catch (_) {
+      return fallback;
+    }
   }
 
-  function save() {
+  function toId(prefix) {
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  }
+
+  function normalizeType(value) {
+    const v = String(value || '').trim().toLowerCase();
+    if (['physical', 'module', 'package', 'customization', 'service'].includes(v)) return v;
+    return 'physical';
+  }
+
+  function normalizeBilling(value) {
+    const v = String(value || '').trim().toLowerCase();
+    if (['one-time', 'subscription', 'hourly', 'revenue-share'].includes(v)) return v;
+    return 'one-time';
+  }
+
+  function normalizeActive(value) {
+    const v = String(value || '').trim().toLowerCase();
+    if (['live', 'draft', 'paused', 'retired'].includes(v)) return v;
+    return 'live';
+  }
+
+  function statusFor(item) {
+    const type = normalizeType(item.type);
+    if (type === 'physical') {
+      const q = Number(item.qty || 0);
+      const low = Number(item.lowAt || 0);
+      if (q <= 0) return { key: 'out', label: 'Out', className: 'bad' };
+      if (q <= low) return { key: 'low', label: 'Low', className: 'warn' };
+      return { key: 'in', label: 'In Stock', className: 'ok' };
+    }
+    const active = normalizeActive(item.active);
+    if (active === 'retired') return { key: 'retired', label: 'Retired', className: 'bad' };
+    if (active === 'paused') return { key: 'paused', label: 'Paused', className: 'warn' };
+    if (active === 'draft') return { key: 'draft', label: 'Draft', className: 'warn' };
+    return { key: 'live', label: 'Live', className: 'ok' };
+  }
+
+  function revenueProxy(item) {
+    const qty = Math.max(0, Number(item.qty || 0));
+    const price = Math.max(0, Number(item.price || 0));
+    const billing = normalizeBilling(item.billing);
+    if (billing === 'subscription') return { label: `${currency(qty * price)}/mo`, monthly: qty * price, oneTime: 0 };
+    if (billing === 'hourly') return { label: `${currency(price)}/hr`, monthly: 0, oneTime: 0 };
+    if (billing === 'revenue-share') return { label: `${currency(price)} share`, monthly: 0, oneTime: 0 };
+    return { label: currency(qty * price), monthly: 0, oneTime: qty * price };
+  }
+
+  function saveItems() {
     localStorage.setItem(KEY, JSON.stringify(state.items));
   }
 
+  function saveCfg() {
+    const cfg = {
+      ghRepo: String(el.ghRepo.value || '').trim(),
+      ghLabels: String(el.ghLabels.value || '').trim(),
+      rewardSplit: Math.max(1, Math.min(100, Number(el.rewardSplit.value || 50)))
+    };
+    state.cfg = cfg;
+    localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+    setPipelineStatus('Pipeline config saved.', 'ok');
+  }
+
+  function saveIntakeSent() {
+    localStorage.setItem(INTAKE_SENT_KEY, JSON.stringify(state.intakeSent));
+  }
+
   function load() {
-    try {
-      const raw = localStorage.getItem(KEY);
-      state.items = raw ? JSON.parse(raw) : [];
-      if (!Array.isArray(state.items)) state.items = [];
-    } catch (_) {
-      state.items = [];
-    }
+    const rawItems = localStorage.getItem(KEY);
+    state.items = Array.isArray(parseJsonSafe(rawItems || '[]', [])) ? parseJsonSafe(rawItems || '[]', []) : [];
+
+    const rawCfg = localStorage.getItem(CFG_KEY);
+    const parsedCfg = parseJsonSafe(rawCfg || '{}', {});
+    state.cfg = {
+      ghRepo: String(parsedCfg.ghRepo || ''),
+      ghLabels: String(parsedCfg.ghLabels || 'triage'),
+      rewardSplit: Math.max(1, Math.min(100, Number(parsedCfg.rewardSplit || 50)))
+    };
+
+    const rawSent = localStorage.getItem(INTAKE_SENT_KEY);
+    const parsedSent = parseJsonSafe(rawSent || '{}', {});
+    state.intakeSent = parsedSent && typeof parsedSent === 'object' ? parsedSent : {};
+
+    state.items = state.items
+      .filter((x) => x && typeof x === 'object')
+      .map((x) => ({
+        id: String(x.id || toId('inv')),
+        sku: String(x.sku || '').trim(),
+        name: String(x.name || '').trim(),
+        category: String(x.category || '').trim(),
+        type: normalizeType(x.type),
+        billing: normalizeBilling(x.billing),
+        active: normalizeActive(x.active),
+        qty: Math.max(0, Number(x.qty || 0)),
+        price: Math.max(0, Number(x.price || 0)),
+        lowAt: Math.max(0, Number(x.lowAt || 0)),
+        moduleId: String(x.moduleId || '').trim(),
+        deliveryUrl: String(x.deliveryUrl || '').trim(),
+        notes: String(x.notes || '').trim(),
+        updatedAt: String(x.updatedAt || nowIso())
+      }))
+      .filter((x) => x.sku && x.name);
+
+    el.ghRepo.value = state.cfg.ghRepo;
+    el.ghLabels.value = state.cfg.ghLabels;
+    el.rewardSplit.value = String(state.cfg.rewardSplit);
   }
 
   function clearForm() {
@@ -294,22 +521,32 @@
     el.sku.value = '';
     el.name.value = '';
     el.category.value = '';
-    el.qty.value = '0';
+    el.type.value = 'physical';
+    el.billing.value = 'one-time';
+    el.active.value = 'live';
+    el.qty.value = '1';
     el.price.value = '0';
     el.lowAt.value = '3';
+    el.moduleId.value = '';
+    el.deliveryUrl.value = '';
     el.notes.value = '';
-    el.saveBtn.textContent = 'Save Item';
+    el.saveBtn.textContent = 'Save Offer';
   }
 
   function upsertItem() {
     const item = {
-      id: state.editId || `inv-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      id: state.editId || toId('inv'),
       sku: String(el.sku.value || '').trim(),
       name: String(el.name.value || '').trim(),
       category: String(el.category.value || '').trim(),
+      type: normalizeType(el.type.value),
+      billing: normalizeBilling(el.billing.value),
+      active: normalizeActive(el.active.value),
       qty: Math.max(0, Number(el.qty.value || 0)),
       price: Math.max(0, Number(el.price.value || 0)),
       lowAt: Math.max(0, Number(el.lowAt.value || 0)),
+      moduleId: String(el.moduleId.value || '').trim(),
+      deliveryUrl: String(el.deliveryUrl.value || '').trim(),
       notes: String(el.notes.value || '').trim(),
       updatedAt: nowIso()
     };
@@ -322,17 +559,18 @@
     const existing = state.items.findIndex((x) => x.id === item.id);
     if (existing >= 0) state.items[existing] = item;
     else state.items.unshift(item);
-    save();
+
+    saveItems();
     render();
-    setStatus(existing >= 0 ? 'Item updated.' : 'Item added.', 'ok');
+    setStatus(existing >= 0 ? 'Offer updated.' : 'Offer added.', 'ok');
     clearForm();
   }
 
   function removeItem(id) {
     state.items = state.items.filter((x) => x.id !== id);
-    save();
+    saveItems();
     render();
-    setStatus('Item deleted.', 'warn');
+    setStatus('Offer deleted.', 'warn');
   }
 
   function editItem(id) {
@@ -342,11 +580,16 @@
     el.sku.value = it.sku || '';
     el.name.value = it.name || '';
     el.category.value = it.category || '';
+    el.type.value = normalizeType(it.type);
+    el.billing.value = normalizeBilling(it.billing);
+    el.active.value = normalizeActive(it.active);
     el.qty.value = String(it.qty || 0);
     el.price.value = String(it.price || 0);
     el.lowAt.value = String(it.lowAt || 0);
+    el.moduleId.value = it.moduleId || '';
+    el.deliveryUrl.value = it.deliveryUrl || '';
     el.notes.value = it.notes || '';
-    el.saveBtn.textContent = 'Update Item';
+    el.saveBtn.textContent = 'Update Offer';
     setStatus(`Editing ${it.sku}.`, 'warn');
   }
 
@@ -354,7 +597,7 @@
     const q = String(el.search.value || '').trim().toLowerCase();
     if (!q) return state.items.slice();
     return state.items.filter((it) => {
-      const blob = `${it.sku} ${it.name} ${it.category} ${it.notes}`.toLowerCase();
+      const blob = `${it.sku} ${it.name} ${it.category} ${it.type} ${it.billing} ${it.moduleId} ${it.deliveryUrl} ${it.notes}`.toLowerCase();
       return blob.includes(q);
     });
   }
@@ -362,13 +605,14 @@
   function exportJson() {
     const payload = {
       exportedAt: nowIso(),
-      app: 'inventory-manager',
-      items: state.items
+      app: 'inventory-offerings-manager',
+      items: state.items,
+      pipelineConfig: state.cfg
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `inventory-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `inventory-offers-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
     setStatus('Export created.', 'ok');
@@ -380,77 +624,301 @@
       const parsed = JSON.parse(txt);
       const incoming = Array.isArray(parsed) ? parsed : parsed.items;
       if (!Array.isArray(incoming)) throw new Error('Expected array/items');
+
       state.items = incoming
         .filter((x) => x && typeof x === 'object')
         .map((x) => ({
-          id: String(x.id || `inv-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`),
+          id: String(x.id || toId('inv')),
           sku: String(x.sku || '').trim(),
           name: String(x.name || '').trim(),
           category: String(x.category || '').trim(),
+          type: normalizeType(x.type),
+          billing: normalizeBilling(x.billing),
+          active: normalizeActive(x.active),
           qty: Math.max(0, Number(x.qty || 0)),
           price: Math.max(0, Number(x.price || 0)),
           lowAt: Math.max(0, Number(x.lowAt || 0)),
+          moduleId: String(x.moduleId || '').trim(),
+          deliveryUrl: String(x.deliveryUrl || '').trim(),
           notes: String(x.notes || '').trim(),
           updatedAt: String(x.updatedAt || nowIso())
         }))
         .filter((x) => x.sku && x.name);
-      save();
+
+      if (parsed && parsed.pipelineConfig && typeof parsed.pipelineConfig === 'object') {
+        state.cfg = {
+          ghRepo: String(parsed.pipelineConfig.ghRepo || state.cfg.ghRepo || ''),
+          ghLabels: String(parsed.pipelineConfig.ghLabels || state.cfg.ghLabels || 'triage'),
+          rewardSplit: Math.max(1, Math.min(100, Number(parsed.pipelineConfig.rewardSplit || state.cfg.rewardSplit || 50)))
+        };
+        el.ghRepo.value = state.cfg.ghRepo;
+        el.ghLabels.value = state.cfg.ghLabels;
+        el.rewardSplit.value = String(state.cfg.rewardSplit);
+        localStorage.setItem(CFG_KEY, JSON.stringify(state.cfg));
+      }
+
+      saveItems();
       render();
-      setStatus(`Imported ${state.items.length} item(s).`, 'ok');
+      setStatus(`Imported ${state.items.length} offer(s).`, 'ok');
     } catch (e) {
       setStatus(`Import failed: ${e.message}`, 'bad');
     }
   }
 
   function clearAll() {
-    if (!confirm('Delete all inventory items?')) return;
+    if (!confirm('Delete all offerings?')) return;
     state.items = [];
-    save();
+    saveItems();
     render();
     clearForm();
-    setStatus('All items removed.', 'warn');
+    setStatus('All offerings removed.', 'warn');
+  }
+
+  function parseLabelsCsv(raw) {
+    return String(raw || '')
+      .split(',')
+      .map((x) => x.trim())
+      .filter(Boolean);
+  }
+
+  function loadIntake() {
+    const supportRaw = parseJsonSafe(localStorage.getItem(SUPPORT_KEY) || '[]', []);
+    const wishRaw = parseJsonSafe(localStorage.getItem(WISHLIST_KEY) || '[]', []);
+    const support = Array.isArray(supportRaw) ? supportRaw : [];
+    const wish = Array.isArray(wishRaw) ? wishRaw : [];
+
+    const supportItems = support
+      .filter((x) => x && typeof x === 'object' && x.id && x.subject)
+      .map((t) => ({
+        intakeId: `support:${t.id}`,
+        source: 'support',
+        title: String(t.subject || '').trim(),
+        createdAt: String(t.createdAt || ''),
+        priority: String(t.severity || 'major').trim(),
+        budgetUsd: 0,
+        labels: ['support', 'triage', `app:${String(t.app || 'unknown').trim()}`],
+        body: {
+          app: String(t.app || '').trim(),
+          description: String(t.description || '').trim(),
+          reproSteps: String(t.reproSteps || '').trim(),
+          expectedBehavior: String(t.expectedBehavior || '').trim(),
+          actualBehavior: String(t.actualBehavior || '').trim(),
+          contact: String(t.contact || '').trim(),
+          appVersion: String(t.appVersion || '').trim(),
+          screenshotUrl: String(t.screenshotUrl || '').trim()
+        }
+      }));
+
+    const wishItems = wish
+      .filter((x) => x && typeof x === 'object' && x.id && x.title)
+      .map((w) => ({
+        intakeId: `wishlist:${w.id}`,
+        source: 'wishlist',
+        title: String(w.title || '').trim(),
+        createdAt: String(w.createdAt || ''),
+        priority: String(w.priority || 'medium').trim(),
+        budgetUsd: Math.max(0, Number(w.budgetUsd || 0)),
+        labels: ['feature-request', 'wishlist', String(w.category || 'other').trim()],
+        body: {
+          category: String(w.category || '').trim(),
+          description: String(w.description || '').trim(),
+          timeline: String(w.timeline || '').trim(),
+          tags: String(w.tags || '').trim(),
+          contact: String(w.contact || '').trim()
+        }
+      }));
+
+    state.intake = [...supportItems, ...wishItems]
+      .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+  }
+
+  function rewardPolicyBlock(budgetUsd) {
+    const split = Math.max(1, Math.min(100, Number(state.cfg.rewardSplit || 50)));
+    const budget = Math.max(0, Number(budgetUsd || 0));
+    const payoutHint = budget > 0 ? ((budget * split) / 100).toFixed(2) : 'TBD';
+    return [
+      '## Customization Reward Policy',
+      `- Winning PR reward split: **${split}%** of collected customization revenue.`,
+      '- Winner selection: **customer choice** among submitted PRs.',
+      '- Re-adaptation rule: when the platform adapts the request again, the new winning PR is rewarded under the same split policy.',
+      `- Current customization budget: **$${budget.toFixed(2)}**`,
+      `- Estimated payout for winner at current budget: **$${payoutHint}**`,
+      '- Candidate winner GitHub handle: `@TBD`'
+    ].join('\n');
+  }
+
+  function buildIssue(intakeItem) {
+    const baseLabels = parseLabelsCsv(state.cfg.ghLabels);
+    const allLabels = [...baseLabels, ...intakeItem.labels]
+      .map((x) => String(x || '').trim())
+      .filter(Boolean)
+      .filter((value, idx, arr) => arr.indexOf(value) === idx);
+
+    const sourcePrefix = intakeItem.source === 'support' ? 'Support' : 'Feature';
+    const title = `[${sourcePrefix}] ${intakeItem.title}`;
+    const bodyParts = [];
+
+    bodyParts.push(`## Intake Source\n- Source: ${intakeItem.source}\n- Intake ID: ${intakeItem.intakeId}\n- Priority: ${intakeItem.priority}`);
+
+    if (intakeItem.source === 'support') {
+      bodyParts.push(
+        [
+          '## Support Context',
+          `- App: ${intakeItem.body.app || 'n/a'}`,
+          `- Contact: ${intakeItem.body.contact || 'n/a'}`,
+          `- App Version: ${intakeItem.body.appVersion || 'n/a'}`,
+          '',
+          '### Description',
+          intakeItem.body.description || 'n/a',
+          '',
+          '### Repro Steps',
+          intakeItem.body.reproSteps || 'n/a',
+          '',
+          '### Expected Behavior',
+          intakeItem.body.expectedBehavior || 'n/a',
+          '',
+          '### Actual Behavior',
+          intakeItem.body.actualBehavior || 'n/a',
+          '',
+          '### Screenshot URL',
+          intakeItem.body.screenshotUrl || 'n/a'
+        ].join('\n')
+      );
+    } else {
+      bodyParts.push(
+        [
+          '## Feature Request Context',
+          `- Category: ${intakeItem.body.category || 'n/a'}`,
+          `- Timeline: ${intakeItem.body.timeline || 'n/a'}`,
+          `- Contact: ${intakeItem.body.contact || 'n/a'}`,
+          `- Tags: ${intakeItem.body.tags || 'n/a'}`,
+          '',
+          '### Requested Capability',
+          intakeItem.body.description || 'n/a'
+        ].join('\n')
+      );
+    }
+
+    bodyParts.push(rewardPolicyBlock(intakeItem.budgetUsd));
+
+    bodyParts.push(
+      [
+        '## Delivery Notes',
+        '- If approved, add implementation checklist, estimate, and acceptance criteria.',
+        '- Link winning PR in this issue before payout.',
+        '- Record payout execution details in closing comment.'
+      ].join('\n')
+    );
+
+    return {
+      title,
+      labels: allLabels,
+      body: bodyParts.join('\n\n')
+    };
+  }
+
+  function ensureRepo() {
+    const repo = String(state.cfg.ghRepo || '').trim();
+    if (!repo || !repo.includes('/')) {
+      setPipelineStatus('Set GitHub repo as owner/repo first.', 'bad');
+      return '';
+    }
+    return repo;
+  }
+
+  function markIntakeSent(intakeId) {
+    state.intakeSent[intakeId] = nowIso();
+    saveIntakeSent();
+  }
+
+  function openGitHubIssue(intakeId) {
+    const repo = ensureRepo();
+    if (!repo) return;
+    const item = state.intake.find((x) => x.intakeId === intakeId);
+    if (!item) return;
+    const issue = buildIssue(item);
+
+    const u = new URL(`https://github.com/${repo}/issues/new`);
+    u.searchParams.set('title', issue.title);
+    u.searchParams.set('body', issue.body);
+    if (issue.labels.length) u.searchParams.set('labels', issue.labels.join(','));
+
+    window.open(u.toString(), '_blank', 'noopener');
+    markIntakeSent(intakeId);
+    renderIntake();
+    setPipelineStatus(`Opened GitHub issue draft for ${intakeId}.`, 'ok');
+  }
+
+  async function copyIssueMarkdown(intakeId) {
+    const item = state.intake.find((x) => x.intakeId === intakeId);
+    if (!item) return;
+    const issue = buildIssue(item);
+    const text = `# ${issue.title}\n\nLabels: ${issue.labels.join(', ')}\n\n${issue.body}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      markIntakeSent(intakeId);
+      renderIntake();
+      setPipelineStatus(`Copied issue markdown for ${intakeId}.`, 'ok');
+    } catch (err) {
+      setPipelineStatus(`Copy failed: ${err.message}`, 'bad');
+    }
   }
 
   function renderStats(items) {
-    const totalItems = items.length;
-    const totalQty = items.reduce((s, it) => s + Number(it.qty || 0), 0);
-    const totalValue = items.reduce((s, it) => s + (Number(it.qty || 0) * Number(it.price || 0)), 0);
-    const lowCount = items.filter((it) => statusFor(it).key === 'low').length;
-    const outCount = items.filter((it) => statusFor(it).key === 'out').length;
-    el.stats.innerHTML = [
-      `<div class="stat"><span class="muted">Items</span><b>${totalItems}</b></div>`,
-      `<div class="stat"><span class="muted">Units</span><b>${totalQty}</b></div>`,
-      `<div class="stat"><span class="muted">Inventory Value</span><b>${currency(totalValue)}</b></div>`,
-      `<div class="stat"><span class="muted">Low Stock</span><b>${lowCount}</b></div>`,
-      `<div class="stat"><span class="muted">Out of Stock</span><b>${outCount}</b></div>`
-    ].join('');
-  }
+    const total = items.length;
+    const physical = items.filter((x) => normalizeType(x.type) === 'physical').length;
+    const digital = total - physical;
+    const low = items.filter((x) => statusFor(x).key === 'low').length;
+    const out = items.filter((x) => statusFor(x).key === 'out').length;
+    const live = items.filter((x) => statusFor(x).key === 'live' || statusFor(x).key === 'in').length;
 
-  function escapeHtml(s) {
-    return String(s || '')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;');
+    let monthly = 0;
+    let oneTime = 0;
+    for (const item of items) {
+      const rev = revenueProxy(item);
+      monthly += rev.monthly;
+      oneTime += rev.oneTime;
+    }
+
+    el.stats.innerHTML = [
+      `<div class="stat"><span class="muted">Offers</span><b>${total}</b></div>`,
+      `<div class="stat"><span class="muted">Physical</span><b>${physical}</b></div>`,
+      `<div class="stat"><span class="muted">Digital/Services</span><b>${digital}</b></div>`,
+      `<div class="stat"><span class="muted">Live</span><b>${live}</b></div>`,
+      `<div class="stat"><span class="muted">MRR Proxy</span><b>${currency(monthly)}</b></div>`,
+      `<div class="stat"><span class="muted">One-Time Catalog</span><b>${currency(oneTime)}</b></div>`,
+      `<div class="stat"><span class="muted">Low Stock</span><b>${low}</b></div>`,
+      `<div class="stat"><span class="muted">Out of Stock</span><b>${out}</b></div>`
+    ].join('');
   }
 
   function renderRows(items) {
     if (!items.length) {
-      el.rows.innerHTML = '<tr><td colspan="9" class="muted">No items found.</td></tr>';
+      el.rows.innerHTML = '<tr><td colspan="10" class="muted">No offers found.</td></tr>';
       return;
     }
+
     el.rows.innerHTML = items.map((it) => {
       const s = statusFor(it);
-      const value = Number(it.qty || 0) * Number(it.price || 0);
+      const rev = revenueProxy(it);
+      const type = normalizeType(it.type);
+      const nameCell = [
+        `<div><strong>${esc(it.name)}</strong></div>`,
+        it.moduleId ? `<div class="muted mono">${esc(it.moduleId)}</div>` : '',
+        it.deliveryUrl ? `<div><a href="${esc(it.deliveryUrl)}" target="_blank" rel="noopener" class="muted">Link</a></div>` : ''
+      ].join('');
+
       return `
         <tr>
-          <td>${escapeHtml(it.sku)}</td>
-          <td>${escapeHtml(it.name)}</td>
-          <td>${escapeHtml(it.category || '-')}</td>
+          <td>${esc(it.sku)}</td>
+          <td>${nameCell}</td>
+          <td>${esc(type)}</td>
+          <td>${esc(normalizeBilling(it.billing))}</td>
           <td>${Number(it.qty || 0)}</td>
           <td>${currency(it.price)}</td>
-          <td>${currency(value)}</td>
+          <td>${esc(rev.label)}</td>
           <td><span class="badge ${s.className}">${s.label}</span></td>
-          <td>${escapeHtml((it.updatedAt || '').replace('T', ' ').slice(0, 16))}</td>
+          <td>${esc((it.updatedAt || '').replace('T', ' ').slice(0, 16))}</td>
           <td>
             <div class="row">
               <button class="btn" data-edit="${it.id}" type="button">Edit</button>
@@ -460,6 +928,7 @@
         </tr>
       `;
     }).join('');
+
     el.rows.querySelectorAll('[data-edit]').forEach((b) => {
       b.addEventListener('click', () => editItem(b.getAttribute('data-edit')));
     });
@@ -468,10 +937,49 @@
     });
   }
 
+  function renderIntake() {
+    if (!state.intake.length) {
+      el.intakeRows.innerHTML = '<tr><td colspan="7" class="muted">No intake found. Create entries in Support Desk or Wishlist Studio, then click Refresh Intake.</td></tr>';
+      return;
+    }
+
+    el.intakeRows.innerHTML = state.intake.map((item) => {
+      const sentAt = state.intakeSent[item.intakeId];
+      const sentBadge = sentAt
+        ? `<span class="badge ok">sent ${esc(sentAt.replace('T', ' ').slice(0, 16))}</span>`
+        : '<span class="badge info">new</span>';
+
+      return `
+        <tr>
+          <td><span class="badge">${esc(item.source)}</span></td>
+          <td>${esc(item.title)}</td>
+          <td>${esc(item.priority || 'n/a')}</td>
+          <td>${currency(item.budgetUsd || 0)}</td>
+          <td>${esc((item.createdAt || '').replace('T', ' ').slice(0, 16))}</td>
+          <td>${sentBadge}</td>
+          <td>
+            <div class="row">
+              <button class="btn ok" data-open-issue="${esc(item.intakeId)}" type="button">Open Issue</button>
+              <button class="btn ghost" data-copy-issue="${esc(item.intakeId)}" type="button">Copy Markdown</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    el.intakeRows.querySelectorAll('[data-open-issue]').forEach((btn) => {
+      btn.addEventListener('click', () => openGitHubIssue(btn.getAttribute('data-open-issue')));
+    });
+    el.intakeRows.querySelectorAll('[data-copy-issue]').forEach((btn) => {
+      btn.addEventListener('click', () => copyIssueMarkdown(btn.getAttribute('data-copy-issue')));
+    });
+  }
+
   function render() {
     const items = filteredItems();
     renderStats(items);
     renderRows(items);
+    renderIntake();
   }
 
   function bind() {
@@ -486,13 +994,31 @@
       if (f) importJson(f);
       el.importFile.value = '';
     });
+
+    el.savePipelineBtn.addEventListener('click', () => {
+      saveCfg();
+      renderIntake();
+    });
+
+    el.refreshIntakeBtn.addEventListener('click', () => {
+      loadIntake();
+      renderIntake();
+      setPipelineStatus(`Loaded ${state.intake.length} intake item(s).`, 'ok');
+    });
   }
 
   function init() {
     load();
+    loadIntake();
     bind();
     render();
-    setStatus('Inventory ready.', 'ok');
+
+    if (state.cfg.ghRepo) {
+      setPipelineStatus(`GitHub repo configured: ${state.cfg.ghRepo}`, 'ok');
+    } else {
+      setPipelineStatus('Set GitHub repo to enable one-click issue creation.', 'warn');
+    }
+    setStatus('Inventory/offering manager ready.', 'ok');
   }
 
   init();

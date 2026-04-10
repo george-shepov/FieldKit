@@ -5,6 +5,9 @@
   <title>Paper-Style Battleship</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
+    :root {
+      --cell-size: clamp(22px, 2.25vw, 34px);
+    }
     body {
       margin: 0;
       padding: 0;
@@ -15,7 +18,7 @@
       justify-content: center;
     }
     .wrapper {
-      max-width: 960px;
+      max-width: 1320px;
       padding: 16px;
       width: 100%;
     }
@@ -42,14 +45,15 @@
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(11, 26px);
-      grid-template-rows: repeat(11, 26px);
+      grid-template-columns: repeat(11, var(--cell-size));
+      grid-template-rows: repeat(11, var(--cell-size));
       border: 1px solid #374151;
       background: #111827;
+      width: fit-content;
     }
     .cell {
-      width: 26px;
-      height: 26px;
+      width: var(--cell-size);
+      height: var(--cell-size);
       border: 1px solid #1f2933;
       box-sizing: border-box;
       font-size: 11px;
@@ -138,10 +142,22 @@
     .box-ship { background: #334155; }
     .box-hit  { background: #b91c1c; }
     .box-miss { background: #111827; }
+
+    @media (max-width: 980px) {
+      :root {
+        --cell-size: clamp(20px, 5.7vw, 30px);
+      }
+      .wrapper {
+        padding: 10px;
+      }
+      .boards {
+        gap: 10px;
+      }
+    }
   </style>
 </head>
 <body>
-<nav style="position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(6,12,18,.85);backdrop-filter:blur(6px);border-bottom:1px solid rgba(255,255,255,.14);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace"><a href="../index.html" style="color:#c6d9ea;text-decoration:none;font-size:12px">&larr; Back to Suite</a><span style="color:#8fb2cc;font-size:12px">ProSe Pilot</span></nav>
+<nav style="position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(6,12,18,.85);backdrop-filter:blur(6px);border-bottom:1px solid rgba(255,255,255,.14);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace"><a href="../index.html" style="color:#c6d9ea;text-decoration:none;font-size:12px">&larr; Back to FieldKit</a><span style="color:#8fb2cc;font-size:12px">FieldKit</span></nav>
 <div class="wrapper">
   <h1>Paper-Style Battleship</h1>
   <div class="subtitle">

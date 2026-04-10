@@ -2,8 +2,8 @@
 /dist/
 .run/
 *.exe
-prosepilot
-prosepilot-*
+fieldkit
+fieldkit-*
 
 # OS / editor noise
 .DS_Store

@@ -4,7 +4,7 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Root = Split-Path -Parent $ScriptDir
 $OutDir = if ($env:OUT_DIR) { $env:OUT_DIR } else { Join-Path $Root 'dist' }
 $Version = if ($env:VERSION) { $env:VERSION } else { Get-Date -Format 'yyyy.MM.dd' }
-$App = if ($env:APP) { $env:APP } else { 'prosepilot' }
+$App = if ($env:APP) { $env:APP } else { 'fieldkit' }
 
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
@@ -19,7 +19,7 @@ $Targets = @(
 
 $LdFlags = "-s -w -X main.buildVersion=$Version"
 
-Write-Host "Building ProSe Pilot launcher"
+Write-Host "Building FieldKit launcher"
 Write-Host "Version: $Version"
 Write-Host "Output:  $OutDir"
 Write-Host ""

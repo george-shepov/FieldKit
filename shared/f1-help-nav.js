@@ -19,6 +19,16 @@
     document.head.appendChild(script);
   })();
 
+  (function ensureUITweaksInit() {
+    if (window.FieldKitUITweaks) return;
+    if (document.getElementById("suiteUiTweaksScript")) return;
+    const script = document.createElement("script");
+    script.id = "suiteUiTweaksScript";
+    script.src = "/shared/ui-tweaks-runtime.js";
+    script.defer = true;
+    document.head.appendChild(script);
+  })();
+
   if (window.__suiteF1Bound) return;
   window.__suiteF1Bound = true;
 
@@ -32,6 +42,13 @@
   };
 
   function detectAppKey() {
+    if (typeof window.SUITE_APP_KEY === "string" && window.SUITE_APP_KEY.trim()) {
+      return window.SUITE_APP_KEY.trim().toLowerCase();
+    }
+    const bodyKey = document.body && document.body.dataset && document.body.dataset.appKey;
+    if (typeof bodyKey === "string" && bodyKey.trim()) {
+      return bodyKey.trim().toLowerCase();
+    }
     const path = window.location.pathname.replace(/\\/g, "/");
     const parts = path.split("/").filter(Boolean);
     if (!parts.length) return "";

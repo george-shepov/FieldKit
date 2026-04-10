@@ -1,18 +1,18 @@
-# ProSe Pilot Store Page Copy
+# FieldKit Store Page Copy
 
 Use this as your base product listing for Gumroad, oneof.store, and similar storefronts.
 
 ## Product Name
 
-`ProSe Pilot - Offline Productivity + Survival Toolkit`
+`FieldKit - Offline Productivity + Swiss Army Pocket Suite`
 
 ## Short Description (1-2 lines)
 
-`ProSe Pilot is an offline-first app suite that combines productivity tools, learning trainers, field utilities, emergency-ready modules, and optional cloud sync when internet is available.`
+`FieldKit is an offline-first app suite that combines productivity tools, learning trainers, field utilities, emergency-ready modules, and optional cloud sync when internet is available.`
 
 ## Long Description
 
-`ProSe Pilot is built for people who need software that keeps working when connectivity is unreliable or unavailable. It runs locally, opens fast, and includes a unified launcher with built-in F1 help across apps.`
+`FieldKit is built for people who need software that keeps working when connectivity is unreliable or unavailable. It runs locally, opens fast, and includes a unified launcher with built-in F1 help across apps.`
 
 `Inside one bundle, you get practical modules for study, productivity, navigation, communication fallback, capture tools, support workflows, and custom-app intake.`
 
@@ -57,7 +57,7 @@ Use this as your base product listing for Gumroad, oneof.store, and similar stor
 
 ### Tier 1: Base Bundle
 
-`Get the full ProSe Pilot suite for personal use.`
+`Get the full FieldKit suite for personal use.`
 
 ### Tier 2: Bundle + Priority Support
 
@@ -105,7 +105,7 @@ Use this as your base product listing for Gumroad, oneof.store, and similar stor
 
 ## Launch Announcement Snippet
 
-`ProSe Pilot is live: an offline-first software multi-tool for productivity, study, and field readiness. One launcher, many practical apps, optional cloud sync, and fast custom module path.`
+`FieldKit is live: an offline-first software multi-tool for productivity, study, and field readiness. One launcher, many practical apps, optional cloud sync, and fast custom module path.`
 
 ## Gumroad Product Settings Notes
 

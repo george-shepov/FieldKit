@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calisthenics — Bodyweight Training Tracker</title>
+  <style>
+    :root {
+      --bg: #09090b;
+      --fg: #fafafa;
+      --card: #111113;
+      --muted: #18181b;
+      --muted-fg: #a1a1aa;
+      --border: #27272a;
+      --accent: #ef4444;
+      --ok: #22c55e;
+      --info: #3b82f6;
+      --warn: #f59e0b;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Manrope", "Inter", "Segoe UI", sans-serif;
+      color: var(--fg);
+      background: linear-gradient(180deg, #09090b 0%, #0d0d10 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 1000px; margin: 0 auto; }
+    header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    h1 {
+      font-size: 2.2rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: var(--muted-fg);
+      font-size: 1.05em;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted-fg);
+      padding: 12px 16px;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      font-size: 1em;
+    }
+    .tab-btn:hover {
+      color: var(--fg);
+    }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 26px rgba(0, 0, 0, 0.22);
+    }
+    .section h2 {
+      font-size: 1.3rem;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .exercise-card {
+      background: #17171a;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .exercise-card:hover {
+      border-color: var(--accent);
+      background: #1a1a1f;
+    }
+    .exercise-card.selected {
+      border-color: var(--accent);
+      background: rgba(239, 68, 68, 0.08);
+    }
+    .exercise-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 8px;
+    }
+    .exercise-name {
+      font-weight: 700;
+      font-size: 1.05em;
+    }
+    .level-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.8em;
+      font-weight: 600;
+    }
+    .level-beginner { background: #0ea5e9; color: #000; }
+    .level-intermediate { background: #f59e0b; color: #000; }
+    .level-advanced { background: #ef4444; color: #fff; }
+    .exercise-progression {
+      color: var(--muted-fg);
+      font-size: 0.9em;
+      margin-top: 8px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .prog-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .prog-label {
+      font-size: 0.8em;
+      color: var(--muted-fg);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .prog-value {
+      font-weight: 600;
+      color: var(--fg);
+    }
+    .workout-plan {
+      display: grid;
+      gap: 12px;
+    }
+    .day-card {
+      background: #17171a;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      border-left: 3px solid var(--info);
+    }
+    .day-title {
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .day-exercises {
+      display: grid;
+      gap: 8px;
+    }
+    .exercise-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px;
+      background: #1a1a1f;
+      border-radius: 8px;
+      font-size: 0.95em;
+    }
+    .exercise-sets {
+      color: var(--muted-fg);
+    }
+    .input-group {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--fg);
+      font-size: 0.95em;
+    }
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      background: var(--muted);
+      color: var(--fg);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 1em;
+    }
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1);
+    }
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 10px 16px;
+      border: 1px solid var(--border);
+      background: var(--muted);
+      color: var(--fg);
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.95em;
+    }
+    .btn:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #000;
+      transform: translateY(-1px);
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
+    .btn-primary:hover {
+      background: #f05252;
+    }
+    .progress-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--ok);
+      transition: width 0.3s;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .stat-box {
+      background: #17171a;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 1.8em;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      font-size: 0.85em;
+      color: var(--muted-fg);
+    }
+    .history-list {
+      display: grid;
+      gap: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .history-item {
+      background: #17171a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.95em;
+    }
+    .history-date {
+      color: var(--muted-fg);
+      font-size: 0.9em;
+    }
+    .delete-btn {
+      background: transparent;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      font-weight: 600;
+      padding: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>💪 Calisthenics Trainer</h1>
+      <p class="subtitle">Progressive bodyweight training tracker</p>
+    </header>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="exercises">Exercises</button>
+      <button class="tab-btn" data-tab="programs">Programs</button>
+      <button class="tab-btn" data-tab="track">Track Workout</button>
+      <button class="tab-btn" data-tab="history">History</button>
+    </div>
+
+    <!-- EXERCISES TAB -->
+    <div id="exercises" class="tab-content active">
+      <div class="section">
+        <h2>📋 Exercise Library</h2>
+        <input type="text" placeholder="Search exercises..." id="searchInput" style="margin-bottom: 16px;">
+        <div id="exercisesList" class="workout-plan"></div>
+      </div>
+    </div>
+
+    <!-- PROGRAMS TAB -->
+    <div id="programs" class="tab-content">
+      <div class="section">
+        <h2>📅 Suggested Programs</h2>
+        <div class="workout-plan" id="programsList"></div>
+      </div>
+      <div class="section">
+        <h2>➕ Create Custom Program</h2>
+        <div class="input-group">
+          <label>Program Name</label>
+          <input type="text" id="programName" placeholder="e.g., Push/Pull/Legs">
+          <label>Description</label>
+          <textarea id="programDesc" placeholder="e.g., Day 1: Pushing exercises..."></textarea>
+          <label>Duration (weeks)</label>
+          <input type="number" id="programWeeks" value="4" min="1" max="52">
+        </div>
+        <button class="btn btn-primary" onclick="saveCustomProgram()">Save Program</button>
+      </div>
+    </div>
+
+    <!-- TRACK WORKOUT TAB -->
+    <div id="track" class="tab-content">
+      <div class="section">
+        <h2>🏋️ Log Workout</h2>
+        <div class="input-group">
+          <label>Date</label>
+          <input type="date" id="workoutDate">
+          <label>Exercise</label>
+          <select id="workoutExercise">
+            <option>Select exercise...</option>
+          </select>
+          <label>Sets × Reps</label>
+          <input type="text" id="workoutSetsReps" placeholder="e.g., 3×12">
+          <label>Notes</label>
+          <textarea id="workoutNotes" placeholder="How did it feel? Any modifications?"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="logWorkout()">Log Workout</button>
+      </div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div id="history" class="tab-content">
+      <div class="section">
+        <h2>📊 Workout History</h2>
+        <div class="stats">
+          <div class="stat-box">
+            <div class="stat-value" id="totalWorkouts">0</div>
+            <div class="stat-label">Total Workouts</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value" id="thisWeek">0</div>
+            <div class="stat-label">This Week</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value" id="streak">0</div>
+            <div class="stat-label">Day Streak</div>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <h2>📝 Recent Workouts</h2>
+        <div class="history-list" id="historyList"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/shared/f1-help-nav.js"></script>
+  <script src="/shared/ui-tweaks-runtime.js"></script>
+  <script>
+    // Exercise database
+    const exercises = [
+      {
+        name: "Push-Ups",
+        category: "Push",
+        level: "beginner",
+        progression: [
+          { step: 1, desc: "Incline Push-Ups", reps: "8-12" },
+          { step: 2, desc: "Wall Push-Ups", reps: "12-20" },
+          { step: 3, desc: "Standard Push-Ups", reps: "8-12" },
+          { step: 4, desc: "Archer Push-Ups", reps: "5-8" },
+          { step: 5, desc: "Pseudo Planche Push-Ups", reps: "5-8" },
+          { step: 6, desc: "One-Arm Push-Ups", reps: "5-8" }
+        ],
+        description: "Classic bodyweight pushing exercise"
+      },
+      {
+        name: "Pull-Ups",
+        category: "Pull",
+        level: "intermediate",
+        progression: [
+          { step: 1, desc: "Dead Hangs", reps: "20-30s" },
+          { step: 2, desc: "Scapular Pulls", reps: "8-12" },
+          { step: 3, desc: "Negative Pull-Ups", reps: "5-8" },
+          { step: 4, desc: "Standard Pull-Ups", reps: "5-8" },
+          { step: 5, desc: "L-Sit Pull-Ups", reps: "3-5" },
+          { step: 6, desc: "Archer Pull-Ups", reps: "3-5" }
+        ],
+        description: "Ultimate back and biceps builder"
+      },
+      {
+        name: "Squats",
+        category: "Legs",
+        level: "beginner",
+        progression: [
+          { step: 1, desc: "Assisted Squats", reps: "20-30" },
+          { step: 2, desc: "Half Squats", reps: "15-20" },
+          { step: 3, desc: "Full Bodyweight Squats", reps: "15-20" },
+          { step: 4, desc: "Pistol Squat Negatives", reps: "5-8" },
+          { step: 5, desc: "Half Pistol Squats", reps: "8-12" },
+          { step: 6, desc: "Full Pistol Squats", reps: "5-8" }
+        ],
+        description: "Fundamental leg exercise"
+      },
+      {
+        name: "Dips",
+        category: "Push",
+        level: "intermediate",
+        progression: [
+          { step: 1, desc: "Negative Dips", reps: "3-5" },
+          { step: 2, desc: "Bench Dips", reps: "8-12" },
+          { step: 3, desc: "Standard Dips", reps: "5-8" },
+          { step: 4, desc: "Weighted Dips", reps: "3-5" },
+          { step: 5, desc: "Ring Dips", reps: "5-8" },
+          { step: 6, desc: "Advanced Ring Dips", reps: "3-5" }
+        ],
+        description: "Chest, shoulders, and triceps"
+      },
+      {
+        name: "Handstand",
+        category: "Balance",
+        level: "advanced",
+        progression: [
+          { step: 1, desc: "Wall Handstand Hold", reps: "10-30s" },
+          { step: 2, desc: "Chest-to-Wall Hold", reps: "20-60s" },
+          { step: 3, desc: "Free-Standing Attempt", reps: "5-10s" },
+          { step: 4, desc: "Free-Standing Hold", reps: "15-30s" },
+          { step: 5, desc: "Handstand Push-Up Negatives", reps: "3-5" },
+          { step: 6, desc: "Full Handstand Push-Ups", reps: "3-5" }
+        ],
+        description: "Advanced balance and strength"
+      },
+      {
+        name: "L-Sit",
+        category: "Core",
+        level: "intermediate",
+        progression: [
+          { step: 1, desc: "Foot-Assisted L-Sit", reps: "10-20s" },
+          { step: 2, desc: "One-Leg L-Sit", reps: "10-20s" },
+          { step: 3, desc: "Tuck L-Sit", reps: "10-20s" },
+          { step: 4, desc: "Full L-Sit", reps: "10-30s" },
+          { step: 5, desc: "V-Sit", reps: "5-15s" },
+          { step: 6, desc: "Weights L-Sit", reps: "5-20s" }
+        ],
+        description: "Core and hip flexor strength"
+      },
+      {
+        name: "Rows",
+        category: "Pull",
+        level: "beginner",
+        progression: [
+          { step: 1, desc: "Inverted Rows High", reps: "8-12" },
+          { step: 2, desc: "Inverted Rows Lower", reps: "8-12" },
+          { step: 3, desc: "Single-Leg Rows", reps: "8-12" },
+          { step: 4, desc: "Archer Rows", reps: "5-8" },
+          { step: 5, desc: "One-Arm Rows", reps: "5-8" }
+        ],
+        description: "Horizontal pulling strength"
+      },
+      {
+        name: "Push-Up Planche",
+        category: "Balance",
+        level: "advanced",
+        progression: [
+          { step: 1, desc: "Planche Lean", reps: "10-30s" },
+          { step: 2, desc: "Pseudo Planche Hold", reps: "10-30s" },
+          { step: 3, desc: "Tuck Planche", reps: "5-20s" },
+          { step: 4, desc: "Advanced Tuck", reps: "5-20s" },
+          { step: 5, desc: "Straddle Planche", reps: "3-10s" },
+          { step: 6, desc: "Full Planche", reps: "1-5s" }
+        ],
+        description: "Extreme pushing strength"
+      }
+    ];
+
+    // Programs
+    const programs = [
+      {
+        name: "Push/Pull/Legs",
+        weeks: 4,
+        description: "Classic 3-day split focusing on push, pull, leg movements",
+        days: [
+          { day: "Day 1: Push", exercises: ["Push-Ups", "Dips", "Handstand"] },
+          { day: "Day 2: Pull", exercises: ["Pull-Ups", "Rows", "L-Sit"] },
+          { day: "Day 3: Legs", exercises: ["Squats"] }
+        ]
+      },
+      {
+        name: "Full Body Beginner",
+        weeks: 3,
+        description: "Balanced routine for beginners hitting all muscle groups",
+        days: [
+          { day: "Day 1: Full", exercises: ["Push-Ups", "Rows", "Squats", "L-Sit"] },
+          { day: "Day 3: Full", exercises: ["Dips", "Pull-Ups", "Squats", "L-Sit"] }
+        ]
+      },
+      {
+        name: "Skill Focus",
+        weeks: 8,
+        description: "Dedicated progression toward handstand and planche",
+        days: [
+          { day: "Day 1: Upper Push", exercises: ["Handstand", "Push-Up Planche", "Dips"] },
+          { day: "Day 2: Upper Pull", exercises: ["Pull-Ups", "Rows", "L-Sit"] },
+          { day: "Day 3: Legs", exercises: ["Squats"] }
+        ]
+      }
+    ];
+
+    // Initialize
+    function initApp() {
+      document.getElementById("workoutDate").valueAsDate = new Date();
+      renderExercises();
+      renderPrograms();
+      populateWorkoutSelect();
+      updateStats();
+      renderHistory();
+      setupTabs();
+    }
+
+    function setupTabs() {
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+          document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+          e.target.classList.add("active");
+          document.getElementById(e.target.dataset.tab).classList.add("active");
+        });
+      });
+    }
+
+    function renderExercises() {
+      const list = document.getElementById("exercisesList");
+      list.innerHTML = exercises.map(ex => `
+        <div class="exercise-card">
+          <div class="exercise-header">
+            <span class="exercise-name">${ex.name}</span>
+            <span class="level-badge level-${ex.level}">${ex.level.toUpperCase()}</span>
+          </div>
+          <p style="color: var(--muted-fg); font-size: 0.9em; margin-bottom: 8px;">${ex.description}</p>
+          <div class="exercise-progression">
+            ${ex.progression.map(p => `<div class="prog-item"><div class="prog-label">Step ${p.step}</div><div class="prog-value">${p.desc}</div></div>`).join("")}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderPrograms() {
+      const list = document.getElementById("programsList");
+      list.innerHTML = programs.map(prog => `
+        <div class="day-card">
+          <div class="day-title">📅 ${prog.name} (${prog.weeks} weeks)</div>
+          <p style="color: var(--muted-fg); font-size: 0.9em; margin-bottom: 12px;">${prog.description}</p>
+          <div class="day-exercises">
+            ${prog.days.map(d => `
+              <div style="padding: 8px; background: #1a1a1f; border-radius: 6px;">
+                <strong>${d.day}</strong>
+                <div style="color: var(--muted-fg); font-size: 0.9em; margin-top: 4px;">${d.exercises.join(", ")}</div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function populateWorkoutSelect() {
+      const select = document.getElementById("workoutExercise");
+      select.innerHTML = "<option>Select exercise...</option>" + exercises.map(ex => `<option>${ex.name}</option>`).join("");
+    }
+
+    function logWorkout() {
+      const date = document.getElementById("workoutDate").value;
+      const exercise = document.getElementById("workoutExercise").value;
+      const setsReps = document.getElementById("workoutSetsReps").value;
+      const notes = document.getElementById("workoutNotes").value;
+
+      if (!date || exercise === "Select exercise..." || !setsReps) {
+        alert("Please fill in all fields");
+        return;
+      }
+
+      const history = JSON.parse(localStorage.getItem("calisthenicsHistory") || "[]");
+      history.push({ date, exercise, setsReps, notes, id: Date.now() });
+      localStorage.setItem("calisthenicsHistory", JSON.stringify(history));
+
+      document.getElementById("workoutSetsReps").value = "";
+      document.getElementById("workoutNotes").value = "";
+      alert("Workout logged! 💪");
+      updateStats();
+      renderHistory();
+    }
+
+    function updateStats() {
+      const history = JSON.parse(localStorage.getItem("calisthenicsHistory") || "[]");
+      document.getElementById("totalWorkouts").textContent = history.length;
+
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      const thisWeek = history.filter(h => new Date(h.date) >= weekAgo).length;
+      document.getElementById("thisWeek").textContent = thisWeek;
+
+      let streak = 0;
+      if (history.length > 0) {
+        const dates = [...new Set(history.map(h => h.date))].sort().reverse();
+        let current = new Date();
+        for (let date of dates) {
+          const workoutDate = new Date(date);
+          if (Math.abs(current - workoutDate) < 86400000) {
+            streak++;
+            current = workoutDate;
+          }
+        }
+      }
+      document.getElementById("streak").textContent = streak;
+    }
+
+    function renderHistory() {
+      const history = JSON.parse(localStorage.getItem("calisthenicsHistory") || "[]");
+      const list = document.getElementById("historyList");
+      if (history.length === 0) {
+        list.innerHTML = "<p style='color: var(--muted-fg); text-align: center;'>No workouts logged yet. Start tracking! 💪</p>";
+        return;
+      }
+      list.innerHTML = history.slice().reverse().map(h => `
+        <div class="history-item">
+          <div>
+            <strong>${h.exercise}</strong> • ${h.setsReps}
+            <div class="history-date">${new Date(h.date).toLocaleDateString()}</div>
+          </div>
+          <button class="delete-btn" onclick="deleteWorkout(${h.id})">Delete</button>
+        </div>
+      `).join("");
+    }
+
+    function deleteWorkout(id) {
+      const history = JSON.parse(localStorage.getItem("calisthenicsHistory") || "[]");
+      const filtered = history.filter(h => h.id !== id);
+      localStorage.setItem("calisthenicsHistory", JSON.stringify(filtered));
+      updateStats();
+      renderHistory();
+    }
+
+    function saveCustomProgram() {
+      const name = document.getElementById("programName").value;
+      const desc = document.getElementById("programDesc").value;
+      alert("Custom program feature coming soon!");
+    }
+
+    // Search functionality
+    document.getElementById("searchInput")?.addEventListener("input", (e) => {
+      const term = e.target.value.toLowerCase();
+      const filtered = exercises.filter(ex => ex.name.toLowerCase().includes(term) || ex.category.toLowerCase().includes(term));
+      const list = document.getElementById("exercisesList");
+      list.innerHTML = filtered.map(ex => `
+        <div class="exercise-card">
+          <div class="exercise-header">
+            <span class="exercise-name">${ex.name}</span>
+            <span class="level-badge level-${ex.level}">${ex.level.toUpperCase()}</span>
+          </div>
+          <p style="color: var(--muted-fg); font-size: 0.9em; margin-bottom: 8px;">${ex.description}</p>
+          <div class="exercise-progression">
+            ${ex.progression.map(p => `<div class="prog-item"><div class="prog-label">Step ${p.step}</div><div class="prog-value">${p.desc}</div></div>`).join("")}
+          </div>
+        </div>
+      `).join("");
+    });
+
+    initApp();
+  </script>
+</body>
+</html>

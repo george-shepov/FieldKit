@@ -96,8 +96,14 @@
   }
   .meta { color: var(--muted); font-size: .84rem; line-height: 1.45; }
 </style>
+  <link rel="stylesheet" href="../shared/suite-nav.css" />
 </head>
 <body>
+<nav class="suite-nav" data-suite-nav="1">
+  <a href="../index.html">&larr; Back to FieldKit</a>
+  <span>FieldKit</span>
+</nav>
+
 <div class="wrap">
   <div class="card">
     <h1>Audio Notes Recorder</h1>
@@ -180,7 +186,7 @@
   }
 
   function getOrCreateDeviceId() {
-    const key = 'prosepilot.deviceId';
+    const key = 'fieldkit.deviceId';
     const existing = localStorage.getItem(key);
     if (existing) return existing;
     const generated = `device-${Math.random().toString(36).slice(2, 10)}`;

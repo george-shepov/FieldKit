@@ -4,9 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Outdoor Kit</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #06101a;
@@ -20,8 +17,8 @@
     --ok: #34d399;
     --warn: #fbbf24;
     --danger: #f87171;
-    --mono: 'IBM Plex Mono', ui-monospace, monospace;
-    --sans: 'Manrope', system-ui, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -383,7 +380,7 @@
 </head>
 <body>
   <nav class="top">
-    <a href="../index.html">&larr; Back to Suite</a>
+    <a href="../index.html">&larr; Back to FieldKit</a>
     <span>Outdoor Kit</span>
   </nav>
 
@@ -627,6 +624,8 @@
                 <option value="off" selected>Off</option>
                 <option value="openai">OpenAI-Compatible</option>
                 <option value="ollama">Ollama</option>
+                <option value="hybrid">Hybrid (Local Llama -> Cloud Llama)</option>
+                <option value="legalassistant">LegalAssistant Cloud Llama</option>
               </select>
             </div>
             <div>
@@ -644,6 +643,7 @@
               <input id="aiApiKey" type="password" placeholder="sk-..." />
             </div>
           </div>
+          <p class="sub">Hybrid mode tries local Ollama at <code>http://localhost:11434</code> first, then falls back to your cloud endpoint.</p>
           <div class="btn-row">
             <button id="aiSaveBtn" class="btn" type="button">Save Settings</button>
             <button id="aiTestBtn" class="btn" type="button">Test Connection</button>
@@ -970,7 +970,7 @@
   }
 
   function secureContextHint() {
-    return 'Use HTTPS (or localhost) for phone sensors/GPS. LAN http://192.168.x.x is blocked by many mobile browsers.';
+    return `Current origin: ${location.origin}. Use HTTPS (or localhost) for phone sensors/GPS. On iPhone, Safari has the best support; plain LAN http://192.168.x.x is usually blocked.`;
   }
 
   function formatGeoError(err, prefix) {
@@ -1812,10 +1812,124 @@
     status(el.aiStatus, 'API key cleared.', 'warn');
   }
 
+  function normalizeBaseUrl(v) {
+    return String(v || '').trim().replace(/\/+$/, '');
+  }
+
+  function getPrivacyManagedEndpoint() {
+    try {
+      if (!window.SUITE_PRIVACY || typeof window.SUITE_PRIVACY.getConfig !== 'function') return '';
+      const cfg = window.SUITE_PRIVACY.getConfig();
+      return normalizeBaseUrl(cfg && cfg.managedEndpoint ? cfg.managedEndpoint : '');
+    } catch (_) {
+      return '';
+    }
+  }
+
+  function extractProviderContent(data) {
+    const content = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+    if (typeof content === 'string' && content.trim()) return content;
+    if (Array.isArray(content)) {
+      const joined = content.map(part => {
+        if (!part) return '';
+        if (typeof part === 'string') return part;
+        if (typeof part.text === 'string') return part.text;
+        return '';
+      }).join(' ').trim();
+      if (joined) return joined;
+    }
+    if (data && typeof data.output === 'string' && data.output.trim()) return data.output;
+    if (data && typeof data.reply === 'string' && data.reply.trim()) return data.reply;
+    if (data && typeof data.text === 'string' && data.text.trim()) return data.text;
+    return '';
+  }
+
+  async function requestOllama(messages, model, baseUrl) {
+    const url = `${normalizeBaseUrl(baseUrl) || 'http://localhost:11434'}/api/chat`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, messages, stream: false })
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Ollama error ${response.status}: ${text.slice(0, 220)}`);
+    }
+    const data = await response.json();
+    const content = data && data.message && data.message.content;
+    if (!content) throw new Error('Ollama returned no message content.');
+    return { content, via: 'local-ollama' };
+  }
+
+  async function requestOpenAICompatible(messages, model, baseUrl, apiKey) {
+    const url = `${normalizeBaseUrl(baseUrl) || 'https://api.openai.com/v1'}/chat/completions`;
+    const headers = { 'Content-Type': 'application/json' };
+    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ model, messages, temperature: 0.4 })
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`API error ${response.status}: ${text.slice(0, 220)}`);
+    }
+
+    const data = await response.json();
+    const content = extractProviderContent(data);
+    if (!content) throw new Error('Provider returned no content.');
+    return { content, via: 'openai-compatible' };
+  }
+
+  function buildLegalAssistantCandidateUrls(baseUrl) {
+    const root = normalizeBaseUrl(baseUrl) || getPrivacyManagedEndpoint() || 'https://legal.giorgiy.org';
+    const lower = root.toLowerCase();
+    if (lower.endsWith('/v1')) {
+      return [`${root}/chat/completions`, `${root.replace(/\/v1$/i, '')}/api/ai/chat/completions`];
+    }
+    if (lower.endsWith('/api/ai')) {
+      return [`${root}/chat/completions`, `${root.replace(/\/api\/ai$/i, '')}/v1/chat/completions`];
+    }
+    return [
+      `${root}/api/ai/chat/completions`,
+      `${root}/v1/chat/completions`,
+      `${root}/chat/completions`
+    ];
+  }
+
+  async function requestLegalAssistant(messages, model, baseUrl, apiKey) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
+    let lastErr = null;
+    const candidates = buildLegalAssistantCandidateUrls(baseUrl);
+    for (const url of candidates) {
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ model, messages, temperature: 0.3 })
+        });
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`${url} -> ${response.status}: ${text.slice(0, 140)}`);
+        }
+        const data = await response.json();
+        const content = extractProviderContent(data);
+        if (!content) throw new Error(`${url} -> no content in response`);
+        return { content, via: `cloud-legalassistant (${url})` };
+      } catch (err) {
+        lastErr = err;
+      }
+    }
+    throw new Error(`LegalAssistant cloud request failed: ${lastErr ? lastErr.message : 'no endpoint available'}`);
+  }
+
   async function aiRequest(messages) {
     const provider = el.aiProvider.value;
     const model = el.aiModel.value.trim();
-    const baseUrl = el.aiBaseUrl.value.trim().replace(/\/$/, '');
+    const baseUrl = normalizeBaseUrl(el.aiBaseUrl.value);
     const apiKey = el.aiApiKey.value.trim();
 
     if (provider === 'off') {
@@ -1827,41 +1941,24 @@
     }
 
     if (provider === 'ollama') {
-      const url = `${baseUrl || 'http://localhost:11434'}/api/chat`;
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model, messages, stream: false })
-      });
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`Ollama error ${response.status}: ${text.slice(0, 220)}`);
+      return requestOllama(messages, model, baseUrl || 'http://localhost:11434');
+    }
+
+    if (provider === 'legalassistant') {
+      return requestLegalAssistant(messages, model, baseUrl, apiKey);
+    }
+
+    if (provider === 'hybrid') {
+      try {
+        return await requestOllama(messages, model, 'http://localhost:11434');
+      } catch (localErr) {
+        const cloud = await requestLegalAssistant(messages, model, baseUrl, apiKey);
+        cloud.via = `${cloud.via}; fallback after local failure (${localErr.message})`;
+        return cloud;
       }
-      const data = await response.json();
-      const content = data && data.message && data.message.content;
-      if (!content) throw new Error('Ollama returned no message content.');
-      return content;
     }
 
-    const url = `${baseUrl || 'https://api.openai.com/v1'}/chat/completions`;
-    const headers = { 'Content-Type': 'application/json' };
-    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ model, messages, temperature: 0.4 })
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`API error ${response.status}: ${text.slice(0, 220)}`);
-    }
-
-    const data = await response.json();
-    const content = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-    if (!content) throw new Error('Provider returned no content.');
-    return typeof content === 'string' ? content : JSON.stringify(content);
+    return requestOpenAICompatible(messages, model, baseUrl, apiKey);
   }
 
   async function sendAiPrompt() {
@@ -1874,10 +1971,11 @@
     status(el.aiStatus, 'Sending request...', 'warn');
 
     try {
-      const content = await aiRequest(state.aiMessages);
+      const result = await aiRequest(state.aiMessages);
+      const content = result && result.content ? result.content : String(result || '');
       state.aiMessages.push({ role: 'assistant', content });
       addAiMessage(`AI: ${content}`, 'ai');
-      status(el.aiStatus, 'AI response received.', 'ok');
+      status(el.aiStatus, `AI response received via ${result.via || 'provider'}.`, 'ok');
     } catch (error) {
       addAiMessage(`AI error: ${error.message}`, '');
       status(el.aiStatus, error.message, 'err');
@@ -1891,8 +1989,9 @@
     ];
 
     try {
-      const content = await aiRequest(probe);
-      status(el.aiStatus, `Connected. Sample reply: ${String(content).slice(0, 80)}`, 'ok');
+      const result = await aiRequest(probe);
+      const content = result && result.content ? result.content : String(result || '');
+      status(el.aiStatus, `Connected via ${result.via || 'provider'}. Sample: ${String(content).slice(0, 80)}`, 'ok');
     } catch (error) {
       status(el.aiStatus, `Connection failed: ${error.message}`, 'err');
     }

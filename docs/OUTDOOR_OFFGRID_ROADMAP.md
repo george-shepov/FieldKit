@@ -4,7 +4,7 @@ This document turns your idea into an implementation path with realistic browser
 
 ## Product direction
 
-Position ProSe Pilot as a compact offline utility pack:
+Position FieldKit as a compact offline utility pack:
 
 1. Productivity + training apps (already done)
 2. Off-grid communication tools

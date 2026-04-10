@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 DIST_DIR="${DIST_DIR:-${ROOT_DIR}/dist}"
 PKG_DIR="${PKG_DIR:-${DIST_DIR}/packages}"
-APP="${APP:-prosepilot}"
+APP="${APP:-fieldkit}"
 VERSION="${VERSION:-$(date +%Y.%m.%d)}"
 BUILD_IF_MISSING="${BUILD_IF_MISSING:-0}"
 
@@ -56,7 +56,7 @@ mkdir -p "${PKG_DIR}/.stage"
 
 manifest="${PKG_DIR}/manifest-${VERSION}.txt"
 {
-  echo "ProSe Pilot customer bundles"
+  echo "FieldKit customer bundles"
   echo "Version: ${VERSION}"
   echo "Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo ""
@@ -89,7 +89,11 @@ EOF
     cat >"${bundle_root}/run-lan.bat" <<EOF
 @echo off
 set SCRIPT_DIR=%~dp0
-"%SCRIPT_DIR%${APP}.exe" --share --enable-api --api-key "change-me"
+if "%FIELDKIT_API_KEY%"=="" (
+  "%SCRIPT_DIR%${APP}.exe" --share --enable-api
+) else (
+  "%SCRIPT_DIR%${APP}.exe" --share --enable-api --api-key "%FIELDKIT_API_KEY%"
+)
 EOF
   else
     cp "${bin_path}" "${bundle_root}/${APP}"
@@ -106,13 +110,17 @@ EOF
 #!/usr/bin/env bash
 set -euo pipefail
 DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
-exec "\${DIR}/${APP}" --share --enable-api --api-key "change-me" "\$@"
+API_KEY="\${FIELDKIT_API_KEY:-}"
+if [[ -n "\${API_KEY}" ]]; then
+  exec "\${DIR}/${APP}" --share --enable-api --api-key "\${API_KEY}" "\$@"
+fi
+exec "\${DIR}/${APP}" --share --enable-api "\$@"
 EOF
     chmod +x "${bundle_root}/run-local.sh" "${bundle_root}/run-lan.sh"
   fi
 
   cat >"${bundle_root}/README.txt" <<EOF
-ProSe Pilot (${goos}/${goarch})
+FieldKit (${goos}/${goarch})
 Version: ${VERSION}
 
 Quick start:
@@ -124,6 +132,7 @@ Quick start:
 
 Important:
 - For public hosting, run behind HTTPS and set a strong API key.
+- To require API auth in run-lan scripts, set FIELDKIT_API_KEY before launch.
 - API endpoints include media sync, registration, heartbeat, wishlist, and support ticket intake.
 - Press F1 in launcher/apps for built-in help.
 EOF

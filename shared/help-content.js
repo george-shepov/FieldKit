@@ -82,6 +82,21 @@
           "Focus blocks, workouts, drills, and timing tasks."
         ]
       },
+      "profile": {
+        title: "Profile Manager",
+        about: "Global username/password manager shared by protected apps.",
+        operations: [
+          "Create or update a single global username/password.",
+          "Sign out the current device quickly.",
+          "Delete profile credentials when rotating access."
+        ],
+        keys: ["Use form controls and buttons. F1 opens app help."],
+        commands: ["No CLI commands."],
+        scenarios: [
+          "Set credentials once and reuse for GigTax and Snippet Board.",
+          "Lock down shared devices with quick sign-out."
+        ]
+      },
       "docketpro": {
         title: "DocketPro",
         about: "Legal docket and deadline manager.",
@@ -527,6 +542,44 @@
           "Two-player style tactical gameplay practice."
         ]
       },
+      "game-academy": {
+        title: "Game Academy",
+        about: "2-in-1 strategy app with Chess and Checkers, featuring Play mode and Watch-and-Learn commentary mode.",
+        operations: [
+          "Switch between Chess and Checkers from the top game tabs.",
+          "Play mode: choose AI level/color and make moves directly on the board.",
+          "Watch mode: assign AI levels for both sides, set speed, and run auto-play or step-by-step analysis.",
+          "Review teaching log tags for tactical and positional concepts while the game progresses."
+        ],
+        keys: [
+          "Use pointer/touch controls to select and play moves.",
+          "F1 opens app help."
+        ],
+        commands: ["No CLI commands."],
+        scenarios: [
+          "Learn tactical patterns by watching two AIs with commentary.",
+          "Practice direct play against configurable opponents in either game."
+        ]
+      },
+      "reversi": {
+        title: "Reversi",
+        about: "Classic 8x8 disc-flipping strategy game with Play mode and Watch-and-Learn mode.",
+        operations: [
+          "Play mode: choose AI difficulty and place legal moves as black.",
+          "Watch mode: set black/white AI levels, speed, and observe move-by-move explanations.",
+          "Use Start/Pause/Next/Reset in Watch mode to step through decisions.",
+          "Review move log tags for concepts like corner control, mobility, danger, and edge play."
+        ],
+        keys: [
+          "Use pointer/touch controls for move selection.",
+          "F1 opens app help."
+        ],
+        commands: ["No CLI commands."],
+        scenarios: [
+          "Learn core Othello/Reversi strategy by watching stronger AI explain choices.",
+          "Practice tactical and positional play against increasing difficulty."
+        ]
+      },
       "positive-iq": {
         title: "Positive IQ Test",
         about: "Cognitive mini-test experience focused on logic, memory, and speed tasks.",
@@ -633,18 +686,19 @@
       },
       "inventory": {
         title: "Inventory Manager",
-        about: "Local inventory tracker for SKU, quantity, pricing, low-stock alerts, and JSON backup.",
+        about: "Catalog manager for physical stock and software offers (modules/packages/customizations) with intake-to-GitHub workflow.",
         operations: [
-          "Create and edit items with SKU/name/category/quantity/price/threshold.",
-          "Filter inventory with quick search.",
-          "Track in-stock, low-stock, and out-of-stock status.",
-          "Export and import JSON snapshots."
+          "Create and edit offerings with SKU/name/type/billing/status/pricing/delivery link.",
+          "Track stock states for physical goods and lifecycle states for software/services.",
+          "Load support tickets and wishlist requests from local queue.",
+          "Open prefilled GitHub issues (or copy markdown) with reward policy section.",
+          "Export and import JSON snapshots for catalog and pipeline config."
         ],
         keys: ["Use touch/click controls. F1 opens app help."],
         commands: ["No CLI commands."],
         scenarios: [
-          "Manage marketplace or local stock levels.",
-          "Run simple inventory operations without backend dependency."
+          "Sell software modules/packages/customizations from a single internal catalog.",
+          "Convert customer support and feature demand into structured GitHub backlog quickly."
         ]
       },
       "chatgpt-viewer": {

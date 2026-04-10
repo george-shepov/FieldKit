@@ -1,6 +1,6 @@
-# ProSe Pilot Customer Quickstart
+# FieldKit Customer Quickstart
 
-This guide is for end users who downloaded a ProSe Pilot bundle.
+This guide is for end users who downloaded a FieldKit bundle.
 
 ## 1) Choose Your File
 
@@ -17,7 +17,7 @@ Unzip the downloaded file into any folder.
 
 The folder includes:
 
-1. launcher binary (`prosepilot` or `prosepilot.exe`)
+1. launcher binary (`fieldkit` or `fieldkit.exe`)
 2. `run-local` script
 3. `run-lan` script
 4. `README.txt`
@@ -60,7 +60,7 @@ If your launcher is started with API enabled, apps can sync/submit data.
 Example run:
 
 ```bash
-./prosepilot --enable-api --api-key "change-me"
+./fieldkit --enable-api --api-key "<strong-random-key>"
 ```
 
 Useful endpoints:
@@ -79,6 +79,7 @@ Useful endpoints:
 1. Run with LAN sharing mode (`run-lan`)
 2. Keep phone and desktop on same network
 3. Enter printed phone URL in browser
+4. Note: iPhone compass/orientation APIs are blocked on plain `http://192.168.x.x` and require `https://` (or `localhost`)
 
 ### Use offline mode
 
@@ -86,6 +87,15 @@ Useful endpoints:
 2. Add to Home Screen from browser menu
 3. For true phone offline install, use HTTPS origin (VPS/domain); plain `http://192.168.x.x` LAN mode cannot register service worker on most phones
 4. Sync/submit later when online (where supported)
+
+### iPhone Compass + HTTPS Setup (VPS)
+
+1. Provision a VPS you control and point both `giorgiy.org` and `giorgiy-shepov.com` DNS records to that server
+2. Copy your bundle to VPS (launcher binary + app folders)
+3. Run launcher on localhost only: `./fieldkit --host 127.0.0.1 --port 8787`
+4. Put Caddy in front with [deploy/Caddyfile](../deploy/Caddyfile) so both domains terminate TLS on `443` and reverse-proxy to `127.0.0.1:8787`
+5. Open either `https://giorgiy.org` or `https://giorgiy-shepov.com` on iPhone, then Share -> Add to Home Screen
+6. Verify in Safari address bar that lock icon is present before testing compass/GPS
 
 ### Capture media and sync later
 
@@ -119,6 +129,12 @@ Useful endpoints:
 1. Allow browser permission prompts
 2. Retry in a modern browser
 3. Use HTTPS/localhost contexts for stricter devices
+
+### Compass says "only localhost or HTTPS"
+
+1. This is expected browser security behavior on iOS
+2. Use `https://` URL (recommended via VPS reverse proxy)
+3. Or test on same device with `localhost` development setup
 
 ### Sync fails
 
