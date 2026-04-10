@@ -10,403 +10,139 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/shared/icons/tictak-icon-192.png">
   <link rel="apple-touch-icon" href="/shared/icons/tictak-icon-512.png">
+  <link rel="stylesheet" href="shared/shadcn.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
   <title>FieldKit</title>
   <style>
-    :root {
-      --background: #09090b;
-      --foreground: #fafafa;
-      --card: #111113;
-      --muted: #18181b;
-      --muted-foreground: #a1a1aa;
-      --border: #27272a;
-      --input: #18181b;
-      --ring: #a1a1aa;
-      --primary: #f4f4f5;
-      --primary-foreground: #0a0a0a;
-      --accent: #1f1f22;
-      --radius: 14px;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: "Manrope", "Inter", "Segoe UI", sans-serif;
-      color: var(--foreground);
       min-height: 100vh;
       padding: 24px;
       background:
-        radial-gradient(circle at 15% 10%, rgba(244, 244, 245, 0.08) 0%, rgba(244, 244, 245, 0) 34%),
-        radial-gradient(circle at 88% 0%, rgba(99, 102, 241, 0.18) 0%, rgba(99, 102, 241, 0) 40%),
+        radial-gradient(circle at 15% 10%, rgba(244, 244, 245, 0.05) 0%, rgba(244, 244, 245, 0) 34%),
+        radial-gradient(circle at 88% 0%, rgba(99, 102, 241, 0.12) 0%, rgba(99, 102, 241, 0) 40%),
         linear-gradient(180deg, #09090b 0%, #0d0d10 100%);
     }
     .container { max-width: 1040px; margin: 0 auto; }
+    
     .header {
       text-align: center;
-      padding: 30px 24px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: color-mix(in oklab, var(--card) 94%, white 6%);
-      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
-      margin-bottom: 18px;
+      padding: 48px 24px;
+      margin-bottom: 24px;
     }
     .header h1 {
-      font-size: clamp(2.1rem, 4vw, 3rem);
-      letter-spacing: -0.02em;
-      color: var(--foreground);
-      margin-bottom: 10px;
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      margin-bottom: 12px;
     }
-    .header p { color: var(--muted-foreground); font-size: 1.02em; }
-    .header-tools {
-      margin-top: 16px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .help-btn {
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: var(--muted);
-      color: var(--foreground);
-      padding: 9px 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background .16s ease, border-color .16s ease, transform .16s ease;
-    }
-    .help-btn:hover {
-      background: var(--accent);
-      border-color: #3f3f46;
-      transform: translateY(-1px);
-    }
-    .install-btn {
-      border-color: #365314;
-      background: #1a2e10;
-    }
-    .install-btn:hover { background: #213916; }
-    .help-hint { color: var(--muted-foreground); font-size: 0.95em; }
+    .header p { color: var(--muted-foreground); font-size: 1.125rem; }
+
     .launcher-controls {
-      margin-bottom: 14px;
-      background: color-mix(in oklab, var(--card) 96%, white 4%);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px;
+      margin-bottom: 24px;
+      padding: 16px;
       display: flex;
-      gap: 10px;
+      gap: 16px;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
     }
-    .control-row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .control-label {
-      color: var(--muted-foreground);
-      font: 600 12px/1 system-ui, -apple-system, sans-serif;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-    }
-    .control-select {
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: var(--input);
-      color: var(--foreground);
-      padding: 8px 10px;
-      font: 600 13px/1.2 system-ui, -apple-system, sans-serif;
-      outline: none;
-    }
-    .control-select:focus { box-shadow: 0 0 0 2px rgba(161, 161, 170, 0.35); }
-    .control-btn {
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: var(--muted);
-      color: var(--foreground);
-      padding: 8px 10px;
-      font: 600 13px/1.2 system-ui, -apple-system, sans-serif;
-      cursor: pointer;
-      transition: background .16s ease, border-color .16s ease;
-    }
-    .control-btn:hover {
-      background: var(--accent);
-      border-color: #3f3f46;
-    }
-    .legend {
-      color: var(--muted-foreground);
-      font-size: 0.88em;
-    }
     
     .category {
-      background: var(--card);
-      border: 1px solid var(--border);
+      margin-bottom: 20px;
+      border: 1px solid hsl(var(--border));
       border-radius: var(--radius);
-      margin-bottom: 16px;
+      background-color: hsl(var(--card) / 0.5);
+      backdrop-filter: blur(4px);
       overflow: hidden;
-      --cat-a: #3b82f6;
-      --cat-b: #8b5cf6;
-      box-shadow: 0 8px 26px rgba(0, 0, 0, 0.22);
     }
     .category-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 20px;
+      padding: 16px 20px;
       cursor: pointer;
       transition: background 0.2s;
-      border-left: 3px solid var(--cat-a);
     }
-    .category-header:hover { background: #17171a; }
+    .category-header:hover { background: hsl(var(--accent)); }
     .category-title {
-      font-size: 1.2em;
+      font-size: 1.125rem;
       font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 10px;
-    }
-    .category-count {
-      background: #1f1f23;
-      border: 1px solid #2f2f35;
-      padding: 4px 12px;
-      border-radius: 999px;
-      font-size: 0.9em;
-      color: var(--muted-foreground);
+      gap: 12px;
     }
     .category-icon {
       width: 32px;
       height: 32px;
       border-radius: 8px;
-      background: #1a1a1e;
+      background: hsl(var(--secondary));
       display: flex;
       align-items: center;
       justify-content: center;
+      color: hsl(var(--foreground));
     }
-    .category-icon img {
-      width: 18px;
-      height: 18px;
-      filter: brightness(0) invert(0.9);
-      display: block;
-    }
-    .chevron {
-      transition: transform 0.3s;
-      font-size: 1.2em;
-      color: var(--muted-foreground);
-    }
-    .category.open .chevron { transform: rotate(180deg); }
     
-    .apps-list {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease-out;
-    }
-    .category.open .apps-list {
-      max-height: 1000px;
-      transition: max-height 0.5s ease-in;
-    }
     .app-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 16px 20px;
-      border-top: 1px solid #232327;
+      padding: 12px 20px;
+      border-top: 1px solid hsl(var(--border));
       transition: background 0.2s;
       text-decoration: none;
       color: inherit;
     }
-    .app-item:hover { background: #18181b; }
+    .app-item:hover { background: hsl(var(--accent) / 0.5); }
     .app-info {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
     }
     .app-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, var(--cat-a), var(--cat-b));
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: hsl(var(--secondary));
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
     .app-icon img {
       width: 24px;
       height: 24px;
       filter: brightness(0) invert(1);
-      display: block;
-    }
-    .category[data-category="finance"] { --cat-a: #0ea5e9; --cat-b: #0284c7; }
-    .category[data-category="legal"] { --cat-a: #fb7185; --cat-b: #e11d48; }
-    .category[data-category="productivity"] { --cat-a: #8b5cf6; --cat-b: #7c3aed; }
-    .category[data-category="health"] { --cat-a: #14b8a6; --cat-b: #0f766e; }
-    .category[data-category="education"] { --cat-a: #22c55e; --cat-b: #15803d; }
-    .category[data-category="business"] { --cat-a: #f59e0b; --cat-b: #b45309; }
-    .category[data-category="utilities"] { --cat-a: #64748b; --cat-b: #334155; }
-    .category[data-category="field"] { --cat-a: #0ea5a4; --cat-b: #0f766e; }
-    .category[data-category="media"] { --cat-a: #60a5fa; --cat-b: #1d4ed8; }
-    .category[data-category="communications"] { --cat-a: #f97316; --cat-b: #c2410c; }
-    .category[data-category="tools"] { --cat-a: #64748b; --cat-b: #334155; }
-    .category[data-category="games"] { --cat-a: #ec4899; --cat-b: #be185d; }
-    .category[data-category="favorites"] { --cat-a: #f59e0b; --cat-b: #b45309; }
-    .app-name { font-weight: 500; }
-    .app-desc { font-size: 0.9em; color: var(--muted-foreground); }
-    .app-meta {
-      margin-top: 4px;
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-    .badges {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      justify-content: flex-end;
-      flex-wrap: wrap;
-      margin-left: 8px;
-    }
-    .badge {
-      padding: 4px 12px;
-      border-radius: 999px;
-      font-size: 0.85em;
-      font-weight: 600;
-    }
-    .badge.demo { background: #fbbf24; color: #000; }
-    .badge.full { background: #10b981; color: #000; }
-    .badge.free { background: #6366f1; color: #fff; }
-    .badge.cat { background: #232328; color: #d4d4d8; border: 1px solid #2f2f35; }
-    .badge.offline { background: #0369a1; color: #e0f2fe; }
-    .badge.hybrid { background: #155e75; color: #cffafe; }
-    .badge.online { background: #7f1d1d; color: #fee2e2; }
-    .favorite-btn {
-      border: 1px solid #3a3a40;
-      border-radius: 999px;
-      background: #111113;
-      color: #d4d4d8;
-      width: 32px;
-      height: 32px;
-      font-size: 16px;
-      line-height: 1;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .favorite-btn:hover { border-color: #f59e0b; color: #fcd34d; }
-    .favorite-btn.is-favorite {
-      border-color: #f59e0b;
-      color: #fcd34d;
-      background: #422006;
-    }
-    .favorites-empty {
-      border-top: 1px solid #232327;
-      padding: 14px 18px;
-      color: var(--muted-foreground);
-      font-size: 0.93em;
     }
     
-    .loading {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--muted-foreground);
+    .app-name { font-weight: 600; font-size: 1rem; }
+    .app-desc { font-size: 0.875rem; color: hsl(var(--muted-foreground)); }
+
+    /* Custom overrides for shadcn look */
+    .badge-connectivity {
+      font-size: 10px;
+      padding: 2px 8px;
+      letter-spacing: 0.05em;
     }
-    .spinner {
-      border: 3px solid #27272a;
-      border-top: 3px solid #e4e4e7;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 20px;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+    
     .help-overlay {
       position: fixed;
       inset: 0;
       display: none;
-      background: rgba(9, 9, 11, 0.8);
-      backdrop-filter: blur(2px);
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
       padding: 20px;
-      z-index: 50;
+      z-index: 100;
     }
-    .help-overlay.open {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-    }
+    .help-overlay.open { display: flex; justify-content: center; align-items: center; }
     .help-dialog {
-      width: min(1100px, 100%);
-      max-height: calc(100vh - 40px);
+      width: min(800px, 100%);
+      max-height: 90vh;
       overflow: auto;
-      background: #0f0f12;
-      border: 1px solid #27272a;
-      border-radius: 14px;
-      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.5);
     }
-    .help-head {
-      position: sticky;
-      top: 0;
-      background: #121216;
-      border-bottom: 1px solid #27272a;
-      padding: 16px 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      z-index: 2;
-    }
-    .help-head h2 { font-size: 1.15em; }
-    .help-head p { color: var(--muted-foreground); font-size: 0.92em; margin-top: 4px; }
-    .help-close {
-      border: 1px solid #313138;
-      background: #19191e;
-      color: var(--foreground);
-      border-radius: 8px;
-      padding: 6px 10px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    .help-close:hover { background: #232329; }
-    .help-body { padding: 16px; display: grid; gap: 14px; }
-    .help-section {
-      background: #111115;
-      border: 1px solid #27272a;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    .help-section-head {
-      padding: 12px 14px;
-      font-weight: 700;
-      border-bottom: 1px solid #232327;
-      background: #16161b;
-    }
-    .help-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 10px;
-      padding: 12px;
-    }
-    .help-card {
-      background: #15151a;
-      border: 1px solid #26262d;
-      border-radius: 10px;
-      padding: 10px;
-    }
-    .help-card h3 { font-size: 0.98em; margin-bottom: 6px; }
-    .help-card p { font-size: 0.88em; color: #d4d4d8; line-height: 1.45; }
-    .help-card p + p { margin-top: 6px; }
-    .help-card strong { color: #f4f4f5; }
-    
+
     @media (max-width: 640px) {
-      .header h1 { font-size: 2em; }
-      .category-header { padding: 16px; }
-      .app-item { padding: 14px 16px; }
       .app-desc { display: none; }
-      .help-overlay { padding: 10px; }
-      .help-dialog { max-height: calc(100vh - 20px); }
-      .help-grid { grid-template-columns: 1fr; }
+      .launcher-controls { flex-direction: column; align-items: stretch; }
     }
   </style>
 </head>
@@ -415,53 +151,59 @@
     <div class="header">
       <h1>FieldKit</h1>
       <p>Offline-first lobby for tools, training, and field workflows</p>
-      <div class="header-tools">
-        <button id="openHelpBtn" class="help-btn" type="button">? Help</button>
-        <button id="installAppBtn" class="help-btn install-btn" type="button">Install</button>
-        <button id="signOutBtn" class="help-btn" type="button" style="border-color: #7f1d1d; background: #2a0d0f;">Sign Out</button>
-        <span class="help-hint">Press <strong>F1</strong> anywhere on this page</span>
-        <span id="installHint" class="help-hint"></span>
+      <div class="header-tools flex items-center justify-center gap-2 m-b-4" style="margin-top: 24px;">
+        <button id="openHelpBtn" class="s-btn s-btn-outline" type="button"><i data-lucide="help-circle" size="18"></i> Help</button>
+        <button id="installAppBtn" class="s-btn s-btn-primary" type="button"><i data-lucide="download" size="18"></i> Install</button>
+        <button id="signOutBtn" class="s-btn s-btn-outline" type="button" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.2);"><i data-lucide="log-out" size="18"></i> Sign Out</button>
+      </div>
+      <div class="flex items-center justify-center gap-2 text-muted" style="font-size: 0.875rem;">
+        <span>Press <kbd class="s-badge s-badge-outline" style="border-radius: 4px; padding: 0 4px;">F1</kbd> anywhere</span>
+        <span id="installHint"></span>
       </div>
     </div>
     
-    <div class="launcher-controls" aria-label="Launcher controls">
-      <div class="control-row">
-        <span class="control-label">View</span>
-        <select id="sortModeSelect" class="control-select">
-          <option value="categories">By Category</option>
-          <option value="az">A-Z</option>
-          <option value="za">Z-A</option>
-          <option value="recent">Most Recent</option>
-          <option value="favorites">Favorites Only</option>
-        </select>
-        <span class="control-label">Connectivity</span>
-        <select id="connectivityFilterSelect" class="control-select">
-          <option value="all">All</option>
-          <option value="airplane">Airplane Mode</option>
-          <option value="wifi">Wi-Fi / Cell</option>
-        </select>
-        <button id="clearRecentBtn" class="control-btn" type="button">Clear Recent</button>
+    <div class="launcher-controls s-card" aria-label="Launcher controls">
+      <div class="flex items-center gap-4 flex-wrap">
+        <div class="flex items-center gap-2">
+          <label class="text-muted font-semibold" style="font-size: 0.75rem; text-transform: uppercase;">View</label>
+          <select id="sortModeSelect" class="s-select" style="width: auto;">
+            <option value="categories">By Category</option>
+            <option value="az">A-Z</option>
+            <option value="za">Z-A</option>
+            <option value="recent">Most Recent</option>
+            <option value="favorites">Favorites Only</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-muted font-semibold" style="font-size: 0.75rem; text-transform: uppercase;">Connectivity</label>
+          <select id="connectivityFilterSelect" class="s-select" style="width: auto;">
+            <option value="all">All</option>
+            <option value="airplane">Airplane Mode</option>
+            <option value="wifi">Wi-Fi / Cell</option>
+          </select>
+        </div>
+        <button id="clearRecentBtn" class="s-btn s-btn-ghost s-btn-sm" type="button">Clear Recent</button>
       </div>
-      <div class="legend">Connectivity labels: AIRPLANE MODE works offline, WI-FI / CELL uses optional or required network features. Use ☆ to pin favorites.</div>
     </div>
 
     <div id="content">
-      <div class="loading">
-        <div class="spinner"></div>
-        <p>Scanning for apps...</p>
+      <div class="loading flex flex-direction-column items-center justify-center p-4" style="padding: 100px 0;">
+        <div class="spinner m-b-4"></div>
+        <p class="text-muted">Scanning for apps...</p>
       </div>
     </div>
   </div>
+  
   <div id="helpOverlay" class="help-overlay" aria-hidden="true">
-    <div class="help-dialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
-      <div class="help-head">
+    <div class="help-dialog s-card" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <div class="s-card-header flex-direction-row justify-between items-center" style="border-bottom: 1px solid hsl(var(--border));">
         <div>
-          <h2 id="helpTitle">Suite Help (F1)</h2>
-          <p>Main features and main scenarios for each app</p>
+          <h2 id="helpTitle" class="s-card-title">Suite Help</h2>
+          <p class="s-card-description">Main features and scenarios for each app</p>
         </div>
-        <button id="closeHelpBtn" class="help-close" type="button" aria-label="Close help">X Clear</button>
+        <button id="closeHelpBtn" class="s-btn s-btn-ghost s-btn-icon" type="button" aria-label="Close help"><i data-lucide="x"></i></button>
       </div>
-      <div id="helpBody" class="help-body"></div>
+      <div id="helpBody" class="help-body" style="padding: 20px;"></div>
     </div>
   </div>
 
@@ -939,20 +681,15 @@
         btn.style.display = '';
       }
     }
-    function getConnectivityMode(app) {
-      if (app.offline === 'hybrid') return 'wifi';
-      if (app.offline === 'online') return 'wifi';
-      return 'airplane';
-    }
     function getOfflineBadgeHTML(app) {
       const mode = getConnectivityMode(app);
-      if (mode === 'wifi') return '<span class="badge online">WI-FI / CELL</span>';
-      return '<span class="badge offline">AIRPLANE MODE</span>';
+      if (mode === 'wifi') return '<span class="s-badge s-badge-outline badge-connectivity" style="border-color: rgba(239, 68, 68, 0.4); color: #f87171;">WI-FI / CELL</span>';
+      return '<span class="s-badge s-badge-outline badge-connectivity" style="border-color: rgba(74, 222, 128, 0.4); color: #4ade80;">AIRPLANE MODE</span>';
     }
     function getTierBadgeHTML(app) {
-      if (app.demo) return '<span class="badge demo">DEMO</span>';
-      if (app.free) return '<span class="badge free">FREE</span>';
-      return '<span class="badge full">FULL</span>';
+      if (app.demo) return '<span class="s-badge s-badge-secondary">DEMO</span>';
+      if (app.free) return '<span class="s-badge s-badge-default" style="background: #6366f1; color: white;">FREE</span>';
+      return '<span class="s-badge s-badge-default">FULL</span>';
     }
     function getAllApps(foundApps) {
       const all = [];
@@ -1012,7 +749,7 @@
       const categoryTitle = APP_REGISTRY[categoryKey]?.title || categoryKey;
       const cleanTitle = categoryTitle.includes(' ') ? categoryTitle.split(' ').slice(1).join(' ') : categoryTitle;
       const categoryBadge = includeCategoryTag
-        ? `<span class="badge cat">${cleanTitle}</span>`
+        ? `<span class="s-badge s-badge-outline text-muted">${cleanTitle}</span>`
         : '';
       const favoriteState = isFavoriteApp(app.key);
       const favoriteLabel = favoriteState ? 'Unfavorite app' : 'Add to favorites';
@@ -1024,14 +761,16 @@
             </div>
             <div>
               <div class="app-name">${app.name}</div>
-              <div class="app-desc">${app.desc}</div>
+              <div class="app-desc text-muted">${app.desc}</div>
               <div class="app-meta">${categoryBadge}</div>
             </div>
           </div>
-          <div class="badges">
+          <div class="badges flex items-center gap-2">
             ${getOfflineBadgeHTML(app)}
             ${getTierBadgeHTML(app)}
-            <button class="favorite-btn ${favoriteState ? 'is-favorite' : ''}" type="button" data-favorite-btn="1" data-app-key="${app.key}" aria-label="${favoriteLabel}" title="${favoriteLabel}">${favoriteState ? '★' : '☆'}</button>
+            <button class="s-btn s-btn-ghost s-btn-icon ${favoriteState ? 'is-favorite' : ''}" type="button" data-favorite-btn="1" data-app-key="${app.key}" aria-label="${favoriteLabel}" title="${favoriteLabel}" style="width: 32px; height: 32px; border-radius: 999px;">
+              <i data-lucide="star" ${favoriteState ? 'fill="#f59e0b" color="#f59e0b"' : ''}></i>
+            </button>
           </div>
         </a>
       `;
@@ -1040,19 +779,19 @@
       const favorites = sortAppsForMode(getAllApps(foundApps).filter(app => isFavoriteApp(app.key)), 'az');
       if (!favorites.length) {
         return `
-          <div class="category open" data-category="favorites">
+          <div class="category" data-category="favorites">
             <div class="category-header" onclick="toggleCategory('favorites')">
               <div class="category-title">
-                <div class="category-icon">
-                  <img src="shared/icons/target.svg" alt="" onerror="this.style.display='none'" aria-hidden="true">
+                <div class="category-icon" style="background: hsl(var(--secondary) / 0.5);">
+                  <i data-lucide="star"></i>
                 </div>
                 <span>Favorites</span>
-                <span class="category-count">0</span>
+                <span class="s-badge s-badge-secondary" style="margin-left: 8px;">0</span>
               </div>
-              <span class="chevron">▼</span>
+              <i data-lucide="chevron-down" class="chevron"></i>
             </div>
             <div class="apps-list">
-              <div class="favorites-empty">Pin your go-to apps with the ☆ button and they will stay here.</div>
+              <div class="favorites-empty p-4 text-muted" style="font-size: 0.875rem;">Pin your go-to apps with the star button and they will stay here.</div>
             </div>
           </div>
         `;
@@ -1061,13 +800,13 @@
         <div class="category open" data-category="favorites">
           <div class="category-header" onclick="toggleCategory('favorites')">
             <div class="category-title">
-              <div class="category-icon">
-                <img src="shared/icons/target.svg" alt="" onerror="this.style.display='none'" aria-hidden="true">
+              <div class="category-icon" style="background: hsl(45 93% 47% / 0.2); color: #f59e0b;">
+                <i data-lucide="star" fill="#f59e0b"></i>
               </div>
               <span>Favorites</span>
-              <span class="category-count">${favorites.length}</span>
+              <span class="s-badge s-badge-secondary" style="margin-left: 8px;">${favorites.length}</span>
             </div>
-            <span class="chevron">▼</span>
+            <i data-lucide="chevron-down" class="chevron"></i>
           </div>
           <div class="apps-list">
             ${favorites.map(app => appItemHTML(app, app.categoryKey, true)).join('')}
@@ -1132,22 +871,28 @@
           const cards = category.found.map(app => {
             const help = getAppHelp(app);
             return `
-              <article class="help-card">
-                <h3><img src="shared/icons/${app.icon}" style="width:1.2em; vertical-align:middle; filter:brightness(0) invert(0.9); margin-right:4px;" onerror="this.style.display='none'" aria-hidden="true"> ${app.name}</h3>
-                <p><strong>Main feature:</strong> ${help.feature}</p>
-                <p><strong>Main scenario:</strong> ${help.scenario}</p>
+              <article class="s-card" style="padding: 16px;">
+                <div class="flex items-center gap-2 m-b-4">
+                  <div class="app-icon" style="width: 32px; height: 32px; border-radius: 6px;">
+                    <img src="shared/icons/${app.icon}" style="width: 18px; height: 18px; filter: brightness(0) invert(1);" onerror="this.style.display='none'" aria-hidden="true">
+                  </div>
+                  <h3 class="font-semibold">${app.name}</h3>
+                </div>
+                <p style="font-size: 0.875rem; line-height: 1.5;"><strong class="text-muted">Feature:</strong> ${help.feature}</p>
+                <p style="font-size: 0.875rem; line-height: 1.5; margin-top: 8px;"><strong class="text-muted">Scenario:</strong> ${help.scenario}</p>
               </article>
             `;
           }).join('');
           return `
-            <section class="help-section">
-              <div class="help-section-head">${category.title.split(' ').slice(1).join(' ')}</div>
-              <div class="help-grid">${cards}</div>
+            <section style="margin-bottom: 32px;">
+              <h4 class="text-muted font-semibold" style="font-size: 0.75rem; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.05em;">${category.title.split(' ').slice(1).join(' ')}</h4>
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">${cards}</div>
             </section>
           `;
         })
         .join('');
       document.getElementById('helpBody').innerHTML = html;
+      lucide.createIcons();
     }
     function openHelp() {
       const ov = document.getElementById('helpOverlay');
@@ -1211,12 +956,12 @@
             <div class="category-header" onclick="toggleCategory('${categoryKey}')">
               <div class="category-title">
                 <div class="category-icon">
-                  <img src="shared/icons/${category.icon}" alt="" onerror="this.style.display='none'" aria-hidden="true">
+                  <img src="shared/icons/${category.icon}" alt="" onerror="this.style.display='none'" aria-hidden="true" style="width: 18px; height: 18px; filter: brightness(0) invert(1);">
                 </div>
                 <span>${category.title.split(' ').slice(1).join(' ')}</span>
-                <span class="category-count">${category.found.length}</span>
+                <span class="s-badge s-badge-secondary" style="margin-left: 8px;">${category.found.length}</span>
               </div>
-              <span class="chevron">▼</span>
+              <i data-lucide="chevron-down" class="chevron"></i>
             </div>
             <div class="apps-list">
               ${category.found
@@ -1229,6 +974,7 @@
         `).join('');
       
       document.getElementById('content').innerHTML = favoritesSection + html;
+      lucide.createIcons();
     }
     function renderFlatLauncher(apps, mode, foundApps, options) {
       const opts = options || {};
@@ -1237,23 +983,23 @@
         : mode === 'favorites'
           ? 'Favorite Apps'
           : (mode === 'za' ? 'All Apps (Z-A)' : 'All Apps (A-Z)');
-      const modeIcon = mode === 'recent' ? 'clock.svg' : (mode === 'favorites' ? 'target.svg' : 'library.svg');
+      const modeIcon = mode === 'recent' ? 'clock' : (mode === 'favorites' ? 'star' : 'layout-grid');
       const html = `
         <div class="category open" data-category="all-apps">
           <div class="category-header">
             <div class="category-title">
               <div class="category-icon">
-                <img src="shared/icons/${modeIcon}" alt="" onerror="this.style.display='none'" aria-hidden="true">
+                <i data-lucide="${modeIcon}"></i>
               </div>
               <span>${modeTitle}</span>
-              <span class="category-count">${apps.length}</span>
+              <span class="s-badge s-badge-secondary" style="margin-left: 8px;">${apps.length}</span>
             </div>
-            <span class="chevron">▼</span>
+            <i data-lucide="chevron-down" class="chevron"></i>
           </div>
           <div class="apps-list">
             ${apps.length
               ? apps.map(app => appItemHTML(app, app.categoryKey, true)).join('')
-              : '<div class="favorites-empty">No apps to show for this view yet.</div>'}
+              : '<div class="favorites-empty p-4 text-muted">No apps to show for this view yet.</div>'}
           </div>
         </div>
       `;
@@ -1262,6 +1008,7 @@
       } else {
         document.getElementById('content').innerHTML = renderFavoritesSectionHTML(foundApps) + html;
       }
+      lucide.createIcons();
     }
     function toAppHref(app) {
       const raw = app.path || (app.key + '/index.html');
