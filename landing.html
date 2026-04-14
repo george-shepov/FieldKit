@@ -244,25 +244,9 @@
         <div id="refRouteHint" style="display:none; margin: 0 0 14px; padding: 10px 12px; border: 1px solid #334155; border-radius: 10px; background: #111b30; color: #cbd5e1; font-size: 0.92rem;"></div>
         <div id="authStateHint" style="display:none; margin: 0 0 14px; padding: 10px 12px; border: 1px solid #334155; border-radius: 10px; background: #0f2a1e; color: #b7f5d3; font-size: 0.92rem;"></div>
         <div class="social-grid">
-          <button class="social-btn" id="btn-linkedin">
-            <img src="shared/icons/linkedin.svg" alt="">
-            Continue with LinkedIn
-          </button>
-          <button class="social-btn" id="btn-github">
-            <img src="shared/icons/github.svg" alt="">
-            Continue with GitHub
-          </button>
           <button class="social-btn" id="btn-google">
             <img src="shared/icons/google-icon.svg" alt="">
             Continue with Google
-          </button>
-          <button class="social-btn" id="btn-microsoft">
-            <img src="shared/icons/microsoft.svg" alt="">
-            Continue with Microsoft
-          </button>
-          <button class="social-btn" id="btn-facebook">
-            <img src="shared/icons/facebook.svg" alt="">
-            Continue with Facebook
           </button>
         </div>
         <div style="margin-top: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
@@ -353,18 +337,7 @@
       if (btn) btn.classList.add('preferred');
     }
 
-    if (referrer.includes('github') || userAgent.includes('github')) {
-      setPreferred('btn-github');
-    } else if (referrer.includes('linkedin') || userAgent.includes('linkedin')) {
-      setPreferred('btn-linkedin');
-    } else if (referrer.includes('facebook') || userAgent.includes('facebook')) {
-      setPreferred('btn-facebook');
-    } else if (referrer.includes('google')) {
-      setPreferred('btn-google');
-    } else {
-      // Default to LinkedIn as requested for the 9000+ network
-      setPreferred('btn-linkedin');
-    }
+    setPreferred('btn-google');
 
     function setLegacyLoginState() {
       let ok = false;
@@ -474,20 +447,6 @@
         window.location.href = `/api/auth/oauth/google?next=${encodeURIComponent(next)}`;
       });
     }
-
-    // All other social buttons remain simulated (placeholder)
-    document.querySelectorAll('.social-btn:not(#btn-google)').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const stored = setLegacyLoginState();
-        if (!stored) {
-          alert('Browser storage is blocked. Please allow site data/cookies for oneofstore.com and try again.');
-          return;
-        }
-        if (skipLandingToggle) setSkipLandingPref(!!skipLandingToggle.checked);
-        const userQuery = referralHandle ? `&u=${encodeURIComponent(referralHandle)}` : '';
-        window.location.href = `index.html?login=1${userQuery}`;
-      });
-    });
 
     // Check server-side Google session on page load (cookie-based)
     fetch('/api/auth/session', { credentials: 'same-origin' })
