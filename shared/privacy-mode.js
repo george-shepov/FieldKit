@@ -10,11 +10,11 @@
   var nativeWebSocket = window.WebSocket;
 
   var defaultConfig = {
-    mode: "offline_private",
-    allowSync: false,
+    mode: "sync_managed",
+    allowSync: true,
     allowSupport: false,
     allowAI: false,
-    managedEndpoint: "",
+    managedEndpoint: "https://giorgiy-shepov.com",
     customEndpoint: ""
   };
 
@@ -206,21 +206,21 @@
     mask.innerHTML = [
       '<div class="suite-privacy-panel" role="dialog" aria-modal="true" aria-label="Privacy mode">',
       '  <div class="suite-privacy-head">',
-      '    <div><h2>Privacy Mode</h2><p>Default is device-only. Cloud features require explicit opt-in.</p></div>',
+      '    <div><h2>Privacy Mode</h2><p>Default is demo-server sync. You can switch back to device-only at any time.</p></div>',
       '    <button class="suite-privacy-close" id="suitePrivacyClose" type="button">Close</button>',
       "  </div>",
       '  <div class="suite-privacy-body">',
       '    <section class="suite-privacy-row">',
       '      <label>Mode</label>',
       '      <select id="suitePrivacyMode" class="suite-privacy-select">',
-      '        <option value="offline_private">Private Offline (Recommended)</option>',
-      '        <option value="sync_managed">Sync to My Server</option>',
+      '        <option value="offline_private">Private Offline (Device Only)</option>',
+      '        <option value="sync_managed">Sync to Demo Server (Default)</option>',
       '        <option value="sync_custom">Use My Own Server</option>',
       "      </select>",
       "    </section>",
       '    <section class="suite-privacy-row">',
-      '      <label for="suiteManagedEndpoint">Managed server endpoint (optional)</label>',
-      '      <input id="suiteManagedEndpoint" class="suite-privacy-input" placeholder="https://your-vps.example.com" />',
+      '      <label for="suiteManagedEndpoint">Demo server endpoint</label>',
+      '      <input id="suiteManagedEndpoint" class="suite-privacy-input" placeholder="https://giorgiy-shepov.com" />',
       '      <label for="suiteCustomEndpoint">Custom server endpoint (optional)</label>',
       '      <input id="suiteCustomEndpoint" class="suite-privacy-input" placeholder="https://my-server.example.com" />',
       "    </section>",
