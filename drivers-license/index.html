@@ -527,6 +527,7 @@
     </section>
   </main>
 
+<script src="./translated_driver_qa.js"></script>
 <script>
 const STORAGE_KEY = 'driverLicenseStudyCustomDeck';
 
@@ -792,7 +793,9 @@ function dedupeTextLines(lines) {
 }
 
 for (const [lang, pack] of Object.entries(PACKS)) {
-  const extra = lang === 'en' ? EXTENDED_EN_QA : [];
+  const extra = lang === 'en'
+    ? EXTENDED_EN_QA
+    : ((window.TRANSLATED_EXTENDED_DRIVER_QA && window.TRANSLATED_EXTENDED_DRIVER_QA[lang]) || []);
   pack.qa = dedupeCards([...pack.qa, ...digestToCards(pack.digest), ...extra]);
 }
 
