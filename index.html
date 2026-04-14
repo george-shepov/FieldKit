@@ -1107,15 +1107,11 @@
 
     function init() {
       captureReferralHandleFromURL();
-      if (!isSignedIn()) {
-        goToLandingForAuth();
-        return;
-      }
 
       const controls = document.querySelector('.launcher-controls');
       if (controls) controls.style.display = 'flex';
       const signOutBtnVisible = document.getElementById('signOutBtn');
-      if (signOutBtnVisible) signOutBtnVisible.style.display = 'inline-flex';
+      if (signOutBtnVisible) signOutBtnVisible.style.display = 'none';
 
       const foundApps = scanApps();
       cachedApps = foundApps;

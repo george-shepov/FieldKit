@@ -239,14 +239,14 @@
   <section class="auth-section" id="register">
     <div class="container">
       <div class="auth-card">
-        <h2>Join the Fleet</h2>
-        <p>Register to sync your preferences and access 9,000+ member features.</p>
+        <h2>FieldKit Demo</h2>
+        <p>Open the full lobby instantly. No account or login required.</p>
         <div id="refRouteHint" style="display:none; margin: 0 0 14px; padding: 10px 12px; border: 1px solid #334155; border-radius: 10px; background: #111b30; color: #cbd5e1; font-size: 0.92rem;"></div>
         <div id="authStateHint" style="display:none; margin: 0 0 14px; padding: 10px 12px; border: 1px solid #334155; border-radius: 10px; background: #0f2a1e; color: #b7f5d3; font-size: 0.92rem;"></div>
         <div class="social-grid">
-          <button class="social-btn" id="btn-google">
-            <img src="shared/icons/google-icon.svg" alt="">
-            Continue with Google
+          <button class="social-btn" id="btn-enter-demo">
+            <img src="shared/icons/rocket.svg" alt="">
+            Enter Demo Lobby
           </button>
         </div>
         <div style="margin-top: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
@@ -257,7 +257,7 @@
           <button id="continueLobbyBtn" class="btn btn-outline" type="button" style="display:none;">Continue to Lobby</button>
         </div>
         <div style="margin-top: 20px; text-align: center; font-size: 0.85rem; color: var(--text-muted);">
-          Already have an account? <a href="#" style="color: var(--primary); text-decoration: none;">Log in</a>
+          Demo mode is active. You can open the lobby right away.
         </div>
       </div>
     </div>
@@ -337,7 +337,7 @@
       if (btn) btn.classList.add('preferred');
     }
 
-    setPreferred('btn-google');
+    setPreferred('btn-enter-demo');
 
     function setLegacyLoginState() {
       let ok = false;
@@ -437,33 +437,14 @@
       }
     } catch (_) {}
 
-    // Google button → real server-side OAuth flow
-    const googleBtn = document.getElementById('btn-google');
-    if (googleBtn) {
-      googleBtn.addEventListener('click', () => {
-        const next = referralHandle
-          ? `/index.html?login=1&u=${encodeURIComponent(referralHandle)}`
-          : '/index.html?login=1';
-        window.location.href = `/api/auth/oauth/google?next=${encodeURIComponent(next)}`;
+    const enterDemoBtn = document.getElementById('btn-enter-demo');
+    if (enterDemoBtn) {
+      enterDemoBtn.addEventListener('click', () => {
+        if (skipLandingToggle) setSkipLandingPref(!!skipLandingToggle.checked);
+        const userQuery = referralHandle ? `?u=${encodeURIComponent(referralHandle)}` : '';
+        window.location.href = `index.html${userQuery}`;
       });
     }
-
-    // Check server-side Google session on page load (cookie-based)
-    fetch('/api/auth/session', { credentials: 'same-origin' })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (!data || !data.signedIn) return;
-        if (continueLobbyBtn && continueLobbyBtn.style.display === 'none') {
-          continueLobbyBtn.style.display = 'inline-flex';
-          continueLobbyBtn.onclick = () => { window.location.href = '/index.html'; };
-        }
-        if (authStateHint && authStateHint.style.display === 'none') {
-          const display = data.name || data.email || 'you';
-          authStateHint.textContent = `Signed in as ${display}. Continue to lobby or stay here.`;
-          authStateHint.style.display = 'block';
-        }
-      })
-      .catch(() => {}); // API may not be enabled; fail silently
   </script>
 </body>
 </html>
