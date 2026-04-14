@@ -52,7 +52,7 @@ var buildVersion = "dev"
 //go:embed snippet-board/* tic-tac-toe/* time-tracker/* ui-tweaker/* profile/*
 //go:embed privacy-camera/* privacy-recorder/*
 //go:embed games/*
-//go:embed about/* calisthenics/*
+//go:embed about/* calisthenics/* convict_conditioning/*
 var appFS embed.FS
 
 var apiLimiter = newAPIRateLimiter(10.0, 2.0, 10*time.Minute)
@@ -109,15 +109,15 @@ func main() {
 
 	printBanner(localURL, lanURL, *share, *enableAPI, *dataDir, *apiKey != "")
 	if *enableAPI && *apiKey == "" {
-		log.Printf("WARNING: --enable-api is active with no --api-key; all API endpoints are unauthenticated")
+		log.Printf("WARNING: enableapi is active with no apikey; all API endpoints are unauthenticated - fieldkit.go:112")
 	}
 
 	if !*noBrowser {
 		go func() {
 			time.Sleep(220 * time.Millisecond)
 			if err := openBrowser(localURL); err != nil {
-				log.Printf("browser launch failed: %v", err)
-				log.Printf("open manually: %s", localURL)
+				log.Printf("browser launch failed: %v - fieldkit.go:119", err)
+				log.Printf("open manually: %s - fieldkit.go:120", localURL)
 			}
 		}()
 	}
@@ -131,7 +131,7 @@ func main() {
 		IdleTimeout:       120 * time.Second,
 	}
 
-	log.Printf("FieldKit launcher %s running", buildVersion)
+	log.Printf("FieldKit launcher %s running - fieldkit.go:134", buildVersion)
 	serveErr := make(chan error, 1)
 	go func() {
 		serveErr <- srv.Serve(ln)
@@ -147,15 +147,15 @@ func main() {
 			log.Fatalf("server error: %v", err)
 		}
 	case sig := <-sigCh:
-		log.Printf("shutdown signal received: %s", sig)
+		log.Printf("shutdown signal received: %s - fieldkit.go:150", sig)
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		if err := srv.Shutdown(ctx); err != nil {
-			log.Printf("graceful shutdown failed, forcing close: %v", err)
+			log.Printf("graceful shutdown failed, forcing close: %v - fieldkit.go:153", err)
 			_ = srv.Close()
 		}
 		cancel()
 		if err := <-serveErr; err != nil && err != http.ErrServerClosed {
-			log.Printf("server exited with error: %v", err)
+			log.Printf("server exited with error: %v - fieldkit.go:158", err)
 		}
 	}
 }
@@ -541,36 +541,36 @@ func isLoopbackHost(host string) bool {
 
 func logRequests(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%s %s", r.Method, r.URL.Path)
+		log.Printf("%s %s - fieldkit.go:544", r.Method, r.URL.Path)
 		next.ServeHTTP(w, r)
 	})
 }
 
 func printBanner(localURL, lanURL string, share bool, apiEnabled bool, dataDir string, apiKeySet bool) {
 	fmt.Println("")
-	fmt.Printf("FieldKit Launcher (%s)\n", buildVersion)
-	fmt.Printf("Desktop URL: %s\n", localURL)
+	fmt.Printf("FieldKit Launcher (%s)\n - fieldkit.go:551", buildVersion)
+	fmt.Printf("Desktop URL: %s\n - fieldkit.go:552", localURL)
 	if share {
 		if lanURL == "" {
-			fmt.Println("Phone URL:   unavailable (LAN IP not detected)")
+			fmt.Println("Phone URL:   unavailable (LAN IP not detected) - fieldkit.go:555")
 		} else {
-			fmt.Printf("Phone URL:   %s\n", lanURL)
+			fmt.Printf("Phone URL:   %s\n - fieldkit.go:557", lanURL)
 		}
-		fmt.Println("Mode:        shared on local network")
+		fmt.Println("Mode:        shared on local network - fieldkit.go:559")
 	} else {
-		fmt.Println("Mode:        desktop-only (use --share for phone access)")
+		fmt.Println("Mode:        desktoponly (use share for phone access) - fieldkit.go:561")
 	}
 	if apiEnabled {
-		fmt.Println("API:         enabled")
-		fmt.Printf("Data dir:    %s\n", dataDir)
+		fmt.Println("API:         enabled - fieldkit.go:564")
+		fmt.Printf("Data dir:    %s\n - fieldkit.go:565", dataDir)
 		if apiKeySet {
-			fmt.Println("API key:     required for upload/register/heartbeat/chat")
+			fmt.Println("API key:     required for upload/register/heartbeat/chat - fieldkit.go:567")
 		} else {
-			fmt.Println("API key:     not required (set --api-key for protection)")
+			fmt.Println("API key:     not required (set apikey for protection) - fieldkit.go:569")
 		}
-		fmt.Println("Endpoints:   /api/pulse, /api/media/upload, /api/register, /api/heartbeat, /api/wishlist/submit, /api/support/ticket")
+		fmt.Println("Endpoints:   /api/pulse, /api/media/upload, /api/register, /api/heartbeat, /api/wishlist/submit, /api/support/ticket - fieldkit.go:571")
 	}
-	fmt.Println("Stop:        Ctrl+C")
+	fmt.Println("Stop:        Ctrl+C - fieldkit.go:573")
 	fmt.Println("")
 }
 

@@ -13,6 +13,20 @@
       --border: 240 3.7% 15.9%;
       --primary: 199 89% 48%;
       --radius: 0.75rem;
+
+      /* Shared panel/control colors used across legacy blocks below */
+      --panel-border: hsl(var(--border));
+      --control-bg: hsl(240 3.7% 13%);
+      --control-fg: hsl(var(--foreground));
+
+      /* Neon palette used by X/O mark rendering */
+      --neon-cyan: #22d3ee;
+      --neon-purple: #c084fc;
+      --neon-yellow: #facc15;
+      --neon-lime: #84cc16;
+      --neon-orange: #fb923c;
+      --neon-red: #f87171;
+      --neon-blue: #60a5fa;
       
       --bg: hsl(var(--background));
       --fg: hsl(var(--foreground));
@@ -88,7 +102,7 @@
     #board {
       display: grid;
       gap: 4px;
-      width: min(96vw, 840px);
+      width: min(98vw, 960px);
       border-radius: var(--radius);
       overflow: hidden;
       background: var(--grid);
@@ -139,13 +153,13 @@
     }
 
     .cell .mark{
-      width:72%;
-      height:72%;
+      width:58%;
+      height:58%;
       position:relative;
       display:block;
       --mark-color: var(--neon-cyan);
-      --mark-glow: color-mix(in srgb, var(--mark-color) 75%, white 25%);
-      filter: drop-shadow(0 0 5px var(--mark-glow)) drop-shadow(0 0 10px var(--mark-color));
+      --mark-glow: color-mix(in srgb, var(--mark-color) 72%, white 28%);
+      filter: none;
     }
     .mark.neon-purple{ --mark-color: var(--neon-purple); }
     .mark.neon-cyan{ --mark-color: var(--neon-cyan); }
@@ -162,11 +176,11 @@
       left:50%;
       top:50%;
       width:88%;
-      height:14%;
+      height:12%;
       border-radius:999px;
       background: var(--mark-color);
       transform-origin:center;
-      box-shadow: 0 0 10px var(--mark-glow), 0 0 20px var(--mark-color), 0 0 30px var(--mark-color);
+      box-shadow: none;
     }
     .mark.x::before{ transform:translate(-50%,-50%) rotate(45deg); }
     .mark.x::after{ transform:translate(-50%,-50%) rotate(-45deg); }
@@ -180,8 +194,31 @@
       height:82%;
       transform:translate(-50%,-50%);
       border-radius:50%;
-      border:0.42rem solid var(--mark-color);
-      box-shadow: 0 0 12px var(--mark-glow), inset 0 0 12px var(--mark-color), 0 0 22px var(--mark-color), 0 0 32px var(--mark-color);
+      border:0.34rem solid var(--mark-color);
+      box-shadow: none;
+    }
+
+    #board.board-neon .cell .mark {
+      filter: drop-shadow(0 0 4px var(--mark-glow)) drop-shadow(0 0 8px var(--mark-color));
+    }
+    #board.board-neon .mark.x::before,
+    #board.board-neon .mark.x::after {
+      box-shadow: 0 0 8px var(--mark-glow), 0 0 16px var(--mark-color);
+    }
+    #board.board-neon .mark.o::before {
+      box-shadow: 0 0 8px var(--mark-glow), inset 0 0 8px var(--mark-color), 0 0 16px var(--mark-color);
+    }
+
+    #board.board-plain .cell .mark {
+      filter: none;
+      --mark-glow: transparent;
+    }
+    #board.board-plain .mark.x { --mark-color: #60a5fa; }
+    #board.board-plain .mark.o { --mark-color: #facc15; }
+    #board.board-plain .mark.x::before,
+    #board.board-plain .mark.x::after,
+    #board.board-plain .mark.o::before {
+      box-shadow: none;
     }
 
     .cell.last-move{ background:var(--last-move-bg)!important; transform:scale(var(--last-move-scale)); z-index:2; }
@@ -242,6 +279,12 @@
     <label>Tier
       <input id="tier" type="range" min="1" max="10" value="5" step="1"/>
       <span id="tierPill">5 - Analyst</span>
+    </label>
+    <label>Style
+      <select id="styleMode">
+        <option value="neon">Neon</option>
+        <option value="plain">Plain</option>
+      </select>
     </label>
     <button id="startBtn" type="button">Start / Restart</button>
     <button id="undoBtn" type="button" class="secondary">Undo</button>
@@ -310,6 +353,7 @@
 
     const tierInput = document.getElementById('tier');
     const tierPill = document.getElementById('tierPill');
+    const styleModeSelect = document.getElementById('styleMode');
 
     /** State **/
     let boardSize = 10;
@@ -320,6 +364,7 @@
     let currentPlayer = 'X';
     let gameOver = false;
     let moveHistory = [];
+    let styleMode = 'neon';
 
     let scoreboard = { xWins: 0, oWins: 0, draws: 0 };
 
@@ -338,10 +383,9 @@
       const controlsH = document.getElementById('controls')?.offsetHeight || 0;
       const presetsH = document.getElementById('presets')?.offsetHeight || 0;
       const messageH = (document.getElementById('message')?.offsetHeight || 0) + (document.getElementById('turnbar')?.offsetHeight || 0);
-      const scoreboardH = document.getElementById('scoreboard')?.offsetHeight || 0;
-      const chrome = navH + titleH + controlsH + presetsH + messageH + scoreboardH + 56;
-      const byHeight = Math.max(220, Math.min(900, window.innerHeight - chrome));
-      const byWidth = Math.max(220, Math.min(900, Math.floor(window.innerWidth * 0.96)));
+      const chrome = navH + titleH + controlsH + presetsH + messageH + 30;
+      const byHeight = Math.max(260, Math.min(1200, window.innerHeight - chrome));
+      const byWidth = Math.max(260, Math.min(1200, Math.floor(window.innerWidth * 0.98)));
       boardEl.style.width = `${Math.floor(Math.min(byHeight, byWidth))}px`;
     }
 
@@ -373,10 +417,19 @@
         if (s.boardSize) { boardSize = clampInt(s.boardSize,3,50); sizeInput.value = boardSize; }
         if (s.winLength){ winLength = clampInt(s.winLength,3,50); winInput.value = winLength; }
         if (s.tier){ tier = clampInt(s.tier,1,10); tierInput.value = tier; updateTierPill(); }
+        if (s.styleMode === 'plain' || s.styleMode === 'neon') {
+          styleMode = s.styleMode;
+          styleModeSelect.value = styleMode;
+        }
       }catch{}
     }
     function saveState(){
-      localStorage.setItem(STORE_KEY, JSON.stringify({ scoreboard, boardSize, winLength, tier }));
+      localStorage.setItem(STORE_KEY, JSON.stringify({ scoreboard, boardSize, winLength, tier, styleMode }));
+    }
+
+    function applyBoardStyle(){
+      boardEl.classList.toggle('board-neon', styleMode === 'neon');
+      boardEl.classList.toggle('board-plain', styleMode === 'plain');
     }
 
     /** Utils **/
@@ -386,6 +439,11 @@
     sizeInput.addEventListener('change', ()=>{ sizeInput.value = clampInt(sizeInput.value,3,50); });
     winInput.addEventListener('change', ()=>{ winInput.value = clampInt(winInput.value,3,50); if(+winInput.value>+sizeInput.value) winInput.value=sizeInput.value; });
     tierInput.addEventListener('input', ()=>{ tier = clampInt(tierInput.value,1,10); updateTierPill(); saveState(); sendMeta(); });
+    styleModeSelect.addEventListener('change', ()=>{
+      styleMode = (styleModeSelect.value === 'plain') ? 'plain' : 'neon';
+      applyBoardStyle();
+      saveState();
+    });
 
     startBtn.addEventListener('click', ()=>{
       const s = clampInt(sizeInput.value,3,50); const w = clampInt(winInput.value,3,50);
@@ -441,6 +499,7 @@
         }
       }
       boardEl.appendChild(frag);
+      applyBoardStyle();
       sendMeta();
     }
 

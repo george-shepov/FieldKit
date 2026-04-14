@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Convict Conditioning - Tracker</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #121c30;
+      --panel-2: #18243e;
+      --text: #e7edf7;
+      --muted: #9fb0cd;
+      --accent: #34d399;
+      --line: #2f3f61;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(900px 420px at 10% -10%, #1f2f4f 0%, transparent 55%), var(--bg);
+      min-height: 100vh;
+    }
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+    }
+    .hero {
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      display: grid;
+      gap: 8px;
+    }
+    h1 { margin: 0; font-size: 1.5rem; }
+    p { margin: 0; color: var(--muted); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 16px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, var(--panel), #101a2e);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 1.05rem;
+    }
+
+    .exercise-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .exercise-item {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: rgba(24, 36, 62, 0.6);
+    }
+
+    .exercise-item h3 {
+      margin: 0 0 4px;
+      font-size: 0.95rem;
+    }
+
+    .exercise-item small { color: var(--muted); }
+
+    .tracker-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    input, select, button, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 9px 10px;
+      background: #0f1a2e;
+      color: var(--text);
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-primary {
+      background: #1f7f60;
+      border-color: #2aa17a;
+    }
+
+    .btn-danger {
+      background: #5e2222;
+      border-color: #8a3434;
+      color: #ffd9d9;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .table-wrap {
+      margin-top: 12px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 680px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    th { color: var(--muted); background: #111d33; }
+
+    .hint {
+      color: #7dd3fc;
+      font-size: 0.84rem;
+      margin-top: 8px;
+    }
+
+    .pdf-frame {
+      width: 100%;
+      height: 420px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #0b1528;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding: 14px;
+    }
+
+    @media (max-width: 960px) {
+      .grid { grid-template-columns: 1fr; }
+      .tracker-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <h1>Convict Conditioning</h1>
+      <p>Bodyweight progression with pictures and explanations from the source guide, plus built-in reps/sets tracking.</p>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Guide + Exercise Explanations</h2>
+        <p>Use the source guide for visuals and step cues, then log each set in the tracker.</p>
+        <div class="exercise-list" id="exerciseList"></div>
+        <p class="hint">Picture source: embedded PDF below.</p>
+        <iframe class="pdf-frame" src="./Convict%20Conditioning.pdf" title="Convict Conditioning PDF"></iframe>
+      </article>
+
+      <article class="card">
+        <h2>Reps & Sets Tracker</h2>
+        <div class="tracker-grid">
+          <div>
+            <label for="dateInput">Date</label>
+            <input id="dateInput" type="date" />
+          </div>
+          <div>
+            <label for="exerciseInput">Exercise</label>
+            <select id="exerciseInput"></select>
+          </div>
+          <div>
+            <label for="setsInput">Sets</label>
+            <input id="setsInput" type="number" min="1" max="20" value="3" />
+          </div>
+          <div>
+            <label for="repsInput">Reps</label>
+            <input id="repsInput" type="number" min="1" max="100" value="10" />
+          </div>
+        </div>
+
+        <div style="margin-top: 10px;">
+          <label for="notesInput">Notes</label>
+          <textarea id="notesInput" rows="3" placeholder="Tempo, RPE, form notes..."></textarea>
+        </div>
+
+        <div class="actions">
+          <button id="addBtn" class="btn-primary" type="button">Add Session Entry</button>
+          <button id="clearBtn" class="btn-danger" type="button">Clear History</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Exercise</th>
+                <th>Sets</th>
+                <th>Reps</th>
+                <th>Total Reps</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+        </div>
+        <div id="emptyState" class="empty">No sessions logged yet.</div>
+      </article>
+    </section>
+  </main>
+
+  <script src="../shared/privacy-mode.js"></script>
+  <script>
+    const EXERCISES = [
+      { name: "Pushups", explain: "Keep a rigid torso, full range, and shoulder control." },
+      { name: "Squats", explain: "Control depth, keep knees tracking over toes, and stay balanced." },
+      { name: "Pullups", explain: "Use full hang to chin-over-bar range with strict control." },
+      { name: "Leg Raises", explain: "Brace core, avoid swinging, and control eccentric lowering." },
+      { name: "Bridges", explain: "Drive hips through and protect neck alignment." },
+      { name: "Handstand Pushups", explain: "Own overhead line and use controlled descent." }
+    ];
+
+    const STORAGE_KEY = "convict_conditioning_tracker_v1";
+
+    const exerciseListEl = document.getElementById("exerciseList");
+    const exerciseInput = document.getElementById("exerciseInput");
+    const historyBody = document.getElementById("historyBody");
+    const emptyState = document.getElementById("emptyState");
+
+    const dateInput = document.getElementById("dateInput");
+    const setsInput = document.getElementById("setsInput");
+    const repsInput = document.getElementById("repsInput");
+    const notesInput = document.getElementById("notesInput");
+
+    function todayISO() {
+      const d = new Date();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return d.getFullYear() + "-" + mm + "-" + dd;
+    }
+
+    function loadHistory() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (_) {
+        return [];
+      }
+    }
+
+    function saveHistory(items) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    }
+
+    function renderExercises() {
+      exerciseListEl.innerHTML = EXERCISES.map((x) =>
+        '<div class="exercise-item"><h3>' + x.name + '</h3><small>' + x.explain + '</small></div>'
+      ).join("");
+
+      exerciseInput.innerHTML = EXERCISES.map((x) =>
+        '<option value="' + x.name + '">' + x.name + '</option>'
+      ).join("");
+    }
+
+    function renderHistory() {
+      const history = loadHistory().slice().sort((a, b) => (a.date < b.date ? 1 : -1));
+      historyBody.innerHTML = history.map((row) => {
+        const total = Number(row.sets || 0) * Number(row.reps || 0);
+        return (
+          '<tr>' +
+            '<td>' + (row.date || "") + '</td>' +
+            '<td>' + (row.exercise || "") + '</td>' +
+            '<td>' + (row.sets || "") + '</td>' +
+            '<td>' + (row.reps || "") + '</td>' +
+            '<td>' + total + '</td>' +
+            '<td>' + (row.notes || "") + '</td>' +
+          '</tr>'
+        );
+      }).join("");
+      emptyState.style.display = history.length ? "none" : "block";
+    }
+
+    function addEntry() {
+      const date = (dateInput.value || "").trim();
+      const exercise = (exerciseInput.value || "").trim();
+      const sets = Number(setsInput.value || 0);
+      const reps = Number(repsInput.value || 0);
+      const notes = (notesInput.value || "").trim();
+
+      if (!date || !exercise || sets < 1 || reps < 1) {
+        alert("Please fill date, exercise, sets, and reps.");
+        return;
+      }
+
+      const history = loadHistory();
+      history.push({ date, exercise, sets, reps, notes });
+      saveHistory(history);
+      notesInput.value = "";
+      renderHistory();
+    }
+
+    function clearHistory() {
+      if (!confirm("Clear all tracked entries?")) return;
+      saveHistory([]);
+      renderHistory();
+    }
+
+    document.getElementById("addBtn").addEventListener("click", addEntry);
+    document.getElementById("clearBtn").addEventListener("click", clearHistory);
+
+    dateInput.value = todayISO();
+    renderExercises();
+    renderHistory();
+  </script>
+</body>
+</html>
