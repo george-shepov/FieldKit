@@ -865,6 +865,15 @@
       }
       return total;
     }
+    function safeCreateIcons() {
+      try {
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+          window.lucide.createIcons();
+        }
+      } catch (_) {
+        // Keep launcher functional even if icon library fails to load.
+      }
+    }
     function getAppHelp(app) {
       const meta = APP_HELP[app.key];
       if (meta) return meta;
@@ -901,7 +910,7 @@
         })
         .join('');
       document.getElementById('helpBody').innerHTML = html;
-      lucide.createIcons();
+      safeCreateIcons();
     }
     function openHelp() {
       const ov = document.getElementById('helpOverlay');
@@ -983,7 +992,7 @@
         `).join('');
       
       document.getElementById('content').innerHTML = favoritesSection + html;
-      lucide.createIcons();
+      safeCreateIcons();
     }
     function renderFlatLauncher(apps, mode, foundApps, options) {
       const opts = options || {};
@@ -1017,7 +1026,7 @@
       } else {
         document.getElementById('content').innerHTML = renderFavoritesSectionHTML(foundApps) + html;
       }
-      lucide.createIcons();
+      safeCreateIcons();
     }
     function toAppHref(app) {
       const raw = app.path || (app.key + '/index.html');
