@@ -46,31 +46,111 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
-      padding: 0 0 40px 0;
-      min-height: 100vh;
+      gap: 8px;
+      padding: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #topbar {
+      width: min(98vw, 1100px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 8px;
+    }
+    #topbar h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+
+    #optionsToggle {
+      height: 2.3rem;
+      padding: 0 1rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      background: hsl(240 3.7% 15.9%);
+      color: var(--fg);
+      font-weight: 700;
+    }
+
+    #optionsBackdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 110;
+    }
+    #optionsBackdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #optionsDrawer {
+      position: fixed;
+      right: 0;
+      top: 0;
+      height: 100vh;
+      width: min(92vw, 360px);
+      background: hsl(var(--card));
+      border-left: 1px solid hsl(var(--border));
+      transform: translateX(102%);
+      transition: transform 0.22s ease;
+      z-index: 120;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    #optionsDrawer.open {
+      transform: translateX(0);
+    }
+
+    #optionsDrawerHead {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    #optionsDrawerHead h2 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 800;
+    }
+    #closeOptionsBtn {
+      border: 1px solid hsl(var(--border));
+      background: hsl(240 3.7% 15.9%);
+      color: var(--fg);
+      border-radius: 8px;
+      width: 2rem;
+      height: 2rem;
+      cursor: pointer;
     }
 
     /* Controls */
     #controls {
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 12px;
-      justify-content: center;
-      align-items: center;
-      width: min(96vw, 640px);
-      background: hsl(var(--card));
-      border: 1px solid hsl(var(--border));
-      border-radius: var(--radius);
-      padding: 20px;
+      width: 100%;
     }
     #controls label {
       font-size: 0.875rem;
       font-weight: 500;
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 8px;
       color: hsl(240 5% 64.9%);
+      width: 100%;
     }
     #controls input, #controls select {
       padding: 8px 12px;
@@ -81,7 +161,7 @@
       color: var(--fg);
       outline: none;
     }
-    #controls input[type="number"] { width: 80px; }
+    #controls input[type="number"] { width: 86px; }
     #controls button {
       height: 2.5rem;
       padding: 0 1.25rem;
@@ -102,7 +182,7 @@
     #board {
       display: grid;
       gap: 4px;
-      width: min(98vw, 960px);
+      width: min(98vw, 1200px);
       border-radius: var(--radius);
       overflow: hidden;
       background: var(--grid);
@@ -158,7 +238,6 @@
       position:relative;
       display:block;
       --mark-color: var(--neon-cyan);
-      --mark-glow: color-mix(in srgb, var(--mark-color) 72%, white 28%);
       filter: none;
     }
     .mark.neon-purple{ --mark-color: var(--neon-purple); }
@@ -198,20 +277,13 @@
       box-shadow: none;
     }
 
-    #board.board-neon .cell .mark {
-      filter: drop-shadow(0 0 4px var(--mark-glow)) drop-shadow(0 0 8px var(--mark-color));
-    }
+    #board.board-neon .cell .mark { filter: none; }
     #board.board-neon .mark.x::before,
-    #board.board-neon .mark.x::after {
-      box-shadow: 0 0 8px var(--mark-glow), 0 0 16px var(--mark-color);
-    }
-    #board.board-neon .mark.o::before {
-      box-shadow: 0 0 8px var(--mark-glow), inset 0 0 8px var(--mark-color), 0 0 16px var(--mark-color);
-    }
+    #board.board-neon .mark.x::after,
+    #board.board-neon .mark.o::before { box-shadow: none; }
 
     #board.board-plain .cell .mark {
       filter: none;
-      --mark-glow: transparent;
     }
     #board.board-plain .mark.x { --mark-color: #60a5fa; }
     #board.board-plain .mark.o { --mark-color: #facc15; }
@@ -235,12 +307,12 @@
     @keyframes winPulse{ from{ box-shadow:0 0 0 0 var(--win-border); } to{ box-shadow:0 0 26px 4px var(--win-border); } }
 
     /* Scoreboard */
-    #scoreboard{ width:min(96vw,460px); background:var(--card); border:1px solid var(--panel-border); border-radius:12px; box-shadow:0 1px 6px rgba(0,0,0,.25); padding:12px; }
-    #scoreboard h3{ margin-bottom:6px; font-size:1.1rem; text-align:center; opacity:.9; }
-    .score-row{ display:flex; justify-content:space-between; margin:4px 0; font-size:1rem; }
+    #scoreboard{ width:min(98vw,1100px); background:var(--card); border:1px solid var(--panel-border); border-radius:12px; box-shadow:0 1px 6px rgba(0,0,0,.25); padding:8px 12px; }
+    #scoreboard h3{ margin-bottom:6px; font-size:0.9rem; text-align:left; opacity:.9; }
+    .score-row{ display:flex; justify-content:space-between; margin:2px 0; font-size:0.9rem; }
     .score-row span{ font-weight:800; }
-    .score-actions{ margin-top:8px; display:flex; gap:8px; }
-    #scoreboard button{ flex:1; padding:8px; font-size:.95rem; border:none; border-radius:8px; background:var(--primary); color:#06131a; font-weight:800; min-height:40px; }
+    .score-actions{ margin-top:6px; display:flex; gap:8px; }
+    #scoreboard button{ flex:1; padding:6px 8px; font-size:.85rem; border:none; border-radius:8px; background:var(--primary); color:#06131a; font-weight:800; min-height:34px; }
 
     /* Overlay */
     #overlay{ position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 100; }
@@ -257,9 +329,9 @@
 
     @media (max-width: 680px){
       :root{ --last-move-scale:1; }
-      body{ padding:8px; }
-      #controls label{ width:100%; justify-content:space-between; }
-      #controls button{ min-height:42px; }
+      #topbar h1 { font-size: 1rem; }
+      #scoreboard h3 { font-size: 0.8rem; }
+      #controls button{ min-height:40px; }
       .preset-btn{ min-height:38px; }
     }
   
@@ -271,29 +343,40 @@
 </style>
 </head>
 <body>
-  <h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:12px;">Generalized Tic-Tac-Toe</h1>
-
-  <div id="controls">
-    <label>Board <input id="boardSize" type="number" min="3" max="50" value="10"/></label>
-    <label>Win <input id="winLength" type="number" min="3" max="50" value="5"/></label>
-    <label>Tier
-      <input id="tier" type="range" min="1" max="10" value="5" step="1"/>
-      <span id="tierPill">5 - Analyst</span>
-    </label>
-    <label>Style
-      <select id="styleMode">
-        <option value="neon">Neon</option>
-        <option value="plain">Plain</option>
-      </select>
-    </label>
-    <button id="startBtn" type="button">Start / Restart</button>
-    <button id="undoBtn" type="button" class="secondary">Undo</button>
+  <div id="topbar">
+    <h1>Generalized Tic-Tac-Toe</h1>
+    <button id="optionsToggle" type="button" aria-expanded="false" aria-controls="optionsDrawer">Options</button>
   </div>
 
-  <div id="presets">
-    <button class="preset-btn" data-size="3" data-win="3" type="button">3x3 (3)</button>
-    <button class="preset-btn" data-size="5" data-win="4" type="button">5x5 (4)</button>
-    <button class="preset-btn" data-size="10" data-win="5" type="button">10x10 (5)</button>
+  <div id="optionsBackdrop" aria-hidden="true"></div>
+  <aside id="optionsDrawer" aria-hidden="true">
+    <div id="optionsDrawerHead">
+      <h2>Options</h2>
+      <button id="closeOptionsBtn" type="button" aria-label="Close options">x</button>
+    </div>
+    <div id="controls">
+      <label>Board <input id="boardSize" type="number" min="3" max="50" value="10"/></label>
+      <label>Win <input id="winLength" type="number" min="3" max="50" value="5"/></label>
+      <label>Tier
+        <input id="tier" type="range" min="1" max="10" value="5" step="1"/>
+        <span id="tierPill">5 - Analyst</span>
+      </label>
+      <label>Style
+        <select id="styleMode">
+          <option value="neon">Neon</option>
+          <option value="plain">Plain</option>
+        </select>
+      </label>
+      <button id="startBtn" type="button">Start / Restart</button>
+      <button id="undoBtn" type="button" class="secondary">Undo</button>
+    </div>
+
+    <div id="presets">
+      <button class="preset-btn" data-size="3" data-win="3" type="button">3x3 (3)</button>
+      <button class="preset-btn" data-size="5" data-win="4" type="button">5x5 (4)</button>
+      <button class="preset-btn" data-size="10" data-win="5" type="button">10x10 (5)</button>
+    </div>
+  </aside>
   </div>
 
   <div id="message" role="status" aria-live="polite"></div>
@@ -343,6 +426,10 @@
     const uploadScoreBtn = document.getElementById('uploadScoreBtn');
     const uploadScoreInput = document.getElementById('uploadScoreInput');
     const turnWhoEl = document.getElementById('turnWho');
+    const optionsToggleBtn = document.getElementById('optionsToggle');
+    const optionsDrawer = document.getElementById('optionsDrawer');
+    const optionsBackdrop = document.getElementById('optionsBackdrop');
+    const closeOptionsBtn = document.getElementById('closeOptionsBtn');
 
     const overlay = document.getElementById('overlay');
     const overlayTitle = document.getElementById('overlayTitle');
@@ -379,14 +466,20 @@
 
     function fitBoardToViewport(){
       const navH = document.querySelector('.suite-nav')?.offsetHeight || 0;
-      const titleH = document.querySelector('h1')?.offsetHeight || 0;
-      const controlsH = document.getElementById('controls')?.offsetHeight || 0;
-      const presetsH = document.getElementById('presets')?.offsetHeight || 0;
+      const topbarH = document.getElementById('topbar')?.offsetHeight || 0;
+      const scoreboardH = document.getElementById('scoreboard')?.offsetHeight || 0;
       const messageH = (document.getElementById('message')?.offsetHeight || 0) + (document.getElementById('turnbar')?.offsetHeight || 0);
-      const chrome = navH + titleH + controlsH + presetsH + messageH + 30;
-      const byHeight = Math.max(260, Math.min(1200, window.innerHeight - chrome));
-      const byWidth = Math.max(260, Math.min(1200, Math.floor(window.innerWidth * 0.98)));
+      const chrome = navH + topbarH + scoreboardH + messageH + 26;
+      const byHeight = Math.max(260, Math.min(1400, window.innerHeight - chrome));
+      const byWidth = Math.max(260, Math.min(1400, Math.floor(window.innerWidth * 0.99)));
       boardEl.style.width = `${Math.floor(Math.min(byHeight, byWidth))}px`;
+    }
+
+    function setOptionsOpen(open){
+      optionsDrawer.classList.toggle('open', open);
+      optionsBackdrop.classList.toggle('open', open);
+      optionsDrawer.setAttribute('aria-hidden', open ? 'false' : 'true');
+      optionsToggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
     }
 
     function getTierParams(v){
@@ -443,6 +536,16 @@
       styleMode = (styleModeSelect.value === 'plain') ? 'plain' : 'neon';
       applyBoardStyle();
       saveState();
+    });
+
+    optionsToggleBtn.addEventListener('click', ()=>{
+      const isOpen = optionsDrawer.classList.contains('open');
+      setOptionsOpen(!isOpen);
+    });
+    closeOptionsBtn.addEventListener('click', ()=> setOptionsOpen(false));
+    optionsBackdrop.addEventListener('click', ()=> setOptionsOpen(false));
+    window.addEventListener('keydown', (e)=>{
+      if(e.key === 'Escape') setOptionsOpen(false);
     });
 
     startBtn.addEventListener('click', ()=>{
@@ -640,7 +743,7 @@
     window.addEventListener('resize', fitBoardToViewport);
 
     /** Boot **/
-    function boot(){ loadState(); updateTierPill(); resetGame(); updateScores(); fitBoardToViewport(); sendMeta(); }
+    function boot(){ loadState(); updateTierPill(); resetGame(); updateScores(); fitBoardToViewport(); setOptionsOpen(false); sendMeta(); }
     boot();
   })();
   </script>
