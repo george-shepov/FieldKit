@@ -13,7 +13,7 @@ module.exports = defineConfig({
   use: {
     baseURL: 'file://' + process.cwd(),
     trace: 'on-first-retry',
-    headless: false,  // Show browser
+    headless: process.env.CI !== undefined,  // Headless in CI, show browser locally
     viewport: { width: 1400, height: 900 },
     actionTimeout: 10000,
   },

@@ -8,3 +8,6 @@ fieldkit-*
 # OS / editor noise
 .DS_Store
 Thumbs.db
+
+# Node.js
+node_modules/
