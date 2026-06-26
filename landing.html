@@ -376,6 +376,26 @@
       } catch (_) {}
     }
 
+    function getSuiteBasePathname() {
+      const p = window.location.pathname || '/';
+      const tail = p.split('/').pop() || '';
+      if (p.endsWith('/')) return p;
+      if (!tail.includes('.')) return p + '/';
+      const idx = p.lastIndexOf('/');
+      return (idx >= 0 ? p.slice(0, idx + 1) : '/');
+    }
+
+    function normalizeSuiteRelativePath(path) {
+      return String(path || '').replace(/^\.?\//, '').replace(/^\//, '');
+    }
+
+    function toSuiteHref(path) {
+      const normalized = normalizeSuiteRelativePath(path);
+      const base = window.location.origin + getSuiteBasePathname();
+      const url = new URL(normalized, base);
+      return url.pathname + url.search + url.hash;
+    }
+
     function normalizeHandle(value) {
       const v = String(value || '').trim().toLowerCase();
       return /^[a-z0-9._-]{3,64}$/.test(v) ? v : '';
@@ -411,7 +431,7 @@
       continueLobbyBtn.style.display = 'inline-flex';
       continueLobbyBtn.addEventListener('click', () => {
         const userQuery = referralHandle ? `&u=${encodeURIComponent(referralHandle)}` : '';
-        window.location.href = `index.html?login=1${userQuery}`;
+        window.location.href = toSuiteHref(`index.html?login=1${userQuery}`);
       });
     }
     if (currentlySignedIn && authStateHint) {
@@ -433,7 +453,7 @@
       const p = new URLSearchParams(window.location.search);
       if (currentlySignedIn && getSkipLandingPref() && p.get('showLanding') !== '1') {
         const userQuery = referralHandle ? `&u=${encodeURIComponent(referralHandle)}` : '';
-        window.location.href = `index.html?login=1${userQuery}`;
+        window.location.href = toSuiteHref(`index.html?login=1${userQuery}`);
       }
     } catch (_) {}
 
@@ -442,7 +462,7 @@
       enterDemoBtn.addEventListener('click', () => {
         if (skipLandingToggle) setSkipLandingPref(!!skipLandingToggle.checked);
         const userQuery = referralHandle ? `?u=${encodeURIComponent(referralHandle)}` : '';
-        window.location.href = `index.html${userQuery}`;
+        window.location.href = toSuiteHref(`index.html${userQuery}`);
       });
     }
   </script>

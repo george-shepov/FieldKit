@@ -5,6 +5,17 @@
   const BACK_BUTTON_ID = "suite-global-back";
   let debounceTimer = null;
 
+  function getSuiteRootPathname() {
+    const path = String(location.pathname || "/");
+    const marker = "/shared/";
+    const idx = path.indexOf(marker);
+    if (idx >= 0) return path.slice(0, idx + 1) || "/";
+    if (path.endsWith("/index.html")) return path.slice(0, -"index.html".length) || "/";
+    if (path.endsWith("/")) return path;
+    const lastSlash = path.lastIndexOf("/");
+    return lastSlash >= 0 ? (path.slice(0, lastSlash + 1) || "/") : "/";
+  }
+
   function wildcardToRegExp(pattern) {
     const escaped = String(pattern || "")
       .replace(/[.+?^${}()|[\]\\]/g, "\\$&")
@@ -127,7 +138,8 @@
 
   function isRootPath(pathname) {
     const p = String(pathname || "/");
-    return p === "/" || p === "/index.html";
+    const root = getSuiteRootPathname();
+    return p === root || p === root + "index.html";
   }
 
   function hasExistingBackControl() {
@@ -157,7 +169,7 @@
         // fallback to root
       }
     }
-    window.location.href = "/";
+    window.location.href = getSuiteRootPathname();
   }
 
   function ensureGlobalBackButton() {

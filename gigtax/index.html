@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GigTax Quick — 2025</title>
+<title>GigTax Quick — 2026</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -236,7 +236,7 @@ function calcTax(){
 
 function genReport(){
   const t=calcTax();
-  let r=`GIGTAX QUICK — 2025 TAX SUMMARY\nGenerated: ${new Date().toLocaleDateString()}\n${"=".repeat(50)}\n\n`;
+  let r=`GIGTAX QUICK — 2026 TAX SUMMARY\nGenerated: ${new Date().toLocaleDateString()}\n${"=".repeat(50)}\n\n`;
   r+=`FILING STATUS: ${DATA.profile.filing_status.toUpperCase()}\n`;
   if(t.w2>0)r+=`W-2 INCOME: ${fmt(t.w2)}\n`;
   r+=`\n--- INCOME BY PLATFORM ---\n`;
@@ -476,11 +476,11 @@ function renderApp(){
           <div class="logo-icon">GT</div>
           <div>
             <div class="logo-text">GigTax Fusion</div>
-            <div class="logo-tag">2025 • SELF-EMPLOYMENT TAX SUITE</div>
+            <div class="logo-tag">2026 • SELF-EMPLOYMENT TAX SUITE</div>
           </div>
         </div>
         <div class="header-right">
-          <span class="ty-badge">TY 2025</span>
+          <span class="ty-badge">TY 2026</span>
           <button class="btn btn-ghost" id="lock-btn" title="Sign out">🔓</button>
           <button class="btn btn-ghost" id="reset-btn" title="Reset all data">📋</button>
         </div>
@@ -625,7 +625,7 @@ function renderMileage(el){
     <div class="card">
       <div class="card-head">Mileage Tracker <span class="badge tag tag-blue">${fmtN(totalMiles)} mi = ${fmt(totalMiles*MILEAGE_RATE)}</span></div>
       <div class="card-body">
-        <p style="font-size:11px;color:var(--text3);margin-bottom:10px">2025 IRS rate: $0.67/mile for business driving — pickups, deliveries, client visits.</p>
+        <p style="font-size:11px;color:var(--text3);margin-bottom:10px">2026 IRS rate: $0.67/mile for business driving — pickups, deliveries, client visits.</p>
         <div class="form-grid">
           <div class="form-group"><label>Miles</label><input class="input" type="number" step="0.1" id="m-miles" placeholder="0"></div>
           <div class="form-group"><label>Date</label><input class="input" type="date" id="m-date" value="${today}"></div>
@@ -664,7 +664,7 @@ function renderDeductions(el){
   const suggestions=[
     {check:!usedCats.has("phone"),text:"📱 Phone & Internet — Deduct the % used for business"},
     {check:!usedCats.has("home_office"),text:"🏠 Home Office — Simplified: $5/sq ft up to 300 sq ft ($1,500 max)"},
-    {check:!hasMileage,text:"🚗 Mileage — $0.67/mile for ALL business driving in 2025"},
+    {check:!hasMileage,text:"🚗 Mileage — $0.67/mile for ALL business driving in 2026"},
     {check:!usedCats.has("software"),text:"💻 Software — Scheduling apps, accounting tools, AI subscriptions"},
     {check:!usedCats.has("supplies"),text:"🧱 Supplies — Cleaning supplies, packing materials, pet supplies"},
     {check:!usedCats.has("insurance"),text:"🛡️ Insurance — Business liability, pet insurance for Rover"},
@@ -704,7 +704,7 @@ function renderEstimate(el){
       </div>
     </div>
     <div class="card">
-      <div class="card-head">📊 2025 Tax Estimate</div>
+      <div class="card-head">📊 2026 Tax Estimate</div>
       <div class="card-body">
         ${row("Gross Gig Income",fmt(t.gross),"var(--accent)",true)}
         ${row("Less: Expenses","("+fmt(t.totalExp)+")","var(--red)")}
@@ -782,7 +782,7 @@ function renderExport(el){
     await runReceiptImportFlow(file);
   };
   $("#x-copy").onclick=()=>{navigator.clipboard.writeText(report).then(()=>{$("#x-copy").textContent="✓ Copied!";setTimeout(()=>$("#x-copy").textContent="📋 Copy to Clipboard",2000)})};
-  $("#x-dl").onclick=()=>{const b=new Blob([report],{type:"text/plain"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download="gigtax-2025-summary.txt";a.click();URL.revokeObjectURL(u)};
+  $("#x-dl").onclick=()=>{const b=new Blob([report],{type:"text/plain"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download="gigtax-2026-summary.txt";a.click();URL.revokeObjectURL(u)};
 }
 
 function row(label,val,color,bold,big){

@@ -1,10 +1,20 @@
 (function () {
+  function resolveSharedAsset(path) {
+    const currentScript = document.currentScript;
+    const scriptURL = currentScript && currentScript.src
+      ? new URL(currentScript.src, window.location.href)
+      : new URL("shared/f1-help-nav.js", document.baseURI);
+    const sharedRootURL = new URL("./", scriptURL);
+    const normalized = String(path || "").replace(/^\/+/, "");
+    return new URL(normalized, sharedRootURL).toString();
+  }
+
   (function ensurePrivacyMode() {
     if (window.__suitePrivacyInit) return;
     if (document.getElementById("suitePrivacyModeScript")) return;
     const script = document.createElement("script");
     script.id = "suitePrivacyModeScript";
-    script.src = "/shared/privacy-mode.js";
+    script.src = resolveSharedAsset("privacy-mode.js");
     script.defer = true;
     document.head.appendChild(script);
   })();
@@ -14,7 +24,7 @@
     if (document.getElementById("suitePwaInitScript")) return;
     const script = document.createElement("script");
     script.id = "suitePwaInitScript";
-    script.src = "/shared/pwa-init.js";
+    script.src = resolveSharedAsset("pwa-init.js");
     script.defer = true;
     document.head.appendChild(script);
   })();
@@ -24,7 +34,7 @@
     if (document.getElementById("suiteUiTweaksScript")) return;
     const script = document.createElement("script");
     script.id = "suiteUiTweaksScript";
-    script.src = "/shared/ui-tweaks-runtime.js";
+    script.src = resolveSharedAsset("ui-tweaks-runtime.js");
     script.defer = true;
     document.head.appendChild(script);
   })();

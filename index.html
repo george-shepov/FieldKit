@@ -1037,11 +1037,30 @@
       }
       safeCreateIcons();
     }
+    function getSuiteBasePathname() {
+      const p = window.location.pathname || '/';
+      const tail = p.split('/').pop() || '';
+      if (p.endsWith('/')) return p;
+      if (!tail.includes('.')) return p + '/';
+      const idx = p.lastIndexOf('/');
+      return (idx >= 0 ? p.slice(0, idx + 1) : '/');
+    }
+
+    function normalizeSuiteRelativePath(path) {
+      return String(path || '').replace(/^\.?\//, '').replace(/^\//, '');
+    }
+
+    function toSuiteHref(path) {
+      const normalized = normalizeSuiteRelativePath(path);
+      const base = window.location.origin + getSuiteBasePathname();
+      const url = new URL(normalized, base);
+      return url.pathname + url.search + url.hash;
+    }
+
     function toAppHref(app) {
       const raw = app.path || (app.key + '/index.html');
       if (/^https?:\/\//i.test(raw)) return raw;
-      const abs = raw.startsWith('/') ? raw : ('/' + raw);
-      const url = new URL(abs, window.location.origin);
+      const url = new URL(toSuiteHref(raw), window.location.origin);
       url.searchParams.set('v', APP_NAV_VERSION);
       return url.pathname + url.search;
     }
@@ -1102,9 +1121,9 @@
         const next = new URLSearchParams();
         next.set('next', 'index');
         if (ref) next.set('u', ref);
-        window.location.href = `landing.html?${next.toString()}`;
+        window.location.href = toSuiteHref(`landing.html?${next.toString()}`);
       } catch (_) {
-        window.location.href = 'landing.html?next=index';
+        window.location.href = toSuiteHref('landing.html?next=index');
       }
     }
 
