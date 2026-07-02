@@ -57,26 +57,17 @@ const PRECACHE_URLS = [
   "/tic-tac-toe/index.html",
   "/time-tracker/index.html",
   "/ui-tweaker/index.html",
-  "/vocabulary-expander/index.html",
   "/wishlist/index.html",
   "/drivers-license/DriversLicensePrep.html",
   "/games/reversi.html",
   "/games/game-academy.html"
 ];
 
-const OPTIONAL_SHARED_URLS = [
-  "/Vocabulary-Expander/vocabulary-toolkit.css",
-  "/Vocabulary-Expander/vocabulary-toolkit.js"
-];
-
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then(async (cache) => {
-        await cache.addAll(PRECACHE_URLS);
-        await Promise.allSettled(OPTIONAL_SHARED_URLS.map((url) => cache.add(url)));
-      })
+      .then((cache) => cache.addAll(PRECACHE_URLS))
       .then(() => self.skipWaiting())
   );
 });
