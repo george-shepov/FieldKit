@@ -1,6 +1,6 @@
 # App Categories
 
-This document groups the included apps into two simple categories to help present the project in a portfolio and explain which apps work fully offline.
+This document groups FieldKit applications and linked ecosystem apps by connectivity requirements.
 
 ## Airplane mode (fully offline / core functionality works without a network)
 
@@ -31,7 +31,7 @@ This document groups the included apps into two simple categories to help presen
 - ui-tweaker
 - many small tools under root directories that do not call remote endpoints
 
-## Wi-Fi / Cell (uses network or optional API endpoints)
+## Wi-Fi / Cell or separately installed PWA
 
 - landing.html (OAuth / auth session)
 - field-checkin (register / heartbeat / server sync)
@@ -43,18 +43,18 @@ This document groups the included apps into two simple categories to help presen
 - privacy-recorder (media upload / sync endpoint)
 - audio-notes (media upload / sync endpoint)
 - image-rater (fetches images and optional caption/tag APIs)
-- vocabulary-expander (loads the shared Vocabulary-Expander module on first use, then caches it for offline sessions)
+- Vocabulary Expander — independent GitHub Pages/PWA application linked from the Training Lab
+- Developer Interview Prep — independent GitHub Pages/PWA application linked from the Training Lab
 - games/game-academy-v2 (variant with Ollama AI integration, requires local Ollama server)
 - any app that exposes a "sync endpoint" or shows an `/api/` input field
 
+## Ecosystem-app rule
+
+Vocabulary Expander and Developer Interview Prep are catalog entries, not copied or merged FieldKit modules. Each application owns its repository, storage, service worker, tests, and release cycle. FieldKit provides discovery and navigation.
+
+A linked app may work offline after it has been opened or installed according to that app's own PWA behavior. FieldKit's service worker does not take ownership of another application's cache.
+
 ## Notes
 
-- Many apps in the "Wi‑Fi / Cell" section include offline-first UX and local fallbacks; they will still function in a limited capacity when offline but provide extra features when a server is available.
-- The Vocabulary Expander assessment, profile, and learning queue run locally after the shared module is cached. No server account is required.
+- Many apps in the "Wi‑Fi / Cell" section include offline-first UX and local fallbacks; they may still function in a limited capacity when offline.
 - The Go server exposes optional API endpoints when started with `--enable-api` (see `fieldkit.go`). These are: `/api/pulse`, `/api/media/upload`, `/api/register`, `/api/heartbeat`, `/api/wishlist/submit`, `/api/support/ticket`, and several auth endpoints.
-- If you'd like, I can:
-  - update the launcher UI to present these categories in the sidebar
-  - add a small badge for each app indicating "offline" or "online features"
-  - generate a screenshot pack for selected apps for the README
-
-If you'd like me to modify the launcher to surface these two categories, say "yes, modify launcher" and I'll patch the launcher UI next.
