@@ -43,12 +43,14 @@ This document groups the included apps into two simple categories to help presen
 - privacy-recorder (media upload / sync endpoint)
 - audio-notes (media upload / sync endpoint)
 - image-rater (fetches images and optional caption/tag APIs)
+- vocabulary-expander (loads the shared Vocabulary-Expander module on first use, then caches it for offline sessions)
 - games/game-academy-v2 (variant with Ollama AI integration, requires local Ollama server)
 - any app that exposes a "sync endpoint" or shows an `/api/` input field
 
 ## Notes
 
 - Many apps in the "Wi‑Fi / Cell" section include offline-first UX and local fallbacks; they will still function in a limited capacity when offline but provide extra features when a server is available.
+- The Vocabulary Expander assessment, profile, and learning queue run locally after the shared module is cached. No server account is required.
 - The Go server exposes optional API endpoints when started with `--enable-api` (see `fieldkit.go`). These are: `/api/pulse`, `/api/media/upload`, `/api/register`, `/api/heartbeat`, `/api/wishlist/submit`, `/api/support/ticket`, and several auth endpoints.
 - If you'd like, I can:
   - update the launcher UI to present these categories in the sidebar
