@@ -42,6 +42,57 @@
     ensureMeta("apple-mobile-web-app-status-bar-style", "black-translucent");
   }
 
+  // Keep the standalone interview question deck visible inside FieldKit without
+  // duplicating its data and editor code. The module page embeds the independently
+  // deployable PWA and also offers a full-screen link.
+  function addInterviewPrepToLauncher() {
+    if (document.querySelector('[data-app-key="developer-interview-prep"]')) return true;
+    const categories = Array.from(document.querySelectorAll('.category'));
+    const training = categories.find(function (category) {
+      const title = category.querySelector('.category-title span');
+      return title && /training lab/i.test(title.textContent || '');
+    });
+    const list = training && training.querySelector('.apps-list');
+    if (!list) return false;
+
+    const link = document.createElement('a');
+    link.href = resolveAssetURL('developer-interview-prep/index.html');
+    link.className = 'app-item';
+    link.setAttribute('data-app-key', 'developer-interview-prep');
+    link.setAttribute('data-category-key', 'education');
+    link.innerHTML = [
+      '<div class="app-info">',
+      '  <div class="app-icon"><span aria-hidden="true" style="font-size:1.25rem">🎯</span></div>',
+      '  <div>',
+      '    <div class="app-name">Developer Interview Prep</div>',
+      '    <div class="app-desc text-muted">Searchable SQL, .NET, JavaScript and behavioral question decks</div>',
+      '  </div>',
+      '</div>',
+      '<div class="badges flex items-center gap-2">',
+      '  <span class="s-badge s-badge-outline badge badge-connectivity offline" style="border-color:rgba(74,222,128,.4);color:#4ade80">AIRPLANE MODE</span>',
+      '  <span class="s-badge s-badge-default">FULL</span>',
+      '</div>'
+    ].join('');
+    list.appendChild(link);
+
+    const count = training.querySelector('.category-title .s-badge');
+    if (count) {
+      const current = Number.parseInt(count.textContent || '0', 10);
+      if (Number.isFinite(current)) count.textContent = String(current + 1);
+    }
+    return true;
+  }
+
+  window.addEventListener('DOMContentLoaded', function () {
+    if (addInterviewPrepToLauncher()) return;
+    const content = document.getElementById('content');
+    if (!content) return;
+    const observer = new MutationObserver(function () {
+      if (addInterviewPrepToLauncher()) observer.disconnect();
+    });
+    observer.observe(content, { childList: true, subtree: true });
+  });
+
   if (!("serviceWorker" in navigator)) return;
 
   async function resetOfflineState() {
