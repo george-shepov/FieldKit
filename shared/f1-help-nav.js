@@ -1,4 +1,19 @@
 (function () {
+  (function ensureDriverLicenseDataFix() {
+    const path = window.location.pathname.replace(/\\/g, "/").toLowerCase();
+    if (!path.includes("/drivers-license/")) return;
+    if (document.getElementById("driverLicenseDataFixScript")) return;
+
+    const currentSrc = document.currentScript && document.currentScript.src;
+    const script = document.createElement("script");
+    script.id = "driverLicenseDataFixScript";
+    script.src = currentSrc
+      ? new URL("../drivers-license/driver-license-data-fix.js", currentSrc).href
+      : "./driver-license-data-fix.js";
+    script.async = false;
+    document.head.appendChild(script);
+  })();
+
   (function ensurePrivacyMode() {
     if (window.__suitePrivacyInit) return;
     if (document.getElementById("suitePrivacyModeScript")) return;
