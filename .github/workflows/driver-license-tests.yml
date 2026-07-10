@@ -1,6 +1,7 @@
 name: Driver License Tests
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: [REV001]
     paths:
