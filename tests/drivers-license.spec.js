@@ -1,6 +1,14 @@
 const { test, expect } = require('@playwright/test');
 
 const APP_PATH = '/drivers-license/index.html';
+const PRIVATE_MODE = {
+  mode: 'offline_private',
+  allowSync: false,
+  allowSupport: false,
+  allowAI: false,
+  managedEndpoint: '',
+  customEndpoint: ''
+};
 
 async function readDeckCount(page) {
   const text = (await page.locator('#cardProgress').textContent()) || '';
@@ -23,6 +31,10 @@ async function selectLanguage(page, language) {
 
 test.describe('Driver License multilingual decks', () => {
   test.beforeEach(async ({ page }) => {
+    await page.addInitScript((config) => {
+      localStorage.setItem('suite.privacy.mode.v1', JSON.stringify(config));
+    }, PRIVATE_MODE);
+
     await page.goto(APP_PATH);
     await expect(page.locator('#langSelect')).toBeVisible();
     await waitForCompleteDeck(page);
