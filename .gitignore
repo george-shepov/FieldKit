@@ -9,3 +9,6 @@ FieldKit
 # OS / editor noise
 .DS_Store
 Thumbs.db
+
+# Node.js dependencies
+node_modules/

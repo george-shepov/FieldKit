@@ -1,4 +1,4 @@
-const CACHE_NAME = "fieldkit-shell-v16";
+const CACHE_NAME = "fieldkit-shell-v17";
 
 function scopedPath(path) {
   const normalized = String(path || "").replace(/^\/+/, "");
@@ -18,6 +18,7 @@ const PRECACHE_URLS = [
   "shared/privacy-mode.js",
   "shared/global-auth.js",
   "shared/pwa-init.js",
+  "shared/app-extensions.js",
   "shared/ui-tweaks-runtime.js",
   "shared/icons/tictak-icon-192.png",
   "shared/icons/tictak-icon-512.png",

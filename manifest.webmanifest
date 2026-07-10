@@ -1,28 +1,28 @@
 {
-  "id": "/",
+  "id": "./",
   "name": "FieldKit",
   "short_name": "FieldKit",
   "description": "Offline-ready productivity, education, and field tools.",
-  "start_url": "/?source=pwa",
-  "scope": "/",
+  "start_url": "./?source=pwa",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "icons": [
     {
-      "src": "/shared/icons/tictak-icon-192.png",
+      "src": "shared/icons/tictak-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/shared/icons/tictak-icon-512.png",
+      "src": "shared/icons/tictak-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/shared/icons/tictak-icon-1024.png",
+      "src": "shared/icons/tictak-icon-1024.png",
       "sizes": "1024x1024",
       "type": "image/png",
       "purpose": "any"
@@ -32,20 +32,26 @@
     {
       "name": "Outdoor Kit",
       "short_name": "Outdoor",
-      "url": "/outdoor-kit/index.html",
+      "url": "./outdoor-kit/index.html",
       "description": "Compass, SOS, calculator, and field tools"
     },
     {
       "name": "Linux Trainer",
       "short_name": "Linux",
-      "url": "/linux-trainer/index.html",
+      "url": "./linux-trainer/index.html",
       "description": "Terminal command drills and scenarios"
     },
     {
       "name": "Kanban",
       "short_name": "Kanban",
-      "url": "/kanban/index.html",
+      "url": "./kanban/index.html",
       "description": "Task board with local persistence"
+    },
+    {
+      "name": "Driver License Study",
+      "short_name": "Driver Study",
+      "url": "./drivers-license/index.html",
+      "description": "Permit-test digest, questions, and flashcards"
     }
   ]
 }

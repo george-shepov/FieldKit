@@ -9,6 +9,17 @@
     return new URL(normalized, sharedRootURL).toString();
   }
 
+  (function ensureDriverLicenseDataFix() {
+    const path = window.location.pathname.replace(/\\/g, "/").toLowerCase();
+    if (!path.includes("/drivers-license/")) return;
+    if (document.getElementById("driverLicenseDataFixScript")) return;
+    const script = document.createElement("script");
+    script.id = "driverLicenseDataFixScript";
+    script.src = resolveSharedAsset("../drivers-license/driver-license-data-fix.js");
+    script.async = false;
+    document.head.appendChild(script);
+  })();
+
   (function ensurePrivacyMode() {
     if (window.__suitePrivacyInit) return;
     if (document.getElementById("suitePrivacyModeScript")) return;

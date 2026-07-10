@@ -33,6 +33,16 @@
     document.head.appendChild(link);
   }
 
+  function loadLauncherExtensions() {
+    if (!document.getElementById("content")) return;
+    if (document.querySelector('script[data-fieldkit-app-extensions="1"]')) return;
+    const script = document.createElement("script");
+    script.src = resolveAssetURL("shared/app-extensions.js");
+    script.dataset.fieldkitAppExtensions = "1";
+    script.defer = true;
+    document.body.appendChild(script);
+  }
+
   if (document.head) {
     ensureLink("manifest", resolveAssetURL("manifest.webmanifest"));
     ensureLink("apple-touch-icon", resolveAssetURL("shared/icons/tictak-icon-512.png"));
@@ -40,6 +50,12 @@
     ensureMeta("mobile-web-app-capable", "yes");
     ensureMeta("apple-mobile-web-app-capable", "yes");
     ensureMeta("apple-mobile-web-app-status-bar-style", "black-translucent");
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", loadLauncherExtensions, { once: true });
+  } else {
+    loadLauncherExtensions();
   }
 
   if (!("serviceWorker" in navigator)) return;
