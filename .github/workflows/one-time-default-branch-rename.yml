@@ -1,0 +1,109 @@
+name: One-time default branch rename
+
+on:
+  push:
+    branches: [REV001]
+    paths:
+      - '.github/workflows/one-time-default-branch-rename.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  rename:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Replace REV001 with main
+        id: rename
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          repo="$GITHUB_REPOSITORY"
+          canonical_sha="$(git rev-parse HEAD)"
+          echo "canonical_sha=$canonical_sha" >> "$GITHUB_OUTPUT"
+
+          # main and REV001 are verified identical. Remove the duplicate ref so
+          # GitHub can rename the current default branch to main atomically.
+          git push origin --delete main
+
+          if ! gh api -X POST "repos/$repo/branches/REV001/rename" -f new_name=main; then
+            echo 'GitHub rejected the rename; restoring main.' >&2
+            git push origin "$canonical_sha:refs/heads/main"
+            exit 1
+          fi
+
+          # Branch renames can complete asynchronously. Wait until the repository
+          # reports main as its default branch before continuing.
+          for attempt in $(seq 1 30); do
+            default_branch="$(gh api "repos/$repo" --jq .default_branch)"
+            if [[ "$default_branch" == 'main' ]]; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo 'The rename request was accepted but did not finish in time.' >&2
+          exit 1
+
+      - name: Remove migration workflow and finalize branch filters
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          repo="$GITHUB_REPOSITORY"
+          target=''
+
+          for attempt in $(seq 1 30); do
+            default_branch="$(gh api "repos/$repo" --jq .default_branch)"
+            if git ls-remote --exit-code --heads origin "$default_branch" >/dev/null 2>&1; then
+              target="$default_branch"
+              break
+            fi
+            sleep 2
+          done
+
+          if [[ -z "$target" ]]; then
+            echo 'Could not resolve the surviving default branch.' >&2
+            exit 1
+          fi
+
+          git fetch origin "+refs/heads/$target:refs/remotes/origin/$target"
+          git checkout -B "$target" "refs/remotes/origin/$target"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          git rm -f .github/workflows/one-time-default-branch-rename.yml
+
+          if [[ "$target" == 'main' ]]; then
+            python - <<'PY'
+          from pathlib import Path
+
+          static = Path('.github/workflows/static.yml')
+          text = static.read_text()
+          text = text.replace('branches: ["REV001", "main"]', 'branches: ["main"]')
+          static.write_text(text)
+
+          tests = Path('.github/workflows/driver-license-tests.yml')
+          text = tests.read_text().replace('branches: [main, REV001]', 'branches: [main]')
+          tests.write_text(text)
+          PY
+          fi
+
+          git add .github/workflows/static.yml .github/workflows/driver-license-tests.yml
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+
+          git commit -m 'chore: finalize main as the canonical branch'
+          git push origin "HEAD:$target"
