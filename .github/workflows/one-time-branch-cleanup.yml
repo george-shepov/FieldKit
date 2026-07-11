@@ -1,0 +1,111 @@
+name: One-time merged branch cleanup
+
+on:
+  push:
+    branches: [REV001]
+    paths:
+      - '.github/workflows/one-time-branch-cleanup.yml'
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify and delete merged branches
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          repo="$GITHUB_REPOSITORY"
+          owner="${repo%%/*}"
+
+          git fetch --prune origin '+refs/heads/*:refs/remotes/origin/*'
+
+          mapfile -t branches < <(
+            git for-each-ref --format='%(refname:strip=3)' refs/remotes/origin/ \
+              | grep -v '^HEAD$' \
+              | sort
+          )
+
+          safe_to_delete=()
+          unsafe=()
+
+          for branch in "${branches[@]}"; do
+            case "$branch" in
+              main|REV001)
+                continue
+                ;;
+            esac
+
+            remote_ref="refs/remotes/origin/$branch"
+            sha="$(git rev-parse "$remote_ref")"
+
+            # A branch fully contained in main has no unique commits.
+            if git merge-base --is-ancestor "$remote_ref" refs/remotes/origin/main; then
+              safe_to_delete+=("$branch")
+              continue
+            fi
+
+            # Squash/rebase merges can leave branch commits outside main's ancestry.
+            # In that case require a completed PR whose recorded head matches the
+            # branch's current head exactly, proving nothing was added afterward.
+            pr_json="$(
+              gh api -X GET "repos/$repo/pulls" \
+                -f state=closed \
+                -f head="$owner:$branch" \
+                -f per_page=100
+            )"
+
+            if jq -e --arg sha "$sha" \
+              'any(.[]; .merged_at != null and .head.sha == $sha)' \
+              <<<"$pr_json" >/dev/null; then
+              safe_to_delete+=("$branch")
+            else
+              unsafe+=("$branch")
+            fi
+          done
+
+          if ((${#unsafe[@]} > 0)); then
+            {
+              echo '## Branch cleanup stopped'
+              echo
+              echo 'These branches may contain unmerged work and were not touched:'
+              printf -- '- `%s`\n' "${unsafe[@]}"
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            printf 'Refusing to delete branches with unverified work:\n' >&2
+            printf '  %s\n' "${unsafe[@]}" >&2
+            exit 1
+          fi
+
+          {
+            echo '## Deleted merged/obsolete branches'
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          for branch in "${safe_to_delete[@]}"; do
+            git push origin --delete "$branch"
+            printf -- '- `%s`\n' "$branch" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+      - name: Remove this one-time workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin REV001
+          git checkout -B REV001 origin/REV001
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/one-time-branch-cleanup.yml
+          git commit -m 'chore: remove one-time branch cleanup workflow'
+          git push origin HEAD:REV001
