@@ -129,10 +129,13 @@ async function applyFieldKitShell(response, url) {
 
   const html = await response.text();
   if (html.includes("data-fieldkit-unified-shell")) {
+    const passthroughHeaders = new Headers(response.headers);
+    passthroughHeaders.delete("content-length");
+    passthroughHeaders.set("x-fieldkit-shell", "unified-v1");
     return new Response(html, {
       status: response.status,
       statusText: response.statusText,
-      headers: response.headers
+      headers: passthroughHeaders
     });
   }
 

@@ -73,7 +73,7 @@
           <div class="fk-shell-logo" aria-hidden="true">FK</div>
           <div class="fk-shell-titles">
             <div class="fk-shell-product">FieldKit</div>
-            <div class="fk-shell-app">${getAppName()}</div>
+            <div class="fk-shell-app"></div>
           </div>
         </div>
       </div>
@@ -86,6 +86,8 @@
       </div>`;
 
     document.body.prepend(header);
+
+    header.querySelector(".fk-shell-app").textContent = getAppName();
 
     const status = header.querySelector("#fkConnectivity");
     const label = status.querySelector(".fk-shell-status-label");
