@@ -2,9 +2,9 @@
 name: Deploy static content to Pages
 
 on:
-  # Runs on pushes targeting the default branch
+  # Support the current default branch during migration and the canonical branch afterward.
   push:
-    branches: ["REV001"]
+    branches: ["REV001", "main"]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
