@@ -85,9 +85,8 @@
         <button class="fk-shell-button" id="fkShellHelp" type="button" title="Help (F1)">? <span>Help</span></button>
       </div>`;
 
-    document.body.prepend(header);
-
     header.querySelector(".fk-shell-app").textContent = getAppName();
+    document.body.prepend(header);
 
     const status = header.querySelector("#fkConnectivity");
     const label = status.querySelector(".fk-shell-status-label");
