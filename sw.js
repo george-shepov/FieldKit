@@ -1,4 +1,4 @@
-const CACHE_NAME = "fieldkit-shell-v19";
+const CACHE_NAME = "fieldkit-shell-v20";
 
 function scopedPath(path) {
   const normalized = String(path || "").replace(/^\/+/, "");
@@ -54,8 +54,10 @@ const PRECACHE_URLS = [
   "linux-trainer/index.html",
   "math-raindrops/index.html",
   "math-trainer/index.html",
+  "quiz-builder/index.html",
   "midi-note-helper/index.html",
   "music-player/index.html",
+  "music-studio/index.html",
   "music-trainer/index.html",
   "odd-one-out/index.html",
   "outdoor-kit/index.html",
@@ -72,6 +74,11 @@ const PRECACHE_URLS = [
   "tic-tac-toe/index.html",
   "time-tracker/index.html",
   "ui-tweaker/index.html",
+  "whiteboard/index.html",
+  "markdown-slides/index.html",
+  "qr-generator/index.html",
+  "chatgpt-viewer/index.html",
+  "opb/index.html",
   "wishlist/index.html",
   "drivers-license/DriversLicensePrep.html",
   "games/reversi.html",
