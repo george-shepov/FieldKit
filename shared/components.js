@@ -5,7 +5,18 @@
     : new URL("shared/components.js", document.baseURI);
   const rootURL = new URL("../", scriptURL);
 
-  // 1. Inject Shadcn CSS and Lucide for pages running without the unified shell.
+  function loadTicTacToeLayout() {
+    const path = window.location.pathname.replace(/\\/g, '/').toLowerCase();
+    if (!path.includes('/tic-tac-toe/')) return;
+    if (document.getElementById('fieldkitTicTacToeLayoutScript')) return;
+    const script = document.createElement('script');
+    script.id = 'fieldkitTicTacToeLayoutScript';
+    script.src = new URL('shared/tic-tac-toe-layout.js', rootURL).toString();
+    script.defer = true;
+    document.head.appendChild(script);
+  }
+
+  // Inject shared styling and icons for pages running without the service-worker shell.
   const injectStyles = () => {
     if (!document.querySelector('link[href*="shadcn.css"]')) {
       const link = document.createElement('link');
@@ -30,7 +41,7 @@
     document.querySelectorAll('.suite-nav, .s-header').forEach((nav) => nav.remove());
   }
 
-  // 2. Modern fallback header for pages opened outside the PWA/service-worker shell.
+  // Modern fallback header for direct file:// and non-service-worker use.
   const createHeader = () => {
     removeLegacyHeaders();
 
@@ -47,8 +58,8 @@
       width: 100%;
       align-self: stretch;
       flex: 0 0 auto;
-      background: hsl(var(--background) / 0.8);
-      backdrop-filter: blur(8px);
+      background: hsl(var(--background) / 0.88);
+      backdrop-filter: blur(10px);
       border-bottom: 1px solid hsl(var(--border));
       min-height: 56px;
       margin-bottom: 8px;
@@ -67,6 +78,9 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
+        <button class="s-btn s-btn-ghost s-btn-icon s-btn-sm" type="button" data-open-privacy="1" title="Privacy settings" aria-label="Privacy settings">
+          <i data-lucide="shield-check" size="18" aria-hidden="true"></i>
+        </button>
         <button id="sharedHelpBtn" class="s-btn s-btn-ghost s-btn-icon s-btn-sm" title="Help (F1)" aria-label="Help">
           <i data-lucide="help-circle" size="18" aria-hidden="true"></i>
         </button>
@@ -80,12 +94,12 @@
     if (helpBtn) {
       helpBtn.onclick = () => {
         if (window.openHelp) window.openHelp();
-        else window.location.href = new URL('index.html?help=1', rootURL).toString();
+        else window.location.href = new URL('help/index.html', rootURL).toString();
       };
     }
 
     // Defensive cleanup for environments that attach the unified shell after
-    // DOMContentLoaded (including an already-installed PWA updating in place).
+    // DOMContentLoaded (including an installed PWA updating in place).
     const observer = new MutationObserver(() => {
       if (!document.querySelector('.fk-shell-header')) return;
       removeLegacyHeaders();
@@ -93,6 +107,8 @@
     });
     observer.observe(document.body, { childList: true });
   };
+
+  loadTicTacToeLayout();
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
