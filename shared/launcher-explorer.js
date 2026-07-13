@@ -37,8 +37,8 @@
 
   function loadMap(key) {
     try {
-      const parsed = JSON.parse(localStorage.getItem(key) || '{}');
-      return parsed && typeof parsed === 'object' ? parsed : {};
+      const value = JSON.parse(localStorage.getItem(key) || '{}');
+      return value && typeof value === 'object' ? value : {};
     } catch (_error) {
       return {};
     }
@@ -75,8 +75,8 @@
 
   function getConnectivity(app) {
     const offline = String(app.offline || '').toLowerCase();
-    const hybrid = offline === 'hybrid' || offline === 'wifi' || offline === 'online' || offline === 'network' || app.offline === false;
-    return hybrid
+    const connected = offline === 'hybrid' || offline === 'wifi' || offline === 'online' || offline === 'network' || app.offline === false;
+    return connected
       ? { key: 'connected', label: 'Wi-Fi / Cell', short: '⌁', title: 'Uses network features and can include local features' }
       : { key: 'offline', label: 'Airplane Mode', short: '✈', title: 'Designed to work without a network connection' };
   }
@@ -89,9 +89,7 @@
 
   function getHelp(app) {
     try {
-      if (typeof APP_HELP !== 'undefined' && APP_HELP && APP_HELP[app.key]) {
-        return APP_HELP[app.key];
-      }
+      if (typeof APP_HELP !== 'undefined' && APP_HELP && APP_HELP[app.key]) return APP_HELP[app.key];
     } catch (_error) {}
     return {
       feature: app.desc || 'Open the app to use its main workflow.',
@@ -159,7 +157,9 @@
     if (favorites[key]) delete favorites[key];
     else favorites[key] = true;
     saveMap(FAVORITES_KEY, favorites);
-    window.dispatchEvent(new CustomEvent('fieldkit-favorites-changed', { detail: { key, favorite: Boolean(favorites[key]) } }));
+    window.dispatchEvent(new CustomEvent('fieldkit-favorites-changed', {
+      detail: { key, favorite: Boolean(favorites[key]) }
+    }));
   }
 
   function markRecent(key) {
@@ -220,6 +220,10 @@
     return `<a class="fk-open-button ${compact ? 'is-compact' : ''}" href="${escapeHtml(app.href)}" data-open-key="${escapeHtml(app.key)}" title="Open ${escapeHtml(app.name)}"><span aria-hidden="true">↗</span><span class="fk-open-label">Open</span></a>`;
   }
 
+  function renderEmpty() {
+    return `<div class="fk-empty-state"><span aria-hidden="true">⌕</span><h3>No matching apps</h3><p>Clear a tag or try a broader search.</p><button type="button" data-action="reset-filters">Reset filters</button></div>`;
+  }
+
   function renderList(apps) {
     if (!apps.length) return renderEmpty();
     return `
@@ -278,18 +282,19 @@
     const tagPoints = tags.map((item, index) => ({ ...item, ...polarPoint(index, tags.length, 25, -Math.PI / 2) }));
     const appPoints = displayedApps.map((app, index) => ({ app, ...polarPoint(index, displayedApps.length, 43, -Math.PI / 2 + 0.12) }));
 
-    const lineMarkup = [
+    const lines = [
       ...tagPoints.map((point) => `<line x1="50" y1="50" x2="${point.x.toFixed(2)}" y2="${point.y.toFixed(2)}"></line>`),
       ...appPoints.map((point) => {
         const related = tagPoints.find((tagPoint) => point.app.tags.includes(tagPoint.tag)) || tagPoints[0];
-        if (!related) return '';
-        return `<line class="is-app-line" x1="${related.x.toFixed(2)}" y1="${related.y.toFixed(2)}" x2="${point.x.toFixed(2)}" y2="${point.y.toFixed(2)}"></line>`;
+        return related
+          ? `<line class="is-app-line" x1="${related.x.toFixed(2)}" y1="${related.y.toFixed(2)}" x2="${point.x.toFixed(2)}" y2="${point.y.toFixed(2)}"></line>`
+          : '';
       })
     ].join('');
 
     return `
       <div class="fk-atlas" aria-label="Capability atlas">
-        <svg class="fk-atlas-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${lineMarkup}</svg>
+        <svg class="fk-atlas-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${lines}</svg>
         <button class="fk-atlas-core" type="button" data-action="clear-tags"><strong>FieldKit</strong><span>${apps.length} apps</span></button>
         ${tagPoints.map((point) => `<button class="fk-atlas-tag ${state.selectedTags.has(point.tag) ? 'is-active' : ''}" type="button" data-action="tag" data-tag="${escapeHtml(point.tag)}" style="--x:${point.x.toFixed(2)}%;--y:${point.y.toFixed(2)}%;--weight:${Math.min(1.35, 0.82 + point.count / Math.max(8, apps.length))}"><span>${escapeHtml(point.tag)}</span><small>${point.count}</small></button>`).join('')}
         ${appPoints.map((point) => `<button class="fk-atlas-app fk-select-app ${state.selectedKey === point.app.key ? 'is-selected' : ''}" type="button" data-key="${escapeHtml(point.app.key)}" style="--x:${point.x.toFixed(2)}%;--y:${point.y.toFixed(2)}%" title="${escapeHtml(point.app.name)}">${iconMarkup(point.app, 'is-tiny')}<span>${escapeHtml(point.app.name)}</span></button>`).join('')}
@@ -297,19 +302,15 @@
       </div>`;
   }
 
-  function renderEmpty() {
-    return `<div class="fk-empty-state"><span aria-hidden="true">⌕</span><h3>No matching apps</h3><p>Clear a tag or try a broader search.</p><button type="button" data-action="reset-filters">Reset filters</button></div>`;
-  }
-
-  function selectedApp(apps) {
-    return state.apps.find((app) => app.key === state.selectedKey) || apps[0] || state.apps[0] || null;
+  function selectedVisibleApp(apps) {
+    return apps.find((app) => app.key === state.selectedKey) || apps[0] || null;
   }
 
   function renderDetails(app) {
     const details = document.getElementById('fkExplorerDetails');
     if (!details) return;
     if (!app) {
-      details.innerHTML = '<div class="fk-details-empty"><span aria-hidden="true">↖</span><p>Select an app to see what it does.</p></div>';
+      details.innerHTML = '<div class="fk-details-empty"><span aria-hidden="true">↖</span><p>Select a visible app to see what it does.</p></div>';
       return;
     }
 
@@ -339,6 +340,12 @@
       ${tags.map(({ tag, count }) => `<button class="fk-tag-chip ${state.selectedTags.has(tag) ? 'is-active' : ''}" type="button" data-action="tag" data-tag="${escapeHtml(tag)}"><span>${escapeHtml(tag)}</span><small>${count}</small></button>`).join('')}`;
   }
 
+  function safeCreateIcons() {
+    try {
+      if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+    } catch (_error) {}
+  }
+
   function render() {
     const browser = document.getElementById('fkExplorerBrowser');
     if (!browser) return;
@@ -348,10 +355,20 @@
       const query = state.query.trim().toLowerCase();
       return (!state.favoritesOnly || isFavorite(app.key)) && (!query || searchableText(app).includes(query));
     });
+    const selected = selectedVisibleApp(apps);
+
+    if (selected && state.selectedKey !== selected.key) {
+      state.selectedKey = selected.key;
+      saveString(SELECTED_KEY, selected.key);
+    }
 
     renderTags(baseForTags);
     browser.dataset.view = state.view;
-    browser.innerHTML = state.view === 'cards' ? renderCards(apps) : state.view === 'atlas' ? renderAtlas(apps) : renderList(apps);
+    browser.innerHTML = state.view === 'cards'
+      ? renderCards(apps)
+      : state.view === 'atlas'
+        ? renderAtlas(apps)
+        : renderList(apps);
 
     document.querySelectorAll('[data-view]').forEach((button) => {
       const active = button.dataset.view === state.view;
@@ -371,19 +388,8 @@
     const resultCount = document.getElementById('fkResultCount');
     if (resultCount) resultCount.textContent = `${apps.length} of ${state.apps.length} apps`;
 
-    const app = selectedApp(apps);
-    if (app && !state.selectedKey) {
-      state.selectedKey = app.key;
-      saveString(SELECTED_KEY, app.key);
-    }
-    renderDetails(app);
+    renderDetails(selected);
     safeCreateIcons();
-  }
-
-  function safeCreateIcons() {
-    try {
-      if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
-    } catch (_error) {}
   }
 
   function selectApp(key) {
@@ -394,7 +400,6 @@
     const details = document.getElementById('fkExplorerDetails');
     if (details && window.matchMedia('(max-width: 860px)').matches) {
       details.classList.add('is-open');
-      details.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
 
@@ -405,8 +410,12 @@
     window.location.href = app.href;
   }
 
+  function elementTarget(event) {
+    return event.target instanceof Element ? event.target : null;
+  }
+
   function handleAction(target, event) {
-    const actionNode = target.closest('[data-action]');
+    const actionNode = target && target.closest('[data-action]');
     if (!actionNode) return false;
     const action = actionNode.dataset.action;
 
@@ -414,7 +423,6 @@
       event.preventDefault();
       event.stopPropagation();
       toggleFavorite(actionNode.dataset.key);
-      render();
       return true;
     }
     if (action === 'tag') {
@@ -472,6 +480,7 @@
     if (!state.apps.length) return;
     if (!state.apps.some((app) => app.key === state.selectedKey)) state.selectedKey = state.apps[0].key;
 
+    document.body.classList.add('fieldkit-launcher-explorer');
     const legacyControls = document.querySelector('.launcher-controls');
     if (legacyControls) legacyControls.hidden = true;
     addPrivacyButton();
@@ -503,9 +512,10 @@
     content.replaceChildren(explorer);
 
     explorer.addEventListener('click', (event) => {
-      if (handleAction(event.target, event)) return;
+      const target = elementTarget(event);
+      if (!target || handleAction(target, event)) return;
 
-      const viewButton = event.target.closest('[data-view]');
+      const viewButton = target.closest('[data-view]');
       if (viewButton) {
         state.view = VALID_VIEWS.includes(viewButton.dataset.view) ? viewButton.dataset.view : 'list';
         saveString(VIEW_KEY, state.view);
@@ -513,34 +523,34 @@
         return;
       }
 
-      const favoriteFilter = event.target.closest('#fkFavoritesOnly');
-      if (favoriteFilter) {
+      if (target.closest('#fkFavoritesOnly')) {
         state.favoritesOnly = !state.favoritesOnly;
         render();
         return;
       }
 
-      const appNode = event.target.closest('.fk-select-app');
+      const appNode = target.closest('.fk-select-app');
       if (appNode && appNode.dataset.key) selectApp(appNode.dataset.key);
     });
 
     explorer.addEventListener('dblclick', (event) => {
-      const appNode = event.target.closest('.fk-select-app');
+      const target = elementTarget(event);
+      const appNode = target && target.closest('.fk-select-app');
       if (appNode && appNode.dataset.key) openApp(appNode.dataset.key);
     });
 
     explorer.addEventListener('keydown', (event) => {
-      const appNode = event.target.closest('.fk-select-app');
-      if (!appNode || !appNode.dataset.key) return;
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        if (event.ctrlKey || event.metaKey) openApp(appNode.dataset.key);
-        else selectApp(appNode.dataset.key);
-      }
+      const target = elementTarget(event);
+      const appNode = target && target.closest('.fk-select-app');
+      if (!appNode || !appNode.dataset.key || event.key !== 'Enter') return;
+      event.preventDefault();
+      if (event.ctrlKey || event.metaKey) openApp(appNode.dataset.key);
+      else selectApp(appNode.dataset.key);
     });
 
     explorer.addEventListener('click', (event) => {
-      const link = event.target.closest('[data-open-key]');
+      const target = elementTarget(event);
+      const link = target && target.closest('[data-open-key]');
       if (link) markRecent(link.dataset.openKey);
     });
 
