@@ -2,8 +2,22 @@ const { test, expect } = require('@playwright/test');
 
 const rootUrl = `file://${process.cwd()}/index.html`;
 const appUrl = (app) => `file://${process.cwd()}/${app}/index.html`;
+const PRIVATE_MODE = {
+  mode: 'offline_private',
+  allowSync: false,
+  allowSupport: false,
+  allowAI: false,
+  managedEndpoint: '',
+  customEndpoint: ''
+};
 
 test.describe('FieldKit App Explorer', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript((config) => {
+      localStorage.setItem('suite.privacy.mode.v1', JSON.stringify(config));
+    }, PRIVATE_MODE);
+  });
+
   test('supports list, card, atlas, search, and details views', async ({ page }) => {
     await page.goto(rootUrl);
     await expect(page.locator('#fkExplorer')).toBeVisible({ timeout: 5000 });
