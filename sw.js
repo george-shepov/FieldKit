@@ -1,5 +1,6 @@
 const CACHE_NAME = "fieldkit-shell-v20";
 
+
 function scopedPath(path) {
   const normalized = String(path || "").replace(/^\/+/, "");
   return new URL(normalized, self.registration.scope).pathname;

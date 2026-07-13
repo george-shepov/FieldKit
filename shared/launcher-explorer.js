@@ -321,14 +321,14 @@
         <button class="fk-details-close" type="button" data-action="close-details" aria-label="Close details">×</button>
       </div>
       <p class="fk-details-description">${escapeHtml(app.desc || app.help.feature)}</p>
+      <div class="fk-details-actions">${favoriteButton(app)}${openButton(app, false)}</div>
       <div class="fk-details-meta">
         ${metaBadge(app.connectivity.key, app.connectivity.label, app.connectivity.short, app.connectivity.title)}
         ${metaBadge(app.access.key, app.access.label, app.access.short)}
       </div>
       <section><h3>Capability</h3><p>${escapeHtml(app.help.feature)}</p></section>
       <section><h3>Best used for</h3><p>${escapeHtml(app.help.scenario)}</p></section>
-      <section><h3>Tags</h3><div class="fk-details-tags">${app.tags.map((tag) => `<button type="button" data-action="tag" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`).join('')}</div></section>
-      <div class="fk-details-actions">${favoriteButton(app)}${openButton(app, false)}</div>`;
+      <section><h3>Tags</h3><div class="fk-details-tags">${app.tags.map((tag) => `<button type="button" data-action="tag" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`).join('')}</div></section>`;
   }
 
   function renderTags(baseApps) {
