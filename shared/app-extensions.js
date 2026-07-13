@@ -28,8 +28,17 @@
     }
   };
 
+  function isLauncherPage() {
+    return Boolean(
+      document.getElementById('content') &&
+      document.querySelector('.launcher-controls') &&
+      document.getElementById('sortModeSelect') &&
+      typeof APP_REGISTRY !== 'undefined'
+    );
+  }
+
   function loadLauncherExplorer() {
-    if (!document.getElementById('content')) return;
+    if (!isLauncherPage()) return;
 
     if (!document.getElementById('fieldkitLauncherExplorerStyle')) {
       const link = document.createElement('link');
