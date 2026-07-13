@@ -54,13 +54,89 @@
     }, 2400);
   }
 
+  function enhanceTicTacToeLayout(header) {
+    const board = document.getElementById("board");
+    const scoreboard = document.getElementById("scoreboard");
+    const sizeInput = document.getElementById("boardSize");
+    if (!board || !scoreboard || !sizeInput) return;
+
+    document.body.classList.add("fk-tic-tac-toe");
+
+    let fitting = false;
+    function fitBoard() {
+      if (fitting) return;
+      fitting = true;
+
+      window.requestAnimationFrame(function () {
+        const viewportHeight = window.visualViewport
+          ? window.visualViewport.height
+          : window.innerHeight;
+        const viewportWidth = window.visualViewport
+          ? window.visualViewport.width
+          : window.innerWidth;
+
+        const chromeNodes = [
+          header,
+          document.getElementById("topbar"),
+          document.getElementById("message"),
+          document.getElementById("turnbar"),
+          scoreboard
+        ].filter(Boolean);
+
+        const chromeHeight = chromeNodes.reduce(function (total, node) {
+          const style = window.getComputedStyle(node);
+          if (style.display === "none" || style.position === "fixed") return total;
+          return total + node.getBoundingClientRect().height;
+        }, 0);
+
+        const bodyStyle = window.getComputedStyle(document.body);
+        const gap = parseFloat(bodyStyle.rowGap || bodyStyle.gap) || 0;
+        const verticalPadding = (parseFloat(bodyStyle.paddingTop) || 0) +
+          (parseFloat(bodyStyle.paddingBottom) || 0);
+        const gapAllowance = gap * Math.max(0, chromeNodes.length);
+        const heightAllowance = chromeHeight + gapAllowance + verticalPadding + 8;
+
+        const byHeight = Math.max(180, viewportHeight - heightAllowance);
+        const byWidth = Math.max(180, Math.min(1200, viewportWidth - 16));
+        const boardPixels = Math.floor(Math.min(byHeight, byWidth));
+        const boardDimension = Math.max(
+          3,
+          parseInt(sizeInput.value, 10) || Math.round(Math.sqrt(board.children.length)) || 10
+        );
+
+        board.style.setProperty("width", boardPixels + "px", "important");
+        board.style.setProperty("height", boardPixels + "px", "important");
+        board.style.gridTemplateColumns = "repeat(" + boardDimension + ", minmax(0, 1fr))";
+        board.style.gridTemplateRows = "repeat(" + boardDimension + ", minmax(0, 1fr))";
+        fitting = false;
+      });
+    }
+
+    const boardObserver = new MutationObserver(fitBoard);
+    boardObserver.observe(board, { childList: true });
+
+    if (window.ResizeObserver) {
+      const layoutObserver = new ResizeObserver(fitBoard);
+      [header, scoreboard, document.getElementById("topbar"), document.getElementById("message"), document.getElementById("turnbar")]
+        .filter(Boolean)
+        .forEach(function (node) { layoutObserver.observe(node); });
+    }
+
+    window.addEventListener("resize", fitBoard);
+    if (window.visualViewport) window.visualViewport.addEventListener("resize", fitBoard);
+    [0, 100, 400].forEach(function (delay) { window.setTimeout(fitBoard, delay); });
+  }
+
   function createShell() {
     if (!document.body || document.querySelector(".fk-shell-header")) return;
 
     document.body.classList.add("fieldkit-app-shell");
 
-    const existingSuiteNav = document.querySelector(".suite-nav, .s-header");
-    if (existingSuiteNav) existingSuiteNav.hidden = true;
+    // The canonical shell replaces any legacy per-app navigation. Remove every
+    // copy so delayed scripts cannot leave a broken duplicate above the app.
+    document.querySelectorAll(".suite-nav, .s-header").forEach(function (nav) {
+      nav.remove();
+    });
 
     const header = document.createElement("header");
     header.className = "fk-shell-header";
@@ -130,6 +206,8 @@
         openHelp();
       }
     });
+
+    enhanceTicTacToeLayout(header);
   }
 
   if (document.readyState === "loading") {
