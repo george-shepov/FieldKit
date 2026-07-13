@@ -1,6 +1,12 @@
 (() => {
   'use strict';
 
+  const currentScript = document.currentScript;
+  const scriptURL = currentScript && currentScript.src
+    ? new URL(currentScript.src, window.location.href)
+    : new URL('shared/app-extensions.js', document.baseURI);
+  const sharedRoot = new URL('./', scriptURL);
+
   const EXTERNAL_APPS = {
     'vocabulary-expander': {
       name: 'Vocabulary Expander',
@@ -21,6 +27,26 @@
       sourceRepo: 'george-shepov/developer-interview-prep'
     }
   };
+
+  function loadLauncherExplorer() {
+    if (!document.getElementById('content')) return;
+
+    if (!document.getElementById('fieldkitLauncherExplorerStyle')) {
+      const link = document.createElement('link');
+      link.id = 'fieldkitLauncherExplorerStyle';
+      link.rel = 'stylesheet';
+      link.href = new URL('launcher-explorer.css', sharedRoot).toString();
+      document.head.appendChild(link);
+    }
+
+    if (!document.getElementById('fieldkitLauncherExplorerScript')) {
+      const script = document.createElement('script');
+      script.id = 'fieldkitLauncherExplorerScript';
+      script.src = new URL('launcher-explorer.js', sharedRoot).toString();
+      script.defer = true;
+      document.body.appendChild(script);
+    }
+  }
 
   function registerExternalLearningApps() {
     try {
@@ -54,6 +80,10 @@
   let attempts = 0;
   const timer = window.setInterval(() => {
     attempts += 1;
-    if (registerExternalLearningApps() || attempts >= 20) window.clearInterval(timer);
+    const registered = registerExternalLearningApps();
+    if (registered || attempts >= 20) {
+      window.clearInterval(timer);
+      loadLauncherExplorer();
+    }
   }, 50);
 })();
