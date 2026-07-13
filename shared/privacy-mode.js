@@ -29,9 +29,8 @@
 
   function copyConfig(src) {
     var cfg = {};
-    Object.keys(defaultConfig).forEach(function (k) {
-      if (hasOwn.call(src || {}, k)) cfg[k] = src[k];
-      else cfg[k] = defaultConfig[k];
+    Object.keys(defaultConfig).forEach(function (key) {
+      cfg[key] = hasOwn.call(src || {}, key) ? src[key] : defaultConfig[key];
     });
     cfg.mode = String(cfg.mode || "offline_private");
     cfg.allowSync = Boolean(cfg.allowSync);
@@ -44,8 +43,7 @@
 
   function getConfig() {
     var raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return copyConfig(safeParse(raw, defaultConfig));
+    return raw ? copyConfig(safeParse(raw, defaultConfig)) : null;
   }
 
   function setConfig(cfg) {
@@ -57,101 +55,99 @@
 
   function endpointOrigins(cfg) {
     var out = [];
-    [cfg.managedEndpoint, cfg.customEndpoint].forEach(function (ep) {
-      if (!ep) return;
+    [cfg.managedEndpoint, cfg.customEndpoint].forEach(function (endpoint) {
+      if (!endpoint) return;
       try {
-        out.push(new URL(ep, window.location.href).origin);
+        out.push(new URL(endpoint, window.location.href).origin);
       } catch (_e) {}
     });
     return out;
   }
 
   function classify(url, cfg) {
-    var u = new URL(String(url), window.location.href);
-    var p = (u.pathname || "").toLowerCase();
-    function isAIPath(pathname) {
-      return pathname.indexOf("/api/ai/") === 0 ||
-        pathname.indexOf("/v1/chat/completions") === 0 ||
-        pathname.indexOf("/chat/completions") === 0 ||
-        pathname.indexOf("/api/chat") === 0;
+    var parsed = new URL(String(url), window.location.href);
+    var path = (parsed.pathname || "").toLowerCase();
+
+    function isAIPath(value) {
+      return value.indexOf("/api/ai/") === 0 ||
+        value.indexOf("/v1/chat/completions") === 0 ||
+        value.indexOf("/chat/completions") === 0 ||
+        value.indexOf("/api/chat") === 0;
     }
-    if (u.protocol === "data:" || u.protocol === "blob:") return "local";
-    if (u.origin === window.location.origin) {
-      if (isAIPath(p)) return "ai";
-      if (u.pathname.indexOf("/api/support/") === 0 || u.pathname === "/api/support/ticket") return "support";
-      if (u.pathname.indexOf("/api/") === 0) return "sync";
+
+    if (parsed.protocol === "data:" || parsed.protocol === "blob:") return "local";
+    if (parsed.origin === window.location.origin) {
+      if (isAIPath(path)) return "ai";
+      if (path.indexOf("/api/support/") === 0 || path === "/api/support/ticket") return "support";
+      if (path.indexOf("/api/") === 0) return "sync";
       return "local";
     }
-    if (endpointOrigins(cfg).indexOf(u.origin) >= 0) {
-      if (isAIPath(p)) return "ai";
-      return "remote-server";
+    if (endpointOrigins(cfg).indexOf(parsed.origin) >= 0) {
+      return isAIPath(path) ? "ai" : "remote-server";
     }
     return "external";
   }
 
   function allowed(url, method, cfg) {
     var conf = cfg || getConfig() || defaultConfig;
-    var cat = classify(url, conf);
-    if (cat === "local") return { ok: true, category: cat };
+    var category = classify(url, conf);
+    if (category === "local") return { ok: true, category: category };
 
     if (conf.mode === "offline_private") {
-      return { ok: false, category: cat, reason: "Offline Private mode blocks all network sync/AI calls." };
+      return { ok: false, category: category, reason: "Offline Private mode blocks all network sync/AI calls." };
     }
-
-    if (cat === "support") {
+    if (category === "support") {
       return conf.allowSupport
-        ? { ok: true, category: cat }
-        : { ok: false, category: cat, reason: "Support submit is disabled in Privacy settings." };
+        ? { ok: true, category: category }
+        : { ok: false, category: category, reason: "Support submit is disabled in Privacy settings." };
     }
-    if (cat === "ai" || cat === "external") {
+    if (category === "ai" || category === "external") {
       return conf.allowAI
-        ? { ok: true, category: cat }
-        : { ok: false, category: cat, reason: "External AI/network calls are disabled in Privacy settings." };
+        ? { ok: true, category: category }
+        : { ok: false, category: category, reason: "External AI/network calls are disabled in Privacy settings." };
     }
-    if (cat === "sync" || cat === "remote-server") {
+    if (category === "sync" || category === "remote-server") {
       return conf.allowSync
-        ? { ok: true, category: cat }
-        : { ok: false, category: cat, reason: "Cloud sync is disabled in Privacy settings." };
+        ? { ok: true, category: category }
+        : { ok: false, category: category, reason: "Cloud sync is disabled in Privacy settings." };
     }
-    return { ok: false, category: cat, reason: "Blocked by privacy policy." };
+    return { ok: false, category: category, reason: "Blocked by privacy policy." };
   }
 
   function blockedError(url, detail) {
-    var e = new Error("[Privacy Mode] Blocked request to " + url + " | " + (detail.reason || "policy"));
-    e.name = "PrivacyModeBlockedError";
-    return e;
+    var error = new Error("[Privacy Mode] Blocked request to " + url + " | " + (detail.reason || "policy"));
+    error.name = "PrivacyModeBlockedError";
+    return error;
   }
 
   function patchNetwork() {
     if (nativeFetch) {
       window.fetch = function (input, init) {
-        var reqUrl = typeof input === "string" ? input : (input && input.url ? input.url : String(input));
-        var decision = allowed(reqUrl, init && init.method ? init.method : "GET");
-        if (!decision.ok) return Promise.reject(blockedError(reqUrl, decision));
-        return nativeFetch(input, init);
+        var requestURL = typeof input === "string" ? input : (input && input.url ? input.url : String(input));
+        var decision = allowed(requestURL, init && init.method ? init.method : "GET");
+        return decision.ok ? nativeFetch(input, init) : Promise.reject(blockedError(requestURL, decision));
       };
     }
 
     if (NativeXHR) {
-      var open0 = NativeXHR.prototype.open;
-      var send0 = NativeXHR.prototype.send;
+      var nativeOpen = NativeXHR.prototype.open;
+      var nativeSend = NativeXHR.prototype.send;
       NativeXHR.prototype.open = function (method, url) {
         this.__suiteUrl = url;
         this.__suiteMethod = method;
-        return open0.apply(this, arguments);
+        return nativeOpen.apply(this, arguments);
       };
       NativeXHR.prototype.send = function () {
         var decision = allowed(this.__suiteUrl || "", this.__suiteMethod || "GET");
         if (!decision.ok) throw blockedError(this.__suiteUrl || "", decision);
-        return send0.apply(this, arguments);
+        return nativeSend.apply(this, arguments);
       };
     }
 
     if (nativeSendBeacon) {
       navigator.sendBeacon = function (url, data) {
         var decision = allowed(url, "POST");
-        if (!decision.ok) return false;
-        return nativeSendBeacon(url, data);
+        return decision.ok ? nativeSendBeacon(url, data) : false;
       };
     }
 
@@ -170,8 +166,6 @@
     var style = document.createElement("style");
     style.id = "suitePrivacyStyle";
     style.textContent = [
-      ".suite-privacy-fab{position:fixed;right:16px;bottom:68px;z-index:2147483599;border:1px solid #2f5f7d;background:#11314a;color:#eaf4ff;border-radius:999px;padding:8px 12px;font:700 12px/1 system-ui,-apple-system,sans-serif;cursor:pointer}",
-      ".suite-privacy-fab:hover{background:#1a4466}",
       ".suite-privacy-mask{position:fixed;inset:0;z-index:2147483601;background:rgba(5,10,18,.78);display:none;align-items:flex-start;justify-content:center;padding:14px;overflow:auto}",
       ".suite-privacy-mask.open{display:flex}",
       ".suite-privacy-panel{width:min(780px,100%);border:1px solid #325a75;border-radius:14px;background:#0e1b29;color:#e6f3ff;box-shadow:0 22px 62px rgba(0,0,0,.45)}",
@@ -185,7 +179,7 @@
       ".suite-privacy-opt{display:grid;gap:6px}",
       ".suite-privacy-check{display:flex;align-items:flex-start;gap:8px;color:#d8e9f8;font:500 13px/1.35 system-ui,-apple-system,sans-serif}",
       ".suite-privacy-input,.suite-privacy-select{width:100%;border:1px solid #355775;background:#0f2438;color:#e6f3ff;border-radius:8px;padding:8px 9px;font:500 13px/1.2 system-ui,-apple-system,sans-serif}",
-      ".suite-privacy-actions{display:flex;gap:8px;justify-content:flex-end}",
+      ".suite-privacy-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}",
       ".suite-privacy-btn{border:1px solid #355775;background:#173654;color:#e8f4ff;border-radius:9px;padding:8px 11px;font:700 12px/1.2 system-ui,-apple-system,sans-serif;cursor:pointer}",
       ".suite-privacy-btn.primary{background:linear-gradient(180deg,#2ea36f,#1f7b53);border-color:#2ea36f;color:#05170d}"
     ].join("");
@@ -194,19 +188,17 @@
 
   function renderPanel(initialOpen, forceChoice) {
     ensureStyles();
+    var mask = document.getElementById("suitePrivacyMask");
+    if (mask) return;
 
-    var fab = document.createElement("button");
-    fab.className = "suite-privacy-fab";
-    fab.type = "button";
-    fab.textContent = "Privacy";
-
-    var mask = document.createElement("div");
+    mask = document.createElement("div");
     mask.className = "suite-privacy-mask";
     mask.id = "suitePrivacyMask";
+    mask.setAttribute("aria-hidden", "true");
     mask.innerHTML = [
       '<div class="suite-privacy-panel" role="dialog" aria-modal="true" aria-label="Privacy mode">',
       '  <div class="suite-privacy-head">',
-      '    <div><h2>Privacy Mode</h2><p>Default is demo-server sync. You can switch back to device-only at any time.</p></div>',
+      '    <div><h2>Privacy Mode</h2><p>Choose device-only operation, the managed demo server, or your own server.</p></div>',
       '    <button class="suite-privacy-close" id="suitePrivacyClose" type="button">Close</button>',
       "  </div>",
       '  <div class="suite-privacy-body">',
@@ -242,10 +234,13 @@
 
     function open() {
       mask.classList.add("open");
+      mask.setAttribute("aria-hidden", "false");
     }
+
     function close() {
       if (forceChoice && !getConfig()) return;
       mask.classList.remove("open");
+      mask.setAttribute("aria-hidden", "true");
     }
 
     function applyToForm(cfg) {
@@ -268,24 +263,27 @@
       });
     }
 
-    document.body.appendChild(fab);
     document.body.appendChild(mask);
+    applyToForm(getConfig() || copyConfig(defaultConfig));
 
-    var current = getConfig() || copyConfig(defaultConfig);
-    applyToForm(current);
-
-    fab.addEventListener("click", open);
     document.getElementById("suitePrivacyClose").addEventListener("click", close);
     mask.addEventListener("click", function (event) {
       if (event.target === mask) close();
     });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") close();
+    });
+    document.addEventListener("click", function (event) {
+      var trigger = event.target && event.target.closest ? event.target.closest("[data-open-privacy]") : null;
+      if (!trigger) return;
+      event.preventDefault();
+      open();
+    });
     document.getElementById("suitePrivacyReset").addEventListener("click", function () {
-      var reset = setConfig(defaultConfig);
-      applyToForm(reset);
+      applyToForm(setConfig(defaultConfig));
     });
     document.getElementById("suitePrivacySave").addEventListener("click", function () {
-      var saved = setConfig(readForm());
-      applyToForm(saved);
+      applyToForm(setConfig(readForm()));
       close();
     });
 
@@ -299,12 +297,12 @@
       applyToForm(saved);
       return saved;
     };
+    window.dispatchEvent(new CustomEvent("suite-privacy-ready", { detail: window.SUITE_PRIVACY }));
 
     if (initialOpen) open();
   }
 
   patchNetwork();
-
   var existingConfig = getConfig();
   if (document.body) {
     renderPanel(!existingConfig, !existingConfig);
