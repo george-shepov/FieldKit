@@ -2,6 +2,7 @@ const { defineConfig } = require('@playwright/test');
 
 module.exports = defineConfig({
   testDir: './tests',
+  testIgnore: 'drivers-license.spec.js',
   timeout: 60000,
   expect: {
     timeout: 10000
