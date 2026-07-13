@@ -38,8 +38,10 @@ test.describe('FieldKit App Explorer', () => {
     await expect(firstRow).toBeVisible();
 
     const metaBadge = firstRow.locator('.fk-meta-badge').first();
+    await expect(metaBadge).toBeVisible();
     const badgeBox = await metaBadge.boundingBox();
-    expect(badgeBox.width).toBeLessThanOrEqual(32);
+    expect(badgeBox).not.toBeNull();
+    expect(badgeBox?.width ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(32);
 
     await expect(page.locator('.suite-privacy-fab')).toHaveCount(0);
     await expect(page.locator('[data-open-privacy]').first()).toBeVisible();
@@ -51,17 +53,37 @@ test.describe('Generalized Tic-Tac-Toe Layout', () => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto(appUrl('tic-tac-toe'));
 
-    await expect(page.locator('#board')).toBeVisible();
+    const board = page.locator('#board');
+    const lastCell = page.locator('.cell').nth(99);
+    const scoreboard = page.locator('#scoreboard');
+
+    await expect(board).toBeVisible();
     await expect(page.locator('.cell')).toHaveCount(100);
-    await page.waitForTimeout(450);
+    await expect(page.locator('body')).toHaveClass(/fk-tic-tac-toe/);
 
-    const boardBox = await page.locator('#board').boundingBox();
-    const lastCellBox = await page.locator('.cell').nth(99).boundingBox();
-    const scoreboardBox = await page.locator('#scoreboard').boundingBox();
+    await expect.poll(async () => board.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return Math.abs(rect.width - rect.height);
+    })).toBeLessThanOrEqual(2);
 
-    expect(Math.abs(boardBox.width - boardBox.height)).toBeLessThanOrEqual(2);
-    expect(lastCellBox.y + lastCellBox.height).toBeLessThanOrEqual(900);
-    expect(scoreboardBox.height).toBeLessThanOrEqual(70);
+    await expect.poll(async () => lastCell.evaluate((element) => {
+      return element.getBoundingClientRect().bottom;
+    })).toBeLessThanOrEqual(900);
+
+    await expect.poll(async () => scoreboard.evaluate((element) => {
+      return element.getBoundingClientRect().height;
+    })).toBeLessThanOrEqual(70);
+
+    const boardBox = await board.boundingBox();
+    const lastCellBox = await lastCell.boundingBox();
+    const scoreboardBox = await scoreboard.boundingBox();
+
+    expect(boardBox).not.toBeNull();
+    expect(lastCellBox).not.toBeNull();
+    expect(scoreboardBox).not.toBeNull();
+    expect(Math.abs((boardBox?.width ?? 0) - (boardBox?.height ?? Number.POSITIVE_INFINITY))).toBeLessThanOrEqual(2);
+    expect((lastCellBox?.y ?? Number.POSITIVE_INFINITY) + (lastCellBox?.height ?? 0)).toBeLessThanOrEqual(900);
+    expect(scoreboardBox?.height ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(70);
     await expect(page.locator('.s-header')).toHaveCount(1);
     await expect(page.locator('.suite-privacy-fab')).toHaveCount(0);
   });
