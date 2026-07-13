@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Online Poll Board — Sections • Stats • Leaderboard • JSON</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{
+    --bg:#f7fbff; --ink:#253044; --brand:#6c63ff; --brand-2:#00bcd4;
+    --card:#ffffff; --muted:#6b7d92; --bar:#e7eef6; --warn:#b00020; --hi:#fff6bf;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+    background: radial-gradient(1200px 700px at 20% -10%, #eaf6ff 0%, transparent 60%),
+                radial-gradient(1000px 600px at 120% 10%, #f0fcff 0%, transparent 60%),
+                var(--bg); color:var(--ink);
+  }
+  header{
+    padding:22px 16px; text-align:center;
+    background:linear-gradient(90deg, var(--brand), var(--brand-2)); color:white;
+    font-weight:700; letter-spacing:.3px; position:sticky; top:0; z-index:3;
+    box-shadow:0 4px 14px rgba(0,0,0,.08);
+  }
+  header small{display:block; font-weight:400; opacity:.9}
+  .wrap{max-width:1100px; margin:24px auto; padding:0 16px 80px}
+  .toolbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:14px 0}
+  .pill{background:rgba(255,255,255,.8); border:1px solid #d8e6f2; color:var(--muted);
+    padding:8px 12px; border-radius:999px; font-size:.9rem}
+  .btn{appearance:none; border:0; border-radius:999px; padding:10px 16px; font-weight:700; cursor:pointer;
+    color:white; background:linear-gradient(90deg, var(--brand), var(--brand-2)); box-shadow:0 6px 16px rgba(108,99,255,.25)}
+  .btn.secondary{background:#eef6ff; color:#274261; border:1px solid #d6e7f7; box-shadow:none}
+  .btn.ghost{background:transparent; color:#274261; border:1px dashed #bcd4ea}
+  .btn.warn{background:#ffe1e1; color:#7a0d0d; border:1px solid #ffc6c6; box-shadow:none}
+  .btn.lock{background:#12263a}
+  select, input[type="text"]{
+    padding:10px 12px; border-radius:10px; border:1px solid #d6e7f3; background:white; font:inherit
+  }
+  .grid{display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .card{background:var(--card); border-radius:14px; padding:16px; box-shadow:0 8px 30px rgba(41,72,107,.08);
+    margin:14px 0; border:1px solid #e6edf5; position:relative}
+  .ghost{opacity:.35}
+  h3{margin:.2rem 0 1rem}
+  .options{display:grid; grid-template-columns:1fr; gap:10px}
+  .option-btn{
+    width:100%; padding:10px 12px; border-radius:10px; border:1px solid #dbe6f2;
+    background:#f3f8ff; cursor:pointer; text-align:left; font-size:1rem;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    transition:.15s transform ease,.15s background ease;
+  }
+  .option-btn:hover{background:#e8f2ff; transform:translateY(-1px)}
+  .option-btn[disabled]{opacity:.5; cursor:not-allowed; transform:none}
+  .results{margin-top:12px}
+  .bar{background:var(--bar); height:26px; border-radius:8px; overflow:hidden; position:relative}
+  .fill{
+    height:100%; width:0%;
+    background:linear-gradient(90deg, var(--brand), var(--brand-2));
+    color:white; display:flex; align-items:center; padding:0 8px; font-weight:600;
+    transition:width .7s ease; text-shadow:0 1px 0 rgba(0,0,0,.25); white-space:nowrap;
+  }
+  .meta{display:flex; gap:14px; color:var(--muted); font-size:.9rem; margin-top:8px; align-items:center; flex-wrap:wrap}
+  .row{display:flex; align-items:center; gap:10px; justify-content:space-between}
+  .switch{display:inline-flex; align-items:center; gap:8px; font-size:.85rem; color:var(--muted)}
+  .switch input{accent-color:var(--brand)}
+  input[type="color"]{width:40px; height:40px; padding:0; border:1px solid #d6e7f7; border-radius:10px; background:white}
+  .foot{margin-top:4px; font-size:.85rem; color:var(--muted)}
+  .err{color:var(--warn); font-weight:600}
+  .toast{
+    position:fixed; right:16px; bottom:16px; background:#12263a; color:white; padding:10px 14px;
+    border-radius:12px; box-shadow:0 12px 30px rgba(0,0,0,.25); opacity:0; pointer-events:none; transition:opacity .2s ease; z-index:4;
+  }
+  .toast.show{opacity:1}
+  .admin-tools{display:none; gap:8px; flex-wrap:wrap}
+  .admin-on .admin-tools{display:flex}
+  .chip{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid #d6e7f7; background:#f8fbff}
+  .chip .dot{width:12px; height:12px; border-radius:50%; border:1px solid #cfe0f2}
+  .share{position:absolute; right:12px; top:12px; display:flex; gap:8px; flex-wrap:wrap}
+  .highlight{animation: hi 1.8s ease 1}
+  @keyframes hi { 0%{box-shadow:0 0 0 0 rgba(255,219,77,.8); background:var(--hi)} 100%{box-shadow:none; background:var(--card)} }
+  .edit-grid{display:grid; gap:8px; grid-template-columns:30px 1fr auto auto auto; align-items:center; width:100%}
+  .edit-row{display:contents}
+  .drag-handle{cursor:grab; user-select:none; color:#7a8da7}
+  .edit-section{margin-top:10px; border-top:1px dashed #e0ecfa; padding-top:10px}
+
+  /* Section header + stats */
+  .section-header{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-top:14px; flex-wrap:wrap}
+  .section-title{display:flex; align-items:center; gap:10px; font-weight:700}
+  .section-actions{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  .stats{display:flex; gap:8px; flex-wrap:wrap}
+  .stat{display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:10px; background:#f3f8ff; border:1px solid #dbe6f2}
+
+  /* Leaderboard */
+  .lb-grid{display:grid; gap:12px; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr))}
+  .lb-item{background:var(--card); border:1px solid #e6edf5; border-radius:12px; padding:12px}
+  .rank{font-weight:800; width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%;
+        background:#eef3ff; border:1px solid #d6e7f7; margin-right:8px}
+  .muted{color:var(--muted)}
+
+  /* Compact EMBED mode */
+  .embed header{display:none}
+  .embed .wrap{margin:0 auto; padding:10px 10px 40px}
+  .embed .toolbar{display:none}
+  .embed .admin-tools{display:none!important}
+  .embed .card{margin:10px 0; padding:12px}
+  .embed .grid{gap:10px}
+  .embed .results .bar{height:20px}
+</style>
+</head>
+<body>
+<header>
+  📊 Online Poll Board
+  <small>Sections • Stats • Leaderboard • SQLite (sql.js) • Inline edit • Reorder • Admin PIN • Results-only • Colors • 1/day • CSV • Delete • Share • Embed • JSON</small>
+</header>
+
+<div class="wrap">
+  <div class="toolbar" id="mainToolbar">
+    <span class="pill" id="dbStatus">DB: <em>initializing…</em></span>
+
+    <select id="sectionFilter">
+      <option value="all">All Sections</option>
+    </select>
+
+    <button class="btn secondary" id="exportBtn">Export DB</button>
+    <label class="btn secondary" for="importFile">Import DB</label>
+    <input type="file" id="importFile" accept=".sqlite,.db,.bin,.dat,application/octet-stream" style="display:none" />
+    <button class="btn secondary" id="exportCsvBtn">Export CSV</button>
+    <button class="btn secondary" id="resetBtn">Reset</button>
+
+    <label class="pill" style="cursor:pointer;">
+      <input type="checkbox" id="publicViewToggle" style="vertical-align:middle; accent-color:var(--brand)"> Public Results View
+    </label>
+
+    <button class="btn" id="adminToggleBtn" title="Enable Admin features (PIN protected)">Unlock Admin</button>
+    <button class="btn lock admin-tools" id="adminLockBtn" title="Lock Admin mode">Lock Admin</button>
+
+    <a class="btn ghost" id="leaderboardBtn" href="?leaderboard=1" title="Top across all sections">Leaderboard</a>
+    <a class="btn ghost" id="backToBoardBtn" href="." style="display:none">Back to Board</a>
+    <a class="btn ghost" id="jsonFeedBtn" href="?format=json" title="JSON feed of current results">JSON</a>
+  </div>
+
+  <!-- Section admin row -->
+  <div class="toolbar admin-tools" id="sectionAdminRow">
+    <div class="chip">
+      <strong>Sections:</strong>
+      <input type="text" id="newSectionName" placeholder="New section name">
+      <input type="color" id="newSectionColor" value="#6c63ff" title="Section color">
+      <button class="btn ghost" id="addSectionBtn">Add Section</button>
+    </div>
+    <div class="chip">
+      <span>Selected:</span>
+      <input type="text" id="renameSectionName" placeholder="Rename selected">
+      <input type="color" id="renameSectionColor" value="#6c63ff" title="Color">
+      <button class="btn ghost" id="renameSectionBtn">Rename</button>
+      <button class="btn warn" id="deleteSectionBtn">Delete Section</button>
+    </div>
+  </div>
+
+  <div id="leaderboardContainer" style="display:none"></div>
+  <div id="sectionsContainer"></div>
+
+  <div class="card admin-tools" id="creatorCard">
+    <h3>Create a new poll</h3>
+    <div class="row" style="gap:8px; flex-wrap:wrap;">
+      <input id="newQuestion" style="flex:2" placeholder="e.g., What feature should we build next?" />
+      <select id="newPollSection" style="flex:1; min-width:220px"></select>
+    </div>
+    <div class="row" style="gap:8px; margin-top:8px;">
+      <input id="newOptions" style="flex:2" placeholder="Options (comma-separated): A, B, C" />
+      <button class="btn" id="addPollBtn" style="flex:0">Add Poll</button>
+    </div>
+    <div class="foot">Votes are anonymous and stored locally (client-side only).</div>
+  </div>
+
+  <div class="foot" id="fallbackMsg"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================
+   Keys & Globals
+   ========================= */
+const DB_STORAGE_KEY   = "online-poll-board.sqlite";
+const VOTE_LOG_KEY     = "online-poll-board.vote-log";
+const ADMIN_PIN_HASH   = "online-poll-board.admin-pin-hash";
+const STATUS   = document.getElementById('dbStatus');
+const FALLBACK = document.getElementById('fallbackMsg');
+const TOAST    = document.getElementById('toast');
+
+const PUBLIC_TOGGLE = document.getElementById('publicViewToggle');
+const ADMIN_TOGGLE_BTN = document.getElementById('adminToggleBtn');
+const ADMIN_LOCK_BTN   = document.getElementById('adminLockBtn');
+
+const SECTION_FILTER = document.getElementById('sectionFilter');
+const SECTIONS_CONTAINER = document.getElementById('sectionsContainer');
+const LEADERBOARD_CONTAINER = document.getElementById('leaderboardContainer');
+
+const NEW_SECTION_NAME = document.getElementById('newSectionName');
+const NEW_SECTION_COLOR= document.getElementById('newSectionColor');
+const RENAME_SECTION_NAME = document.getElementById('renameSectionName');
+const RENAME_SECTION_COLOR= document.getElementById('renameSectionColor');
+
+const NEW_POLL_SECTION = document.getElementById('newPollSection');
+
+const LB_BTN = document.getElementById('leaderboardBtn');
+const BACK_BTN = document.getElementById('backToBoardBtn');
+const JSON_BTN = document.getElementById('jsonFeedBtn');
+
+let SQL; let db;
+let usingFallback = false;
+let resultsOnly = false;
+let adminSession = false;
+let sectionsCache = []; // [{id,name,color}]
+let embedMode = false;
+let leaderboardMode = false;
+
+/* Palette */
+const PALETTE = ["#6c63ff","#00bcd4","#ff8a65","#66bb6a","#ffd54f","#42a5f5","#ab47bc","#ef5350","#26a69a","#8d6e63"];
+
+/* =========================
+   Boot
+   ========================= */
+(async function init(){
+  parseUrlFlagsEarly();
+
+  try{
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js");
+    SQL = await initSqlJs({ locateFile: f => "https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/" + f });
+  }catch(e){
+    console.warn("sql.js failed to load; using in-memory fallback.", e);
+    usingFallback = true;
+  }
+
+  if (!usingFallback) { await initDbSqlite(); } else { initMock(); }
+
+  // JSON FEED mode: render raw JSON and bail
+  const params = new URLSearchParams(location.search);
+  if ((params.get('format')||'').toLowerCase()==='json'){
+    renderJsonFeed(); return;
+  }
+
+  bindUi();
+  refreshSectionsUI();
+
+  if (leaderboardMode) {
+    renderLeaderboard();
+  } else {
+    renderSectionsAndPolls();
+  }
+
+  handleDeepLink();
+  window.addEventListener('hashchange', ()=>{ parseUrlFlagsEarly(); handleDeepLink(); });
+})();
+
+/* =========================
+   URL flags (embed, results-only, leaderboard)
+   ========================= */
+function parseUrlFlagsEarly(){
+  const params = new URLSearchParams(location.search);
+  resultsOnly = (params.get('view')||'').toLowerCase()==='results' || (location.hash||'').endsWith(':results');
+  embedMode = (params.get('embed')||'') === '1';
+  leaderboardMode = (params.get('leaderboard')||'') === '1';
+
+  document.body.classList.toggle('embed', embedMode);
+  const pubT = document.getElementById('publicViewToggle');
+  if (pubT) pubT.checked = resultsOnly;
+
+  // toggle toolbar nav buttons visibility
+  if (leaderboardMode){ BACK_BTN.style.display = 'inline-block'; LB_BTN.style.display='none'; }
+  else { BACK_BTN.style.display = 'none'; LB_BTN.style.display='inline-block'; }
+}
+
+/* =========================
+   SQLite setup + migrations
+   ========================= */
+async function initDbSqlite(){
+  const saved = localStorage.getItem(DB_STORAGE_KEY);
+  db = saved ? new SQL.Database(base64ToBytes(saved)) : new SQL.Database();
+
+  db.run(`PRAGMA foreign_keys = ON;`);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS sections(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      color TEXT
+    );
+    CREATE TABLE IF NOT EXISTS polls(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      section_id INTEGER,
+      question TEXT NOT NULL,
+      one_per_day INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(section_id) REFERENCES sections(id) ON DELETE CASCADE
+    );
+    CREATE TABLE IF NOT EXISTS poll_options(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      poll_id INTEGER NOT NULL,
+      label TEXT NOT NULL,
+      color TEXT,
+      votes INTEGER NOT NULL DEFAULT 0,
+      position INTEGER,
+      FOREIGN KEY(poll_id) REFERENCES polls(id) ON DELETE CASCADE
+    );
+  `);
+  // Migrations for legacy
+  try{
+    const pollsCols = query(`PRAGMA table_info(polls)`);
+    if (!pollsCols.some(c => (c.name||c.Name)==='section_id')){
+      db.run(`ALTER TABLE polls ADD COLUMN section_id INTEGER;`);
+    }
+    const optsCols = query(`PRAGMA table_info(poll_options)`);
+    if (!optsCols.some(c => (c.name||c.Name)==='position')){
+      db.run(`ALTER TABLE poll_options ADD COLUMN position INTEGER;`);
+      const pids = query(`SELECT id FROM polls ORDER BY id ASC`).map(r=>r.id);
+      pids.forEach(pid=>{
+        const optIds = query(`SELECT id FROM poll_options WHERE poll_id=? ORDER BY id ASC`, [pid]).map(r=>r.id);
+        optIds.forEach((oid, i)=> execRun(`UPDATE poll_options SET position=? WHERE id=?`, [i+1, oid]));
+      });
+    }
+  }catch(e){ console.warn('Migration step failed', e); }
+
+  // Ensure a section & seed
+  const scount = query(`SELECT COUNT(*) AS c FROM sections`)[0].c;
+  if (!scount){ execRun(`INSERT INTO sections(name, color) VALUES (?,?)`, ["General", "#6c63ff"]); }
+  const generalId = query(`SELECT id FROM sections WHERE name=?`, ["General"])[0].id;
+  execRun(`UPDATE polls SET section_id=? WHERE section_id IS NULL`, [generalId]);
+
+  const pcount = query(`SELECT COUNT(*) AS c FROM polls`)[0].c;
+  if (!pcount){
+    const sid = generalId;
+    execRun(`INSERT INTO polls(section_id, question, one_per_day) VALUES (?,?,1),(?, ?,1)`,
+      [sid, "What’s your favorite programming language?", sid, "Which design tool do you prefer?"]);
+    const ids = query("SELECT id FROM polls ORDER BY id ASC").map(r=>r.id);
+    const add = db.prepare("INSERT INTO poll_options(poll_id,label,color,position) VALUES (?,?,?,?)");
+    ["JavaScript","Python","C#","Java"].forEach((opt,i)=>add.run([ids[0],opt, PALETTE[i%PALETTE.length], i+1]));
+    ["Figma","Adobe XD","Sketch","Canva"].forEach((opt,i)=>add.run([ids[1],opt, PALETTE[(i+4)%PALETTE.length], i+1]));
+    add.free();
+  }
+
+  persistDb();
+  STATUS.innerHTML = "DB: <b>SQLite (sql.js)</b> ✅";
+  FALLBACK.textContent = "";
+}
+
+/* =========================
+   Fallback (in-memory)
+   ========================= */
+let mem=null;
+function initMock(){
+  mem = {
+    sections:[{id:1,name:"General",color:"#6c63ff"}],
+    polls:[
+      {id:1, section_id:1, question:"What’s your favorite programming language?", one_per_day:1},
+      {id:2, section_id:1, question:"Which design tool do you prefer?", one_per_day:1}
+    ],
+    options:[
+      {id:1,poll_id:1,label:"JavaScript",color:"#6c63ff",votes:0,position:1},
+      {id:2,poll_id:1,label:"Python",color:"#00bcd4",votes:0,position:2},
+      {id:3,poll_id:1,label:"C#",color:"#ff8a65",votes:0,position:3},
+      {id:4,poll_id:1,label:"Java",color:"#66bb6a",votes:0,position:4},
+      {id:5,poll_id:2,label:"Figma",color:"#ffd54f",votes:0,position:1},
+      {id:6,poll_id:2,label:"Adobe XD",color:"#42a5f5",votes:0,position:2},
+      {id:7,poll_id:2,label:"Sketch",color:"#ab47bc",votes:0,position:3},
+      {id:8,poll_id:2,label:"Canva",color:"#ef5350",votes:0,position:4}
+    ],
+    nextIds:{section:2, poll:3, opt:9}
+  };
+  STATUS.innerHTML = "DB: <b>Fallback (in-memory)</b> ⚠️";
+  FALLBACK.innerHTML = '<span class="err">sql.js was unavailable. Using a temporary in-memory store. Votes will not persist.</span>';
+}
+
+/* =========================
+   DB helpers
+   ========================= */
+function persistDb(){ try{ if(!usingFallback) localStorage.setItem(DB_STORAGE_KEY, bytesToBase64(db.export())); }catch(e){} }
+function query(sql, params=[]){ const stmt=db.prepare(sql); const rows=[]; stmt.bind(params); while(stmt.step()) rows.push(stmt.getAsObject()); stmt.free(); return rows; }
+function execRun(sql, params=[]){ const stmt=db.prepare(sql); stmt.run(params); stmt.free(); persistDb(); }
+
+/* =========================
+   Sections API
+   ========================= */
+function loadSections(){
+  if (usingFallback){
+    sectionsCache = mem.sections.slice().sort((a,b)=>a.name.localeCompare(b.name));
+  } else {
+    sectionsCache = query(`SELECT id, name, COALESCE(color,'') AS color FROM sections ORDER BY name ASC`);
+  }
+  return sectionsCache;
+}
+function createSection(name, color){
+  if (!name.trim()) return false;
+  if (usingFallback){ mem.sections.push({id:mem.nextIds.section++, name, color}); }
+  else { execRun(`INSERT INTO sections(name,color) VALUES (?,?)`, [name, color||null]); }
+  refreshSectionsUI(); toast("Section created ➕"); return true;
+}
+function renameSection(id, name, color){
+  if (!id) return;
+  if (usingFallback){ const s = mem.sections.find(x=>x.id===id); if (s){ s.name=name||s.name; s.color=color||s.color; } }
+  else { execRun(`UPDATE sections SET name=?, color=? WHERE id=?`, [name, color||null, id]); }
+  refreshSectionsUI(); toast("Section updated ✍️");
+}
+function deleteSection(id){
+  if (!id) return;
+  if (usingFallback){
+    const pollIds = mem.polls.filter(p=>p.section_id===id).map(p=>p.id);
+    mem.options = mem.options.filter(o=>!pollIds.includes(o.poll_id));
+    mem.polls = mem.polls.filter(p=>p.section_id!==id);
+    mem.sections = mem.sections.filter(s=>s.id!==id);
+  } else {
+    execRun(`DELETE FROM sections WHERE id=?`, [id]);
+  }
+  refreshSectionsUI(); renderSectionsAndPolls(); toast("Section deleted 🗑️");
+}
+
+/* =========================
+   UI Wiring
+   ========================= */
+function bindUi(){
+  document.getElementById('exportBtn').addEventListener('click', onExportDb);
+  document.getElementById('importFile').addEventListener('change', onImportDb);
+  document.getElementById('resetBtn').addEventListener('click', onReset);
+  document.getElementById('exportCsvBtn').addEventListener('click', onExportCsv);
+
+  if (!embedMode){
+    PUBLIC_TOGGLE.addEventListener('change', ()=>{
+      resultsOnly = PUBLIC_TOGGLE.checked;
+      updateUrlForResultsOnly(resultsOnly);
+      if (leaderboardMode) renderLeaderboard();
+      else renderSectionsAndPolls();
+    });
+
+    ADMIN_TOGGLE_BTN.addEventListener('click', async ()=>{
+      if (adminSession){ toast("Admin already unlocked"); return; }
+      const ok = await ensureAdminAuth();
+      if (ok){ enterAdminMode(); }
+    });
+    ADMIN_LOCK_BTN.addEventListener('click', ()=>{ exitAdminMode(); toast("Admin locked 🔒"); });
+  } else {
+    exitAdminMode(); // disable admin in embed
+  }
+
+  SECTION_FILTER.addEventListener('change', ()=>{
+    if (leaderboardMode) renderLeaderboard(); // filter influences section breakdown panel
+    else renderSectionsAndPolls();
+  });
+
+  document.getElementById('addSectionBtn').addEventListener('click', ()=>{
+    if (!adminSession) return toast("Unlock Admin first");
+    createSection(NEW_SECTION_NAME.value.trim(), NEW_SECTION_COLOR.value);
+    NEW_SECTION_NAME.value='';
+  });
+  document.getElementById('renameSectionBtn').addEventListener('click', ()=>{
+    if (!adminSession) return toast("Unlock Admin first");
+    const sid = currentSectionId();
+    if (!sid || sid==='all') return toast("Pick a section to rename");
+    renameSection(Number(sid), RENAME_SECTION_NAME.value.trim() || selectedSection()?.name, RENAME_SECTION_COLOR.value);
+  });
+  document.getElementById('deleteSectionBtn').addEventListener('click', ()=>{
+    if (!adminSession) return toast("Unlock Admin first");
+    const sid = currentSectionId();
+    if (!sid || sid==='all') return toast("Pick a section to delete");
+    const s = selectedSection();
+    if (!confirm(`Delete section “${s.name}” and ALL its polls? This cannot be undone.`)) return;
+    deleteSection(Number(sid));
+    SECTION_FILTER.value='all';
+  });
+
+  document.getElementById('addPollBtn').addEventListener('click', onAddPoll);
+}
+
+/* Populate filter + new-poll section dropdowns */
+function refreshSectionsUI(){
+  loadSections();
+  SECTION_FILTER.innerHTML = `<option value="all">All Sections</option>` +
+    sectionsCache.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  const s = selectedSection();
+  if (s){ RENAME_SECTION_NAME.value = s.name; RENAME_SECTION_COLOR.value = s.color || "#6c63ff"; }
+  NEW_POLL_SECTION.innerHTML = sectionsCache.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+}
+
+function selectedSection(){ const v = SECTION_FILTER.value; if (v==='all') return null; return sectionsCache.find(s=>String(s.id)===String(v)); }
+function currentSectionId(){ return SECTION_FILTER.value; }
+
+/* =========================
+   Rendering — Sections Page
+   ========================= */
+function renderSectionsAndPolls(){
+  LEADERBOARD_CONTAINER.style.display='none';
+  SECTIONS_CONTAINER.style.display='block';
+  SECTIONS_CONTAINER.innerHTML = '';
+  const filter = SECTION_FILTER.value;
+  const sectionsToShow = filter==='all' ? sectionsCache : sectionsCache.filter(s=>String(s.id)===String(filter));
+
+  if (sectionsToShow.length===0){
+    SECTIONS_CONTAINER.innerHTML = `<div class="card ghost">No sections yet. Unlock Admin to add one.</div>`;
+    return;
+  }
+
+  sectionsToShow.forEach(section=>{
+    const stats = computeSectionStats(section.id);
+    const secWrap = document.createElement('section');
+    const dot = `<span class="dot" style="background:${section.color||'#cfe0f2'}"></span>`;
+    const topOptHtml = stats.topOption
+      ? `<span class="stat" title="Top option across this section">
+           🏆 <strong>${escapeHtml(stats.topOption.label)}</strong> (${stats.topOption.votes} vote${stats.topOption.votes===1?'':'s'})
+           <a href="#poll-${stats.topOption.pollId}" class="pill" style="text-decoration:none;">View poll →</a>
+         </span>`
+      : `<span class="stat">🏆 No votes yet</span>`;
+
+    secWrap.innerHTML = `
+      <div class="section-header" id="section-${section.id}">
+        <div class="section-title">${dot}<span>${section.name}</span></div>
+        <div class="section-actions">
+          <div class="stats">
+            <span class="stat">🧮 ${stats.polls} poll${stats.polls===1?'':'s'}</span>
+            <span class="stat">🗳️ ${stats.votes} total vote${stats.votes===1?'':'s'}</span>
+            ${topOptHtml}
+          </div>
+        </div>
+      </div>
+      <div class="grid" id="grid-${section.id}"></div>
+    `;
+    SECTIONS_CONTAINER.appendChild(secWrap);
+
+    const polls = usingFallback
+      ? mem.polls.filter(p=>p.section_id===section.id).map(p=>({...p, total: mem.options.filter(o=>o.poll_id===p.id).reduce((a,b)=>a+b.votes,0)}))
+      : query(`
+          SELECT p.id, p.section_id, p.question, p.one_per_day,
+                 COALESCE(SUM(o.votes),0) AS total
+          FROM polls p
+          LEFT JOIN poll_options o ON o.poll_id = p.id
+          WHERE p.section_id = ?
+          GROUP BY p.id
+          ORDER BY p.id DESC
+        `, [section.id]);
+
+    const grid = secWrap.querySelector(`#grid-${section.id}`);
+    if (!polls.length){
+      grid.innerHTML = `<div class="card ghost">No polls in this section.</div>`;
+    } else {
+      polls.forEach(p=> grid.appendChild(pollCard(p, section)));
+    }
+  });
+}
+
+/* =========================
+   Leaderboard Page
+   ========================= */
+function renderLeaderboard(){
+  SECTIONS_CONTAINER.style.display='none';
+  LEADERBOARD_CONTAINER.style.display='block';
+  LEADERBOARD_CONTAINER.innerHTML = '';
+
+  const data = snapshotData(); // {sections, polls, options}
+  const agg = computeGlobalStats(data);
+
+  // Header card
+  const head = document.createElement('div');
+  head.className = 'card';
+  head.innerHTML = `
+    <h3>🏆 Top Across All Sections</h3>
+    <div class="meta">
+      <span class="stat">🧮 ${agg.totalPolls} poll${agg.totalPolls===1?'':'s'}</span>
+      <span class="stat">🗳️ ${agg.totalVotes} total vote${agg.totalVotes===1?'':'s'}</span>
+      <span class="stat">📦 ${data.sections.length} section${data.sections.length===1?'':'s'}</span>
+      <a class="btn ghost" id="lbCsvBtn">Export Leaderboard CSV</a>
+    </div>
+  `;
+  LEADERBOARD_CONTAINER.appendChild(head);
+  head.querySelector('#lbCsvBtn').addEventListener('click', ()=>exportLeaderboardCsv(agg));
+
+  // Top options overall
+  const topOptsCard = document.createElement('div');
+  topOptsCard.className='card';
+  topOptsCard.innerHTML = `<h3>🔥 Top Options (overall)</h3><div class="lb-grid" id="lb-top-opts"></div>`;
+  LEADERBOARD_CONTAINER.appendChild(topOptsCard);
+  const optsGrid = topOptsCard.querySelector('#lb-top-opts');
+  agg.topOptions.slice(0, 12).forEach((o, i)=>{
+    const el = document.createElement('div');
+    el.className = 'lb-item';
+    const section = data.sections.find(s=>s.id===o.section_id);
+    el.innerHTML = `
+      <div><span class="rank">${i+1}</span><strong>${escapeHtml(o.label)}</strong></div>
+      <div class="muted">Votes: ${o.votes} • ${section ? 'Section: '+escapeHtml(section.name) : ''}</div>
+      <div class="muted">Poll: <a href="#poll-${o.poll_id}">${escapeHtml(o.question)}</a></div>
+    `;
+    optsGrid.appendChild(el);
+  });
+
+  // Top polls by total votes
+  const topPollsCard = document.createElement('div');
+  topPollsCard.className='card';
+  topPollsCard.innerHTML = `<h3>📈 Top Polls by Total Votes</h3><div class="lb-grid" id="lb-top-polls"></div>`;
+  LEADERBOARD_CONTAINER.appendChild(topPollsCard);
+  const pollsGrid = topPollsCard.querySelector('#lb-top-polls');
+  agg.topPolls.slice(0, 12).forEach((p, i)=>{
+    const el = document.createElement('div');
+    el.className = 'lb-item';
+    const section = data.sections.find(s=>s.id===p.section_id);
+    el.innerHTML = `
+      <div><span class="rank">${i+1}</span><strong>${escapeHtml(p.question)}</strong></div>
+      <div class="muted">Total votes: ${p.total_votes} • ${section ? 'Section: '+escapeHtml(section.name) : ''}</div>
+      <div class="muted">Top option: ${escapeHtml(p.top_option_label)} (${p.top_option_votes})</div>
+      <div><a class="pill" href="#poll-${p.id}" style="text-decoration:none;">Open poll →</a></div>
+    `;
+    pollsGrid.appendChild(el);
+  });
+
+  // Section standings
+  const bySection = document.createElement('div');
+  bySection.className='card';
+  bySection.innerHTML = `<h3>🧭 Section Standings</h3><div class="lb-grid" id="lb-sections"></div>`;
+  LEADERBOARD_CONTAINER.appendChild(bySection);
+  const secGrid = bySection.querySelector('#lb-sections');
+  agg.sectionTotals.forEach((s, i)=>{
+    const el = document.createElement('div');
+    el.className = 'lb-item';
+    el.innerHTML = `
+      <div><span class="rank">${i+1}</span><strong>${escapeHtml(s.name)}</strong></div>
+      <div class="muted">Polls: ${s.polls} • Votes: ${s.votes}</div>
+    `;
+    secGrid.appendChild(el);
+  });
+}
+
+/* Snapshot & Global Stats */
+function snapshotData(){
+  if (usingFallback){
+    return {
+      sections: mem.sections.map(s=>({...s})),
+      polls: mem.polls.map(p=>({...p})),
+      options: mem.options.map(o=>({...o}))
+    };
+  } else {
+    const sections = query(`SELECT id, name, COALESCE(color,'') AS color FROM sections ORDER BY id ASC`);
+    const polls = query(`SELECT id, section_id, question, one_per_day, created_at FROM polls ORDER BY id ASC`);
+    const options = query(`SELECT id, poll_id, label, COALESCE(color,'') AS color, votes, COALESCE(position, id) AS position
+                           FROM poll_options ORDER BY poll_id ASC, position ASC, id ASC`);
+    return { sections, polls, options };
+  }
+}
+function computeGlobalStats(data){
+  const sectionIndex = Object.fromEntries(data.sections.map(s=>[s.id, s]));
+  const pollOptions = {};
+  data.options.forEach(o=>{
+    if (!pollOptions[o.poll_id]) pollOptions[o.poll_id]=[];
+    pollOptions[o.poll_id].push(o);
+  });
+
+  const topOptions = data.options
+    .map(o=>{
+      const poll = data.polls.find(p=>p.id===o.poll_id) || {};
+      return { ...o, question: poll.question || '', section_id: poll.section_id || null };
+    })
+    .sort((a,b)=> (b.votes||0)-(a.votes||0) || a.id-b.id);
+
+  const pollTotals = data.polls.map(p=>{
+    const opts = pollOptions[p.id]||[];
+    const total = opts.reduce((a,b)=>a+(b.votes||0),0);
+    const top = opts.slice().sort((a,b)=>(b.votes||0)-(a.votes||0) || a.id-b.id)[0] || {label:'—', votes:0};
+    return {
+      id:p.id, section_id:p.section_id, question:p.question,
+      total_votes: total, top_option_label: top.label, top_option_votes: top.votes||0
+    };
+  }).sort((a,b)=> (b.total_votes)-(a.total_votes) || a.id-b.id);
+
+  const sectionTotalsMap = new Map();
+  data.sections.forEach(s=>sectionTotalsMap.set(s.id, { id:s.id, name:s.name, votes:0, polls:0 }));
+  data.polls.forEach(p=>{
+    const entry = sectionTotalsMap.get(p.section_id);
+    if (entry){ entry.polls += 1; }
+  });
+  data.options.forEach(o=>{
+    const poll = data.polls.find(p=>p.id===o.poll_id);
+    if (poll){
+      const entry = sectionTotalsMap.get(poll.section_id);
+      if (entry){ entry.votes += (o.votes||0); }
+    }
+  });
+  const sectionTotals = [...sectionTotalsMap.values()].sort((a,b)=> b.votes - a.votes || a.name.localeCompare(b.name));
+
+  const totalVotes = data.options.reduce((a,b)=>a+(b.votes||0),0);
+  return {
+    totalVotes,
+    totalPolls: data.polls.length,
+    topOptions,
+    topPolls: pollTotals,
+    sectionTotals
+  };
+}
+function exportLeaderboardCsv(agg){
+  const lines = [];
+  lines.push(["Top Options (overall)"]);
+  lines.push(["Rank","Option","Votes","Poll ID","Poll Question","Section"]);
+  const data = snapshotData();
+  agg.topOptions.slice(0,50).forEach((o, i)=>{
+    const section = data.sections.find(s=>s.id===o.section_id);
+    lines.push([i+1, o.label, o.votes, o.poll_id, o.question, section? section.name : ""]);
+  });
+  lines.push([]);
+  lines.push(["Top Polls"]);
+  lines.push(["Rank","Poll ID","Question","Total Votes","Top Option","Top Option Votes","Section"]);
+  agg.topPolls.slice(0,50).forEach((p,i)=>{
+    const section = data.sections.find(s=>s.id===p.section_id);
+    lines.push([i+1, p.id, p.question, p.total_votes, p.top_option_label, p.top_option_votes, section? section.name:""]);
+  });
+  lines.push([]);
+  lines.push(["Section Standings"]);
+  lines.push(["Rank","Section","Polls","Votes"]);
+  agg.sectionTotals.forEach((s,i)=> lines.push([i+1, s.name, s.polls, s.votes]));
+
+  const csv = lines.map(r=>r.map(toCsvCell).join(',')).join('\n');
+  triggerDownload(new Blob([csv], {type:"text/csv;charset=utf-8"}), `leaderboard.csv`);
+}
+
+/* =========================
+   Voting & Results (unchanged)
+   ========================= */
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function getVoteLog(){ try { return JSON.parse(localStorage.getItem(VOTE_LOG_KEY) || "{}"); } catch { return {}; } }
+function setVoteLog(log){ localStorage.setItem(VOTE_LOG_KEY, JSON.stringify(log)); }
+function canVote(pollId){ const log = getVoteLog(); return log[pollId] !== todayStr(); }
+function markVoted(pollId){ const log = getVoteLog(); log[pollId] = todayStr(); setVoteLog(log); }
+
+function onVote(pollId, optionId){
+  if (isResultsOnly()){ toast("Results-only mode: voting disabled."); return; }
+  let onePerDay = 1;
+  if (usingFallback){ const p = mem.polls.find(x=>x.id===pollId); onePerDay = p ? Number(p.one_per_day) : 1; }
+  else { onePerDay = Number(query(`SELECT one_per_day FROM polls WHERE id=?`, [pollId])[0].one_per_day); }
+  if (onePerDay && !canVote(pollId)){ toast("You've already voted on this poll today from this browser."); return; }
+
+  if (usingFallback){ const o = mem.options.find(x=>x.id===optionId); if (o) o.votes++; }
+  else { execRun(`UPDATE poll_options SET votes = votes + 1 WHERE id = ?`, [optionId]); }
+  if (onePerDay) markVoted(pollId);
+
+  renderResults(pollId);
+  // Refresh the visible page
+  if (leaderboardMode) renderLeaderboard(); else renderSectionsAndPolls();
+  toast("Vote counted ✅");
+}
+
+function renderResults(pollId){
+  const res = document.getElementById(`res-${pollId}`); if (!res) return;
+  const options = usingFallback
+    ? mem.options.filter(o=>o.poll_id===pollId).sort((a,b)=>(a.position||0)-(b.position||0)||a.id-b.id)
+    : query(`SELECT id, label, votes, COALESCE(color,'') AS color, COALESCE(position,id) AS position
+             FROM poll_options WHERE poll_id = ? ORDER BY position ASC, id ASC`, [pollId]);
+
+  const total = options.reduce((a,b)=>a + (b.votes||0), 0);
+  res.innerHTML = '';
+  options.forEach(opt=>{
+    const pct = total ? Math.round((opt.votes/total)*100) : 0;
+    const bg = gradientFrom(opt.color || '#6c63ff');
+    const row = document.createElement('div');
+    row.style.margin = '6px 0';
+    row.innerHTML = `
+      <div class="row" style="margin-bottom:4px;">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="width:12px;height:12px;border-radius:50%;border:1px solid #cfe0f2;background:${opt.color||'#6c63ff'}"></span>
+          ${escapeHtml(opt.label)}
+        </div>
+        <div class="meta">${opt.votes} vote${opt.votes===1?'':'s'} • ${pct}%</div>
+      </div>
+      <div class="bar"><div class="fill" style="width:${pct}%; background:${bg}">${pct ? pct+'%' : ''}</div></div>
+    `;
+    res.appendChild(row);
+  });
+}
+
+/* =========================
+   Per-section stats (existing)
+   ========================= */
+function computeSectionStats(sectionId){
+  let pollIds=[], pollsCount=0, totalVotes=0, top=null;
+  if (usingFallback){
+    const polls = mem.polls.filter(p=>p.section_id===sectionId);
+    pollsCount = polls.length; pollIds = polls.map(p=>p.id);
+    const opts = mem.options.filter(o=>pollIds.includes(o.poll_id));
+    opts.forEach(o=>{
+      totalVotes += (o.votes||0);
+      if (!top || o.votes > top.votes){ top = { label:o.label, votes:o.votes||0, pollId:o.poll_id }; }
+    });
+  } else {
+    const polls = query(`SELECT id FROM polls WHERE section_id=?`, [sectionId]);
+    pollsCount = polls.length; pollIds = polls.map(r=>r.id);
+    if (pollIds.length){
+      const inClause = `(${pollIds.map(()=>'?').join(',')})`;
+      const totals = query(`SELECT SUM(votes) AS v FROM poll_options WHERE poll_id IN ${inClause}`, pollIds);
+      totalVotes = (totals[0]?.v) || 0;
+      const topRow = query(`
+        SELECT label, votes, poll_id FROM poll_options
+        WHERE poll_id IN ${inClause}
+        ORDER BY votes DESC, id ASC LIMIT 1
+      `, pollIds);
+      if (topRow.length){ top = { label: topRow[0].label, votes: topRow[0].votes||0, pollId: topRow[0].poll_id }; }
+    }
+  }
+  return { polls: pollsCount, votes: totalVotes, topOption: top };
+}
+
+/* =========================
+   JSON FEED
+   ========================= */
+function renderJsonFeed(){
+  // Build a stable, useful JSON shape
+  const data = snapshotData();
+  // enrich with totals
+  const pollsOut = data.polls.map(p=>{
+    const options = data.options.filter(o=>o.poll_id===p.id).sort((a,b)=>(a.position||0)-(b.position||0)||a.id-b.id);
+    const total = options.reduce((a,b)=>a+(b.votes||0),0);
+    return {
+      id:p.id, section_id:p.section_id, question:p.question, one_per_day: !!p.one_per_day,
+      total_votes: total,
+      options: options.map(o=>({
+        id:o.id, label:o.label, color:o.color||null, votes:o.votes||0,
+        percent: total ? Math.round((o.votes||0)/total*100) : 0
+      }))
+    };
+  });
+  const sectionsOut = data.sections.map(s=>{
+    const ps = pollsOut.filter(p=>p.section_id===s.id);
+    const votes = ps.reduce((a,b)=>a+b.total_votes,0);
+    return { id:s.id, name:s.name, color:s.color||null, polls: ps.length, votes };
+  });
+
+  const payload = {
+    generated_at: new Date().toISOString(),
+    results_only: resultsOnly,
+    embed: embedMode,
+    counts: {
+      sections: sectionsOut.length,
+      polls: pollsOut.length,
+      votes: sectionsOut.reduce((a,b)=>a+b.votes,0)
+    },
+    sections: sectionsOut,
+    polls: pollsOut
+  };
+
+  // Replace the page with JSON text
+  document.body.innerHTML = '';
+  const pre = document.createElement('pre');
+  pre.textContent = JSON.stringify(payload, null, 2);
+  document.body.appendChild(pre);
+}
+
+/* =========================
+   CSV helpers
+   ========================= */
+function toCsvCell(v){ const s=String(v ?? ''); return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; }
+function exportPollCsv(pollId){
+  const poll = usingFallback
+    ? (mem.polls.find(p=>p.id===pollId) || {})
+    : query(`SELECT p.id, p.question, s.name AS section, p.section_id
+             FROM polls p LEFT JOIN sections s ON s.id=p.section_id WHERE p.id=?`, [pollId])[0] || {};
+  const opts = usingFallback
+    ? mem.options.filter(o=>o.poll_id===pollId).sort((a,b)=>(a.position||0)-(b.position||0)||a.id-b.id)
+    : query(`SELECT label, votes FROM poll_options WHERE poll_id=? ORDER BY position ASC, id ASC`, [pollId]);
+  const total = opts.reduce((a,b)=>a+(b.votes||0),0);
+  const rows = [
+    ["Section", poll.section || (sectionsCache.find(s=>s.id===poll.section_id)?.name||'')],
+    ["Poll ID", poll.id],
+    ["Question", poll.question],
+    [],
+    ["Option","Votes","Percent"]
+  ];
+  opts.forEach(o=> rows.push([o.label, o.votes, total? Math.round((o.votes/total)*100)+'%' : '0%']));
+  rows.push([]); rows.push(["Total", total]);
+  const csv = rows.map(r=>r.map(toCsvCell).join(',')).join('\n');
+  triggerDownload(new Blob([csv], {type:"text/csv;charset=utf-8"}), `poll-${pollId}.csv`);
+}
+function onExportCsv(){
+  const lines = [["Section","Poll ID","Question","Option","Votes","Percent"]];
+  const polls = usingFallback
+    ? mem.polls.map(p=>({...p, section: (mem.sections.find(s=>s.id===p.section_id)||{}).name}))
+    : query(`SELECT p.id, p.question, p.section_id, s.name AS section
+             FROM polls p LEFT JOIN sections s ON s.id = p.section_id ORDER BY s.name ASC, p.id ASC`);
+  polls.forEach(p=>{
+    const opts = usingFallback
+      ? mem.options.filter(o=>o.poll_id===p.id).sort((a,b)=>(a.position||0)-(b.position||0)||a.id-b.id)
+      : query(`SELECT label, votes FROM poll_options WHERE poll_id=? ORDER BY position ASC, id ASC`, [p.id]);
+    const total = opts.reduce((a,b)=>a+(b.votes||0),0);
+    opts.forEach(o=> lines.push([p.section||'', p.id, p.question, o.label, o.votes, total? Math.round((o.votes/total)*100)+'%' : '0%']));
+  });
+  const csv = lines.map(r=>r.map(toCsvCell).join(',')).join('\n');
+  triggerDownload(new Blob([csv], {type:"text/csv;charset=utf-8"}), `polls.csv`);
+}
+
+/* =========================
+   Create / Import / Export / Reset
+   ========================= */
+function onAddPoll(){
+  if (!adminSession) return toast("Unlock Admin first");
+  const q = document.getElementById('newQuestion').value.trim();
+  const secId = Number(NEW_POLL_SECTION.value || (selectedSection()?.id));
+  const opts = document.getElementById('newOptions').value.split(',').map(s=>s.trim()).filter(Boolean);
+  if (!q || opts.length < 2){ alert("Please provide a question and at least two options."); return; }
+  if (!secId){ alert("Pick a section."); return; }
+
+  if (usingFallback){
+    const id = mem.nextIds.poll++;
+    mem.polls.push({id, section_id:secId, question:q, one_per_day:1});
+    opts.forEach((label,i)=>mem.options.push({id:mem.nextIds.opt++, poll_id:id, label, votes:0, color: PALETTE[i%PALETTE.length], position:i+1}));
+  } else {
+    execRun(`INSERT INTO polls(section_id, question, one_per_day) VALUES (?, ?, 1)`, [secId, q]);
+    const pollId = query(`SELECT last_insert_rowid() AS id`)[0].id;
+    const stmt = db.prepare(`INSERT INTO poll_options(poll_id,label,color,position) VALUES (?,?,?,?)`);
+    opts.forEach((label,i)=>stmt.run([pollId, label, PALETTE[i%PALETTE.length], i+1]));
+    stmt.free(); persistDb();
+  }
+  document.getElementById('newQuestion').value=''; document.getElementById('newOptions').value='';
+  if (leaderboardMode) renderLeaderboard(); else renderSectionsAndPolls();
+  toast("Poll created ✅");
+}
+
+function onExportDb(){
+  if (usingFallback){ alert("Export unavailable in fallback mode."); return; }
+  try{ triggerDownload(new Blob([db.export()], {type: "application/octet-stream"}), "online-poll-board.sqlite"); }
+  catch(e){ console.error(e); alert("Export failed."); }
+}
+async function onImportDb(e){
+  const file = e.target.files?.[0]; if (!file) return;
+  if (usingFallback){ alert("Import unavailable in fallback mode."); e.target.value=''; return; }
+  const buf = new Uint8Array(await e.target.files[0].arrayBuffer());
+  try{ db?.close(); }catch(_){}
+  db = new SQL.Database(buf); db.run(`PRAGMA foreign_keys = ON;`);
+  persistDb(); refreshSectionsUI();
+  if (leaderboardMode) renderLeaderboard(); else renderSectionsAndPolls();
+  e.target.value='';
+}
+function onReset(){
+  if (!confirm("This will clear local data (DB, vote log, admin session). Continue?")) return;
+  localStorage.removeItem(VOTE_LOG_KEY);
+  localStorage.removeItem(DB_STORAGE_KEY);
+  adminSession = false; document.body.classList.remove('admin-on');
+  ADMIN_TOGGLE_BTN.textContent = "Unlock Admin";
+  if (!usingFallback){ try{ db.close(); }catch(_){ } initDbSqlite().then(()=>{ refreshSectionsUI(); if (leaderboardMode) renderLeaderboard(); else renderSectionsAndPolls(); }); }
+  else { initMock(); refreshSectionsUI(); if (leaderboardMode) renderLeaderboard(); else renderSectionsAndPolls(); }
+  toast("Reset complete");
+}
+
+/* =========================
+   Admin PIN (tiny auth)
+   ========================= */
+async function ensureAdminAuth(){
+  let stored = localStorage.getItem(ADMIN_PIN_HASH);
+  if (!stored){
+    const first = prompt("Set an Admin PIN (4–8 digits):");
+    if (!/^\d{4,8}$/.test(first||"")){ toast("PIN must be 4–8 digits"); return false; }
+    const confirmPin = prompt("Confirm PIN:"); if (first !== confirmPin){ toast("PINs do not match"); return false; }
+    stored = await sha256(first); localStorage.setItem(ADMIN_PIN_HASH, stored); toast("Admin PIN set ✅");
+  } else {
+    const attempt = prompt("Enter Admin PIN:"); if (attempt==null) return false;
+    const hash = await sha256(attempt); if (hash !== stored){ toast("Incorrect PIN"); return false; }
+  }
+  return true;
+}
+function enterAdminMode(){ adminSession = true; document.body.classList.add('admin-on'); ADMIN_TOGGLE_BTN.textContent = "Admin Unlocked"; toast("Admin unlocked 🔓"); refreshSectionsUI(); if (leaderboardMode) renderLeaderboard(); else renderSectionsAndPolls(); }
+function exitAdminMode(){ adminSession = false; document.body.classList.remove('admin-on'); ADMIN_TOGGLE_BTN.textContent = "Unlock Admin"; refreshSectionsUI(); if (leaderboardMode) renderLeaderboard(); else renderSectionsAndPolls(); }
+async function sha256(text){
+  if (!crypto?.subtle){ return simpleHash(text); }
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function simpleHash(s){ let h=0; for (let i=0;i<s.length;i++){ h=((h<<5)-h)+s.charCodeAt(i); h|=0; } return 'x'+(h>>>0).toString(16); }
+
+/* =========================
+   Results-only & Links
+   ========================= */
+function isResultsOnly(){ return !!resultsOnly; }
+function updateUrlForResultsOnly(enabled){
+  const url = new URL(location.href);
+  if (enabled) url.searchParams.set('view','results'); else url.searchParams.delete('view');
+  history.replaceState(null, '', url.toString());
+}
+function buildShareUrl(results, pollId){
+  const url = new URL(location.href);
+  if (results) url.searchParams.set('view','results'); else url.searchParams.delete('view');
+  url.hash = `#poll-${pollId}` + (results ? ':results' : '');
+  return url.toString();
+}
+function handleDeepLink(){
+  const idRaw = location.hash.replace('#',''); if (!idRaw) return;
+  const id = idRaw.split(':')[0];
+  if (id.startsWith('poll-')){
+    const pid = Number(id.replace('poll-',''));
+    let sid;
+    if (usingFallback){ const p = mem.polls.find(x=>x.id===pid); sid = p?.section_id; }
+    else { const r = query(`SELECT section_id FROM polls WHERE id=?`, [pid])[0]; sid = r?.section_id; }
+    if (!leaderboardMode && sid){ SECTION_FILTER.value = String(sid); renderSectionsAndPolls(); }
+  }
+  const el = document.getElementById(id);
+  if (el){ el.scrollIntoView({behavior:'smooth', block:'start'}); el.classList.remove('highlight'); void el.offsetWidth; el.classList.add('highlight'); }
+}
+
+/* =========================
+   Helpers
+   ========================= */
+function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.async=true; s.onload=()=>res(); s.onerror=rej; document.head.appendChild(s); }); }
+function triggerDownload(blob, filename){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href); }
+function bytesToBase64(bytes){ let bin=''; for (let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]); return btoa(bin); }
+function base64ToBytes(b64){ const bin = atob(b64); const bytes = new Uint8Array(bin.length); for (let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i); return bytes; }
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&nbsp;&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])).replace('&nbsp;&amp;','&amp;'); }
+let toastTimer=null; function toast(msg){ TOAST.textContent=msg; TOAST.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>TOAST.classList.remove('show'), 2000); }
+function sanitizeColor(c){ return c && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(c) ? c : ''; }
+function randomColorFor(seed){ return PALETTE[Math.abs(hashCode(String(seed))) % PALETTE.length]; }
+function hashCode(str){ let h=0; for (let i=0;i<s.length;i++){ h=((h<<5)-h)+s.charCodeAt(i); h|=0; } return h; }
+function gradientFrom(hex){ const base = sanitizeColor(hex) || "#6c63ff"; const light = lighten(base, 18); return `linear-gradient(90deg, ${base}, ${light})`; }
+function lighten(hex, pct){ const c=hex.replace('#',''); const n=c.length===3?c.split('').map(x=>x+x).join(''):c;
+  const r=parseInt(n.slice(0,2),16), g=parseInt(n.slice(2,4),16), b=parseInt(n.slice(4,6),16);
+  const f=(v)=>Math.min(255, Math.round(v + (255-v)*(pct/100)));
+  return '#'+[f(r),f(g),f(b)].map(v=>v.toString(16).padStart(2,'0')).join(''); }
+</script>
+</body>
+</html>
