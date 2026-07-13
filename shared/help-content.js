@@ -703,24 +703,24 @@
       },
       "chatgpt-viewer": {
         title: "ChatGPT Viewer",
-        about: "Placeholder app in launcher registry.",
-        operations: ["Not installed in this bundle."],
-        keys: ["N/A"],
+        about: "Private local viewer for ChatGPT conversation exports.",
+        operations: ["Import an exported conversation file.", "Browse and search conversations locally."],
+        keys: ["Use on-screen controls. F1 opens FieldKit help."],
         commands: ["N/A"],
         scenarios: ["Use when viewer app is added."]
       },
       "qr-generator": {
         title: "QR Generator",
-        about: "Placeholder app in launcher registry.",
-        operations: ["Not installed in this bundle."],
+        about: "Generate QR codes from text or links without sending data to a server.",
+        operations: ["Enter text or a URL.", "Generate and save a QR code."],
         keys: ["N/A"],
         commands: ["N/A"],
         scenarios: ["Use when generator app is added."]
       },
       "markdown-slides": {
         title: "Markdown Slides",
-        about: "Placeholder app in launcher registry.",
-        operations: ["Not installed in this bundle."],
+        about: "Create presentations from Markdown slide content.",
+        operations: ["Write or paste Markdown.", "Present and export your deck."],
         keys: ["N/A"],
         commands: ["N/A"],
         scenarios: ["Use when slides app is added."]
@@ -735,8 +735,8 @@
       },
       "quiz-builder": {
         title: "Quiz Builder",
-        about: "Placeholder app in launcher registry.",
-        operations: ["Not installed in this bundle."],
+        about: "Build interactive, local-first quizzes.",
+        operations: ["Create question banks.", "Take quizzes and review results."],
         keys: ["N/A"],
         commands: ["N/A"],
         scenarios: ["Use when quiz builder is added."]

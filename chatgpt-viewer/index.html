@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ChatGPT Backup Viewer — Local & Private</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.1.0/variable.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+  <style>
+    :root{
+      --bg:#0b0d10;--panel:#12161b;--muted:#7a8698;--text:#e6ebf2;--accent:#7dd3fc;--line:#1f2731;--chip:#1a2029;--user:#1e3a8a;--assistant:#334155;--system:#3f3f46;
+      --card:#0f141a;--danger:#ef4444;--ok:#22c55e;--warn:#f59e0b
+    }
+    *{box-sizing:border-box;font-family:"InterVariable",system-ui,-apple-system,Segoe UI,Roboto,Arial,"Apple Color Emoji","Segoe UI Emoji"}
+    html,body{height:100%;}
+    body{margin:0;background:var(--bg);color:var(--text);}
+    .app{display:grid;grid-template-rows:56px 1fr;grid-template-columns:300px 1fr;grid-template-areas:"top top" "left main";height:100vh;}
+    .top{grid-area:top;display:flex;align-items:center;gap:12px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--panel);}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:700}
+    .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 18px var(--accent)}
+    .top input[type="search"]{flex:1;min-width:120px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#0c1117;color:var(--text)}
+    .top .btn{padding:9px 12px;border:1px solid var(--line);background:#0c1117;border-radius:10px;color:var(--text);cursor:pointer}
+    .top .btn.primary{border-color:#0ea5e9;background:#0b1220}
+    .left{grid-area:left;border-right:1px solid var(--line);overflow:auto;background:var(--panel)}
+    .main{grid-area:main;display:grid;grid-template-rows:auto 1fr;min-width:0}
+    .filters{padding:12px;border-bottom:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap}
+    .filters .chip{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;display:flex;align-items:center;gap:6px}
+    .filters input,.filters select{background:#0c1117;border:1px solid var(--line);color:var(--text);border-radius:8px;padding:6px 8px}
+    .list{overflow:auto;height:calc(100vh - 56px);}
+    .conv{display:flex;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer}
+    .conv:hover{background:#0c1117}
+    .conv.active{background:#0b1220}
+    .conv .meta{flex:1;min-width:0}
+    .conv .title{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .conv .sub{color:var(--muted);font-size:12px;display:flex;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .badge{font-size:11px;border:1px solid var(--line);background:var(--chip);padding:2px 6px;border-radius:999px}
+    .empty{padding:24px;color:var(--muted)}
+    .viewer{overflow:auto;padding:24px;}
+    .thread-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .thread-title h2{margin:0;font-size:18px}
+    .thread-toolbar{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+    .button{border:1px solid var(--line);background:#0c1117;color:var(--text);padding:8px 10px;border-radius:10px;cursor:pointer}
+    .button.ghost{background:transparent}
+    .button.ok{border-color:var(--ok)}
+    .button.warn{border-color:var(--warn)}
+    .button.danger{border-color:var(--danger)}
+    .msg{border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0;background:var(--card)}
+    .msg.user{background:linear-gradient(180deg,#0b2040,#0b162a);border-color:#102b5a}
+    .msg.assistant{background:linear-gradient(180deg,#121820,#141b22)}
+    .msg.system{background:linear-gradient(180deg,#1f1f22,#19191b)}
+    .msg .mhead{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+    .role{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#a3aed0}
+    .time{font-size:12px;color:var(--muted)}
+    .content{line-height:1.6}
+    .content pre{background:#0b1220;padding:12px;border-radius:10px;overflow:auto;border:1px solid var(--line)}
+    .content code{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:999px;background:var(--chip);border:1px solid var(--line);font-size:11px;color:#b5c2d6}
+    .statline{display:flex;gap:12px;flex-wrap:wrap;margin:8px 0}
+    .dropzone{border:1.5px dashed var(--line);border-radius:12px;padding:12px 14px;color:var(--muted)}
+    .flex{display:flex;gap:10px;align-items:center}
+    .hidden{display:none}
+    .right-tools{display:flex;gap:10px}
+    .kbd{display:inline-block;border:1px solid var(--line);border-bottom-width:3px;padding:0 6px;border-radius:6px;font-size:12px;color:#cbd5e1;background:#0c1117}
+    .footer{padding:10px 12px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="top">
+      <div class="brand"><span class="dot"></span> ChatGPT Backup Viewer</div>
+      <input id="search" type="search" placeholder="Search titles & messages (⌘/Ctrl+K)" />
+      <button id="btnLoadZip" class="btn">Open .zip</button>
+      <input id="zipInput" type="file" accept=".zip" class="hidden" />
+      <button id="btnLoadJson" class="btn">Open .json</button>
+      <input id="jsonInput" type="file" accept=".json" class="hidden" />
+      <button id="btnExport" class="btn primary" title="Export filtered threads">Export</button>
+      <div class="right-tools">
+        <label class="btn" title="Dark / Light"><input id="themeToggle" type="checkbox"> Dark</label>
+        <button id="btnHelp" class="btn" title="Help & Shortcuts">?</button>
+      </div>
+    </div>
+
+    <div class="left">
+      <div class="filters">
+        <div class="chip">Threads: <span id="countThreads">0</span></div>
+        <div class="chip">Msgs: <span id="countMsgs">0</span></div>
+        <div class="chip">Models: <span id="countModels">0</span></div>
+        <select id="modelFilter"><option value="">All models</option></select>
+        <input id="dateFrom" type="date" />
+        <input id="dateTo" type="date" />
+        <label class="chip"><input id="hasImages" type="checkbox"> Images</label>
+        <label class="chip"><input id="onlyStarred" type="checkbox"> ★ Starred</label>
+      </div>
+      <div id="list" class="list"></div>
+      <div class="footer">Local & private. Nothing leaves this page.</div>
+    </div>
+
+    <div class="main">
+      <div class="viewer">
+        <div class="dropzone" id="dropzone">
+          <b>Drop your ChatGPT data export here</b> (zip or conversations.json), or use the buttons above.
+          <div style="margin-top:8px">Path examples: <span class="kbd">conversations.json</span> or <span class="kbd">conversations/*.json</span> inside the zip.</div>
+        </div>
+        <div id="thread" class="hidden"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vendor libs -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/common.min.js"></script>
+
+  <script>
+    // ===== Utilities
+    const DateTime = luxon.DateTime;
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+    const fmt = (ts)=> ts ? DateTime.fromMillis(ts).toFormat('yyyy-LL-dd HH:mm') : '';
+    const esc = (s)=> (s||'').toString().replace(/[<>]/g, c=> ({'<':'&lt;','>':'&gt;'}[c]));
+    const md = new marked.Marked({
+      breaks:true, gfm:true,
+      highlight(code,lang){ try{ return hljs.highlight(code,{language:lang||'plaintext'}).value }catch{ return esc(code)} }
+    });
+
+    const state = {
+      threads: [], // normalized
+      files: new Map(), // path->blob
+      fuse: null,
+      starred: new Set(JSON.parse(localStorage.getItem('cgbv_starred')||'[]')),
+      theme: (localStorage.getItem('cgbv_theme')||'dark')
+    };
+
+    // ===== Theme
+    const themeToggle = $('#themeToggle');
+    function applyTheme(){
+      if(state.theme==='light'){
+        document.body.style.setProperty('--bg','#f6f7fb');
+        document.body.style.setProperty('--panel','#ffffff');
+        document.body.style.setProperty('--text','#0b1220');
+        document.body.style.setProperty('--line','#e5e7eb');
+        document.body.style.setProperty('--muted','#475569');
+        document.body.style.setProperty('--card','#fff');
+      }
+    }
+    applyTheme();
+    themeToggle.checked = state.theme==='dark';
+    themeToggle.addEventListener('change', ()=>{
+      state.theme = themeToggle.checked ? 'dark' : 'light';
+      localStorage.setItem('cgbv_theme', state.theme);
+      location.reload();
+    });
+
+    // ===== Loading
+    $('#btnLoadZip').onclick = ()=> $('#zipInput').click();
+    $('#btnLoadJson').onclick = ()=> $('#jsonInput').click();
+    $('#zipInput').addEventListener('change', async (e)=>{
+      const file = e.target.files[0]; if(!file) return;
+      await loadZip(file);
+    });
+    $('#jsonInput').addEventListener('change', async (e)=>{
+      const file = e.target.files[0]; if(!file) return;
+      const text = await file.text();
+      let parsed; try{ parsed = JSON.parse(text) }catch{ alert('Invalid JSON'); return }
+      await loadJSON(parsed);
+    });
+
+    // Drag & drop
+    const dz = $('#dropzone');
+    ;['dragenter','dragover'].forEach(ev=> dz.addEventListener(ev, e=>{ e.preventDefault(); e.dataTransfer.dropEffect='copy'; dz.style.borderColor = '#60a5fa'; }));
+    ;['dragleave','drop'].forEach(ev=> dz.addEventListener(ev, e=>{ e.preventDefault(); dz.style.borderColor = 'var(--line)'; }));
+    dz.addEventListener('drop', async (e)=>{
+      const f = e.dataTransfer.files[0]; if(!f) return;
+      if(f.name.endsWith('.zip')) return loadZip(f);
+      if(f.name.endsWith('.json')){ const text = await f.text(); return loadJSON(JSON.parse(text)); }
+      alert('Please drop a .zip or .json from ChatGPT export');
+    });
+
+    async function loadZip(file){
+      const zip = await JSZip.loadAsync(file);
+      state.files.clear();
+      // Keep a map of every file for potential image/asset lookup
+      await Promise.all(Object.values(zip.files).map(async zf=>{
+        if(!zf.dir){ state.files.set(zf.name, await zf.async('blob')); }
+      }));
+      let convs = [];
+      if(zip.files['conversations.json']){
+        const json = JSON.parse(await zip.files['conversations.json'].async('string'));
+        convs = normalizeAnyExport(json);
+      } else {
+        // new-style: conversations/*.json
+        const entries = Object.keys(zip.files).filter(p=> p.startsWith('conversations/') && p.endsWith('.json'));
+        if(entries.length){
+          const arr = [];
+          for(const p of entries){ try{ arr.push(JSON.parse(await zip.files[p].async('string'))) }catch{} }
+          convs = normalizeAnyExport(arr);
+        }
+      }
+      if(!convs.length){ alert('Could not find conversations in the zip. Expected conversations.json or conversations/*.json'); return }
+      state.threads = convs;
+      buildFuse();
+      populateModels();
+      renderList();
+      showTip('Loaded '+convs.length+' conversations from zip.');
+      dz.classList.add('hidden');
+      $('#thread').classList.remove('hidden');
+    }
+
+    async function loadJSON(parsed){
+      const convs = normalizeAnyExport(parsed);
+      if(!convs.length){ alert('JSON did not look like a ChatGPT export. Expect an array or {conversations:[...]}.'); return }
+      state.threads = convs;
+      buildFuse();
+      populateModels();
+      renderList();
+      showTip('Loaded '+convs.length+' conversations from JSON.');
+      dz.classList.add('hidden');
+      $('#thread').classList.remove('hidden');
+    }
+
+    function normalizeAnyExport(json){
+      let raw = [];
+      if(Array.isArray(json)) raw = json; else if(json && Array.isArray(json.conversations)) raw = json.conversations; else return [];
+      const out = [];
+      for(const conv of raw){ out.push(normalizeConversation(conv)); }
+      // sort newest first by update or create
+      out.sort((a,b)=> (b.update||b.create||0)-(a.update||a.create||0));
+      return out;
+    }
+
+    function normalizeConversation(conv){
+      const id = conv.id || conv.conversation_id || conv.conversation_id_v2 || crypto.randomUUID();
+      const title = conv.title || conv.gpt_title || conv.safe_title || 'Untitled';
+      const create = toMillis(conv.create_time) || toMillis(conv.creation_date) || 0;
+      const update = toMillis(conv.update_time) || create;
+      const metaModels = new Set();
+      const messages = [];
+
+      if(Array.isArray(conv.messages)){
+        // newer style: flat array
+        for(const m of conv.messages){
+          const mm = normalizeMessage(m);
+          if(!mm) continue;
+          messages.push(mm);
+          if(mm.model) metaModels.add(mm.model);
+        }
+      } else if(conv.mapping){
+        // old style: mapping graph
+        const nodes = Object.values(conv.mapping).filter(n=> n && n.message && n.message.author && n.message.content);
+        nodes.sort((a,b)=> toMillis(a.message.create_time)-toMillis(b.message.create_time));
+        for(const n of nodes){
+          const mm = normalizeMessage(n.message);
+          if(!mm) continue;
+          messages.push(mm);
+          if(mm.model) metaModels.add(mm.model);
+        }
+      }
+      return { id, title, create, update, models:[...metaModels], messages };
+    }
+
+    function toMillis(t){
+      if(!t) return 0;
+      if(typeof t === 'number'){ if(t< 10_000_000_000) return t*1000; return t }
+      if(typeof t === 'string'){
+        // try ISO
+        const d = Date.parse(t); if(!Number.isNaN(d)) return d;
+        // some exports store as seconds string
+        if(/^[0-9]+$/.test(t)){ const n=+t; return n< 10_000_000_000 ? n*1000 : n }
+      }
+      return 0;
+    }
+
+    function normalizeMessage(m){
+      try{
+        const role = (m.author?.role || m.role || 'assistant').toLowerCase();
+        const ts = toMillis(m.create_time || m.timestamp || m.metadata?.timestamp);
+        const model = m.metadata?.model_slug || m.model || m.metadata?.model;
+        let text = '';
+        let hasImages = false;
+        const content = m.content || m.message?.content || m;
+        // cases: content.parts (strings), content.parts (objects), content.text, content[0].text, content.content[0].text
+        if(Array.isArray(content?.parts)){
+          text = content.parts.map(p=> typeof p==='string'? p : (p?.text || p?.content || '')).join('\n\n');
+          hasImages = content.parts.some(p=> typeof p==='object' && (p.type==='image' || p.type==='image_file' || p.type==='image_url'));
+        } else if(typeof content?.text === 'string'){
+          text = content.text;
+        } else if(Array.isArray(content?.content)){
+          text = content.content.map(p=> p?.text || '').join('\n\n');
+          hasImages = content.content.some(p=> p?.type?.includes('image'));
+        } else if(typeof content === 'string'){
+          text = content;
+        } else if(content?.content_type === 'code'){ text = content.text || content.code || '' }
+        return { role, ts, model, text, hasImages };
+      }catch{
+        return null;
+      }
+    }
+
+    // ===== Search & Filters
+    function buildFuse(){
+      state.fuse = new Fuse(state.threads, {
+        includeScore:false,
+        keys:[
+          {name:'title', weight:0.4},
+          {name:'messages.text', weight:0.6}
+        ],
+        threshold:0.3, minMatchCharLength:2
+      });
+    }
+
+    function populateModels(){
+      const set = new Set();
+      for(const t of state.threads){ for(const m of (t.models||[])) set.add(m) }
+      const sel = $('#modelFilter');
+      sel.innerHTML = '<option value="">All models</option>' + [...set].sort().map(m=>`<option>${esc(m)}</option>`).join('');
+      $('#countModels').textContent = set.size;
+    }
+
+    function applyFilters(){
+      const q = $('#search').value.trim();
+      const model = $('#modelFilter').value;
+      const hasImages = $('#hasImages').checked;
+      const onlyStarred = $('#onlyStarred').checked;
+      const df = $('#dateFrom').value ? Date.parse($('#dateFrom').value+'T00:00:00') : 0;
+      const dt = $('#dateTo').value ? Date.parse($('#dateTo').value+'T23:59:59') : Number.MAX_SAFE_INTEGER;
+
+      let arr = state.threads;
+      if(q){ arr = state.fuse.search(q).map(r=> r.item) }
+      if(model){ arr = arr.filter(t=> t.models?.includes(model)) }
+      if(hasImages){ arr = arr.filter(t=> t.messages.some(m=> m.hasImages)) }
+      if(onlyStarred){ arr = arr.filter(t=> state.starred.has(t.id)) }
+      arr = arr.filter(t=> (t.update||t.create)>=df && (t.update||t.create)<=dt);
+      return arr;
+    }
+
+    function renderList(){
+      const arr = applyFilters();
+      const list = $('#list');
+      list.innerHTML = '';
+      let totalMsgs = 0;
+      for(const t of arr){ totalMsgs += t.messages.length }
+      $('#countThreads').textContent = arr.length;
+      $('#countMsgs').textContent = totalMsgs;
+      if(!arr.length){ list.innerHTML = '<div class="empty">No threads match the current filters.</div>'; return }
+      for(const t of arr){
+        const el = document.createElement('div'); el.className='conv'; el.dataset.id=t.id;
+        el.innerHTML = `
+          <div class="meta">
+            <div class="title">${esc(t.title)}</div>
+            <div class="sub">
+              <span class="badge">${t.messages.length} msgs</span>
+              <span>${fmt(t.update||t.create)}</span>
+              ${state.starred.has(t.id)?'<span title="Starred">★</span>':''}
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            ${(t.models||[]).slice(0,2).map(m=>`<span class="badge" title="Model">${esc(m)}</span>`).join('')}
+            <button class="button ghost" title="Star / Unstar">★</button>
+          </div>
+        `;
+        el.onclick = (e)=>{
+          if(e.target.tagName==='BUTTON'){ toggleStar(t.id); e.stopPropagation(); return }
+          openThread(t.id);
+          $$('.conv', list).forEach(n=> n.classList.remove('active'));
+          el.classList.add('active');
+        };
+        list.appendChild(el);
+      }
+      // auto-open first if nothing open
+      if(!$('#thread').dataset.id && arr.length) openThread(arr[0].id);
+    }
+
+    function toggleStar(id){
+      if(state.starred.has(id)) state.starred.delete(id); else state.starred.add(id);
+      localStorage.setItem('cgbv_starred', JSON.stringify([...state.starred]));
+      renderList();
+    }
+
+    function openThread(id){
+      const t = state.threads.find(x=> x.id===id); if(!t) return;
+      const container = $('#thread'); container.dataset.id = id; container.innerHTML = '';
+      const head = document.createElement('div'); head.className='thread-title';
+      head.innerHTML = `
+        <h2>${esc(t.title)}</h2>
+        <span class="pill" title="Messages">${t.messages.length} msgs</span>
+        <span class="pill" title="Updated at">${fmt(t.update||t.create)}</span>
+        ${(t.models||[]).map(m=>`<span class="pill">${esc(m)}</span>`).join('')}
+        <div class="thread-toolbar">
+          <button class="button" id="btnCopy">Copy text</button>
+          <button class="button ok" id="btnExportMD">Export .md</button>
+          <button class="button warn" id="btnExportHTML">Export .html</button>
+          <button class="button danger" id="btnDeleteLocal">Hide</button>
+        </div>`;
+      container.appendChild(head);
+
+      const stat = document.createElement('div'); stat.className='statline';
+      stat.innerHTML = `
+        <span class="pill">User msgs: ${t.messages.filter(m=>m.role==='user').length}</span>
+        <span class="pill">Assistant msgs: ${t.messages.filter(m=>m.role==='assistant').length}</span>
+      `;
+      container.appendChild(stat);
+
+      for(const m of t.messages){ container.appendChild(renderMessage(m)); }
+
+      // wire toolbar
+      $('#btnCopy').onclick = ()=> navigator.clipboard.writeText(threadToPlain(t)).then(()=> showTip('Copied thread to clipboard'));
+      $('#btnExportMD').onclick = ()=> exportThreadMD(t);
+      $('#btnExportHTML').onclick = ()=> exportThreadHTML(t);
+      $('#btnDeleteLocal').onclick = ()=> hideThread(id);
+
+      // update URL hash for deep-link
+      location.hash = encodeURIComponent(id);
+    }
+
+    function renderMessage(m){
+      const el = document.createElement('div'); el.className = 'msg '+(m.role||'assistant');
+      el.innerHTML = `
+        <div class="mhead">
+          <span class="role">${m.role}</span>
+          <span class="time">${fmt(m.ts)}</span>
+          ${m.model?`<span class="pill">${esc(m.model)}</span>`:''}
+          ${m.hasImages?`<span class="pill">🖼 images</span>`:''}
+          <button class="button ghost" style="margin-left:auto">Copy</button>
+        </div>
+        <div class="content"></div>
+      `;
+      const html = DOMPurify.sanitize(md.parse(m.text||''));
+      $('.content', el).innerHTML = html;
+      $('button', el).onclick = ()=> navigator.clipboard.writeText(m.text||'');
+      return el;
+    }
+
+    // ===== Export helpers
+    function threadToPlain(t){
+      return [`# ${t.title}`, `Updated: ${fmt(t.update||t.create)}`, '']
+        .concat(t.messages.map(m=> `## ${m.role} — ${fmt(m.ts)}\n\n${m.text||''}`)).join('\n');
+    }
+    function exportThreadMD(t){
+      const blob = new Blob([threadToPlain(t)],{type:'text/markdown;charset=utf-8'});
+      saveAs(blob, safeName(`${fmt(t.update||t.create).slice(0,10)} ${t.title}.md`));
+    }
+    function exportThreadHTML(t){
+      const html = `<!doctype html><meta charset=utf-8><title>${esc(t.title)}</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css"><style>body{font-family:ui-sans-serif,system-ui;padding:24px;max-width:900px;margin:auto;line-height:1.6} .msg{border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin:12px 0} pre{background:#0b1220;color:#e6ebf2;padding:12px;border-radius:10px;overflow:auto}</style><h1>${esc(t.title)}</h1><div>Updated: ${fmt(t.update||t.create)}</div>${t.messages.map(m=> `<div class=msg><div><b>${m.role}</b> — ${fmt(m.ts)} ${m.model?`<span style="opacity:.6">(${esc(m.model)})</span>`:''}</div>${DOMPurify.sanitize(md.parse(m.text||''))}</div>`).join('')}`;
+      saveAs(new Blob([html],{type:'text/html;charset=utf-8'}), safeName(`${fmt(t.update||t.create).slice(0,10)} ${t.title}.html`));
+    }
+    function safeName(s){ return s.replace(/[\\/:*?"<>|]/g,'_').slice(0,150) }
+
+    $('#btnExport').onclick = async ()=>{
+      const arr = applyFilters();
+      if(!arr.length) return alert('Nothing to export — adjust filters.');
+      const zip = new JSZip();
+      for(const t of arr){ zip.file(`${safeName(fmt(t.update||t.create).slice(0,10)+' '+t.title)}.md`, threadToPlain(t)); }
+      const blob = await zip.generateAsync({type:'blob'});
+      saveAs(blob, `chatgpt-threads-export-${Date.now()}.zip`);
+    };
+
+    function hideThread(id){
+      state.threads = state.threads.filter(t=> t.id!==id);
+      if(state.starred.has(id)) state.starred.delete(id);
+      renderList();
+      $('#thread').innerHTML = '<div class="empty">Thread hidden. Use your original export to load again if needed.</div>';
+      $('#thread').dataset.id='';
+    }
+
+    // ===== Search wiring
+    $('#search').addEventListener('input', ()=> renderList());
+    $('#modelFilter').addEventListener('change', renderList);
+    $('#hasImages').addEventListener('change', renderList);
+    $('#onlyStarred').addEventListener('change', renderList);
+    $('#dateFrom').addEventListener('change', renderList);
+    $('#dateTo').addEventListener('change', renderList);
+
+    // Keyboard: focus search (Ctrl/Cmd+K)
+    window.addEventListener('keydown', (e)=>{
+      if((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); $('#search').focus(); }
+    });
+
+    // Deep-link open via hash
+    window.addEventListener('hashchange', ()=>{
+      const id = decodeURIComponent(location.hash.replace('#',''));
+      if(id){ openThread(id); }
+    });
+
+    // ===== Tips / Help
+    function showTip(msg){
+      const n = document.createElement('div');
+      n.textContent = msg; n.style.position='fixed'; n.style.bottom='16px'; n.style.right='16px'; n.style.padding='10px 12px'; n.style.border='1px solid var(--line)'; n.style.background='#0c1117'; n.style.borderRadius='10px'; n.style.boxShadow='0 10px 30px rgba(0,0,0,.3)';
+      document.body.appendChild(n); setTimeout(()=> n.remove(), 2400);
+    }
+
+    $('#btnHelp').onclick = ()=>{
+      alert(`ChatGPT Backup Viewer (Local)\n\n1) Click "Open .zip" and select your ChatGPT export (zip) or conversations.json.\n2) Use the left panel to filter by date, model, starred, and images.\n3) Search across titles and messages.\n4) Click a thread to view. Copy or export as Markdown/HTML.\n5) Export all filtered threads as a zip from the top bar.\n\nShortcuts:\n• Ctrl/Cmd+K — focus search\n• Click ★ to star/unstar conversations (saved locally)\n\nPrivacy: Everything runs locally in your browser. No uploads.`);
+    };
+
+  </script>
+<script>
+(function(){
+  // ===== Lightweight add-ons: Assets viewer, Gallery, and Code extraction (no regex tricks)
+  var nl = String.fromCharCode(10);
+
+  // Ensure state has extras
+  window.state = window.state || {};
+  if(!state.urls) state.urls = new Map();
+  if(!state.assets) state.assets = [];
+  if(!state.gallery) state.gallery = [];
+  if(!state.galleryIdx) state.galleryIdx = 0;
+
+  // ---- Styles
+  var style = document.createElement('style');
+  style.textContent = "#assetsPanel{position:fixed;left:12px;right:12px;bottom:12px;background:#0c1117;border:1px solid var(--line);border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,.5);padding:12px;display:none;z-index:50}#assetsPanel .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;max-height:60vh;overflow:auto}#assetsPanel .tile{border:1px solid var(--line);border-radius:10px;padding:6px;background:#0b1220;display:flex;flex-direction:column;gap:6px}#assetsPanel img{width:100%;height:120px;object-fit:cover;border-radius:8px}#lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:60}#lightbox img{max-width:92vw;max-height:88vh;box-shadow:0 20px 60px rgba(0,0,0,.6);border-radius:12px}#lightbox .nav{position:fixed;left:0;right:0;bottom:30px;display:flex;gap:10px;justify-content:center}#lightbox button{border:1px solid var(--line);background:#0c1117;color:#e5e7eb;border-radius:999px;padding:10px 14px;cursor:pointer}details.code-map{border:1px solid var(--line);border-radius:12px;padding:10px;margin:12px 0;background:#0c1117}details.code-map summary{cursor:pointer;font-weight:600}.codefile{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:6px 8px;margin:6px 0;background:#0b1220}.codefile small{opacity:.7}";
+  document.head.appendChild(style);
+
+  // ---- Panels
+  var assetsPanel = document.createElement('div');
+  assetsPanel.id = 'assetsPanel';
+  assetsPanel.innerHTML = '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><b style="flex:1">Assets in export</b><input id="assetsSearch" placeholder="Filter by name…" style="flex:2"><span class="pill">Images: <span id="assetsCount">0</span></span><button id="assetsClose" class="button">Close</button></div><div id="assetsGrid" class="grid"></div>';
+  document.body.appendChild(assetsPanel);
+
+  var lightbox = document.createElement('div');
+  lightbox.id = 'lightbox';
+  lightbox.innerHTML = '<img id="lightboxImg" alt="preview"><div class="nav"><button id="lbPrev">◀</button><button id="lbNext">▶</button><button id="lbClose">✕</button></div>';
+  document.body.appendChild(lightbox);
+
+  function openLightbox(urls, idx){ state.gallery = urls||[]; state.galleryIdx = idx||0; var img=document.getElementById('lightboxImg'); if(state.gallery.length){ img.src = state.gallery[state.galleryIdx]; document.getElementById('lightbox').style.display='flex'; } }
+  function closeLightbox(){ document.getElementById('lightbox').style.display='none'; var img=document.getElementById('lightboxImg'); if(img) img.src=''; }
+  function stepLightbox(d){ if(!state.gallery.length) return; state.galleryIdx = (state.galleryIdx + d + state.gallery.length) % state.gallery.length; document.getElementById('lightboxImg').src = state.gallery[state.galleryIdx]; }
+  document.getElementById('lbPrev').onclick = function(){ stepLightbox(-1) };
+  document.getElementById('lbNext').onclick = function(){ stepLightbox(1) };
+  document.getElementById('lbClose').onclick = closeLightbox;
+  document.getElementById('lightbox').addEventListener('click', function(e){ if(e.target && e.target.id==='lightbox') closeLightbox(); });
+
+  // ---- Top bar buttons
+  var topBar = document.querySelector('.top');
+  function addTopBtn(id, label, title){ var b=document.createElement('button'); b.id=id; b.className='btn'; b.textContent=label; if(title) b.title=title; var right=document.querySelector('.right-tools'); topBar.insertBefore(b, right); return b; }
+  var btnAssets = addTopBtn('btnAssets','Assets','Browse images/files in this export');
+  var btnCodeAll = addTopBtn('btnCodeAll','Extract Code','Extract code from filtered threads');
+
+  btnAssets.addEventListener('click', function(){ assetsPanel.style.display='block'; renderAssetsPanel(''); });
+  document.getElementById('assetsClose').addEventListener('click', function(){ assetsPanel.style.display='none'; });
+  document.getElementById('assetsSearch').addEventListener('input', function(e){ renderAssetsPanel(e.target.value||''); });
+
+  function isImagePath(name){ var low=name.toLowerCase(); var dot=low.lastIndexOf('.'); var ext = dot>=0? low.slice(dot):''; return ['.png','.jpg','.jpeg','.gif','.webp','.svg'].indexOf(ext)>=0; }
+
+  function indexAssetsFromMaps(){ var items=[]; state.files.forEach(function(blob, path){ if(isImagePath(path)){ var url = state.urls.get(path); items.push({path:path, name:path.split('/').pop(), size:blob.size, type:blob.type||'image/*', url:url}); } }); return items; }
+
+  function renderAssetsPanel(filter){ var grid=document.getElementById('assetsGrid'); var q=(filter||'').toLowerCase(); var items = indexAssetsFromMaps().filter(function(a){ return !q || a.name.toLowerCase().indexOf(q)>=0; }); document.getElementById('assetsCount').textContent = String(items.length); grid.innerHTML = items.map(function(a){ return '<div class="tile" data-path="'+a.path+'"><img loading="lazy" src="'+a.url+'" alt="'+a.name+'"><div style="display:flex;gap:8px;align-items:center;justify-content:space-between"><small>'+a.name+'</small><button class="button ghost" data-open>View</button></div></div>'; }).join(''); Array.prototype.forEach.call(grid.querySelectorAll('[data-open]'), function(btn){ btn.addEventListener('click', function(ev){ var tile = ev.target.closest('.tile'); var path = tile.getAttribute('data-path'); var idx = items.findIndex(function(x){ return x.path===path; }); openLightbox(items.map(function(x){ return x.url }), idx<0?0:idx); }); }); }
+
+  // ---- Patch loadZip to also build urls and assets
+  var originalLoadZip = window.loadZip;
+  window.loadZip = async function(file){
+    var zip = await JSZip.loadAsync(file);
+    state.files.clear(); state.urls.clear(); state.assets = [];
+    var names = Object.keys(zip.files);
+    for(var i=0;i<names.length;i++){
+      var name = names[i]; var zf = zip.files[name];
+      if(!zf.dir){ var blob = await zf.async('blob'); state.files.set(name, blob); var url = URL.createObjectURL(blob); state.urls.set(name, url); if(isImagePath(name)){ state.assets.push({path:name, name:name.split('/').pop(), size:blob.size, type:blob.type||'image/*', url:url}); } }
+    }
+    var convs = [];
+    if(zip.files['conversations.json']){
+      var json = JSON.parse(await zip.files['conversations.json'].async('string'));
+      convs = normalizeAnyExport(json);
+    } else {
+      var entries = names.filter(function(p){ return p.indexOf('conversations/')===0 && p.slice(-5)==='.json'; });
+      if(entries.length){ var arr=[]; for(var j=0;j<entries.length;j++){ var p=entries[j]; try{ arr.push(JSON.parse(await zip.files[p].async('string'))) }catch(e){} } convs = normalizeAnyExport(arr); }
+    }
+    if(!convs.length){ alert('Could not find conversations in the zip. Expected conversations.json or conversations/*.json'); return }
+    state.threads = convs; buildFuse(); populateModels(); renderList(); showTip('Loaded '+convs.length+' conversations from zip. Found '+state.assets.length+' images.');
+    document.getElementById('dropzone').classList.add('hidden'); document.getElementById('thread').classList.remove('hidden');
+  };
+
+  // ---- Resolve inline images to local assets after rendering a message
+  var originalRenderMessage = window.renderMessage;
+  window.renderMessage = function(m){ var el = originalRenderMessage(m); resolveInlineImages(el); return el; };
+  function resolveInlineImages(scope){ var imgs = scope.querySelectorAll('img'); Array.prototype.forEach.call(imgs, function(img){ var src = img.getAttribute('src')||''; if(/^https?:/i.test(src) || src.indexOf('data:')===0) return; var url = state.urls.get(src); if(!url){ var name = src.split('/').pop(); state.urls.forEach(function(u,p){ if(!url && (p===name || p.slice(-name.length-1)==='/'+name)) url = u; }); } if(url) img.src = url; }); }
+
+  // ---- Augment thread view with Gallery/Code Map/Export Code
+  var originalOpenThread = window.openThread;
+  window.openThread = function(id){ originalOpenThread(id); setTimeout(augmentThreadTools, 0); };
+
+  function currentThread(){ var id = (document.getElementById('thread')||{}).dataset ? document.getElementById('thread').dataset.id : null; if(!id) return null; for(var i=0;i<state.threads.length;i++){ if(state.threads[i].id===id) return state.threads[i]; } return null; }
+
+  function augmentThreadTools(){
+    var container = document.getElementById('thread'); if(!container) return;
+    var bar = container.querySelector('.thread-toolbar'); if(!bar) return; if(bar.querySelector('#btnThreadGallery')) return;
+    var btnGallery = document.createElement('button'); btnGallery.className='button'; btnGallery.id='btnThreadGallery'; btnGallery.textContent='Gallery';
+    var btnCodeMap = document.createElement('button'); btnCodeMap.className='button'; btnCodeMap.id='btnCodeMap'; btnCodeMap.textContent='Code Map';
+    var btnExportCode = document.createElement('button'); btnExportCode.className='button'; btnExportCode.id='btnExportCode'; btnExportCode.textContent='Export Code';
+    var danger = bar.querySelector('#btnDeleteLocal'); bar.insertBefore(btnGallery, danger); bar.insertBefore(btnCodeMap, danger); bar.insertBefore(btnExportCode, danger);
+    btnGallery.addEventListener('click', function(){ var urls = Array.prototype.map.call(container.querySelectorAll('.content img'), function(i){ return i.src; }).filter(Boolean); if(!urls.length){ showTip('No images detected in this thread.'); return } openLightbox(urls, 0); });
+    btnCodeMap.addEventListener('click', function(){ renderCodeMap(container); });
+    btnExportCode.addEventListener('click', function(){ exportThreadCode(); });
+  }
+
+  function parseBlocks(text){ var res=[]; if(!text) return res; var parts = String(text).split('```'); for(var i=1;i<parts.length;i+=2){ var seg = parts[i]; var nlIdx = seg.indexOf(nl); var info=''; var code=''; if(nlIdx>=0){ info = seg.slice(0,nlIdx).trim(); code = seg.slice(nlIdx+1); } else { code = seg; } var sp = info.indexOf(' '); var lang = (sp===-1? info: info.slice(0,sp)).toLowerCase()||'txt'; var path = guessPath(info, code); res.push({lang:lang, info:info, code:code, path:path}); } return res; }
+  function guessPath(info, code){
+    var tokens = info.split(' ').filter(function(x){ return x && x.trim().length>0 });
+    for(var i=0;i<tokens.length;i++){ var t=tokens[i]; if(t.indexOf('file=')===0||t.indexOf('title=')===0||t.indexOf('name=')===0||t.indexOf('path=')===0){ var v=t.split('=').slice(1).join('='); if(v) return v; } }
+    var lines = String(code).split(nl).slice(0,5);
+    for(var j=0;j<lines.length;j++){ var line=lines[j]; var low=line.toLowerCase(); var hit = -1; var key=''; if((hit=low.indexOf('file:'))>=0) key='file:'; else if((hit=low.indexOf('filename:'))>=0) key='filename:'; else if((hit=low.indexOf('path:'))>=0) key='path:'; if(hit>=0){ var idx = line.toLowerCase().indexOf(key); var rest = line.slice(idx+key.length).trim(); if(rest) return rest; } }
+    return '';
+  }
+  function extForLang(lang){ var m={js:'js',ts:'ts',jsx:'jsx',tsx:'tsx',py:'py',python:'py',sh:'sh',bash:'sh',zsh:'zsh',html:'html',css:'css',json:'json',yml:'yml',yaml:'yml',md:'md',sql:'sql',go:'go',rs:'rs',rust:'rs',java:'java',csharp:'cs',cs:'cs',cpp:'cpp',c:'c',php:'php',ruby:'rb',r:'r',kt:'kt',swift:'swift',lua:'lua',dart:'dart'}; return m[lang]||'txt'; }
+
+  function renderCodeMap(container){
+    var t = currentThread(); if(!t){ showTip('No thread open.'); return }
+    var files = new Map();
+    for(var mi=0; mi<t.messages.length; mi++){
+      var blocks = parseBlocks(t.messages[mi].text);
+      for(var bi=0; bi<blocks.length; bi++){
+        var b = blocks[bi]; var key = b.path || ( (b.lang||'txt') + '/snippet-' + String(mi).padStart(3,'0') + '-' + String(bi).padStart(2,'0') + '.' + extForLang(b.lang) );
+        if(!files.has(key)) files.set(key, []);
+        files.get(key).push({ ts: t.messages[mi].ts, role: t.messages[mi].role, code: b.code, lang: b.lang });
+      }
+    }
+    var details = document.createElement('details'); details.className='code-map'; details.open = true;
+    var total=0; files.forEach(function(arr){ total+=arr.length });
+    details.innerHTML = '<summary>Code Map — '+files.size+' files, '+total+' blocks</summary>';
+    files.forEach(function(blocks, path){ var div=document.createElement('div'); div.className='codefile'; div.innerHTML = '<span class="pill">'+path+'</span><small>'+blocks.length+' blocks</small><button class="button ghost" data-open>Preview</button>'; div.querySelector('[data-open]').onclick = function(){ previewCodeFile(path, blocks) }; details.appendChild(div); });
+    container.appendChild(details);
+  }
+
+  function previewCodeFile(path, blocks){ var win = window.open('', '_blank'); var sep = nl+nl+'/* --- split --- */'+nl+nl; var merged = blocks.sort(function(a,b){ return a.ts-b.ts }).map(function(b){ return b.code }).join(sep); var html = '<!doctype html><meta charset=utf-8><title>'+path+'</title><pre>'+escapeHtml(merged)+'</pre>'; win.document.write(html); win.document.close(); }
+  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  async function exportThreadCode(){ var t = currentThread(); if(!t){ showTip('Open a thread first.'); return } var zip=new JSZip(); var count=0; for(var mi=0;mi<t.messages.length;mi++){ var blocks=parseBlocks(t.messages[mi].text); for(var bi=0;bi<blocks.length;bi++){ var b=blocks[bi]; var p = b.path || ( (t.title.replace(/[/\:*?"<>|]/g,'_')) + '/snippet-' + String(mi).padStart(3,'0') + '-' + String(bi).padStart(2,'0') + '.' + extForLang(b.lang) ); zip.file(p, b.code); count++; } } if(!count){ showTip('No code blocks found in this thread.'); return } var blob = await zip.generateAsync({type:'blob'}); saveAs(blob, 'thread-code-'+t.title.replace(/[/\:*?"<>|]/g,'_')+'.zip'); }
+
+  btnCodeAll.addEventListener('click', async function(){ var arr = window.applyFilters? applyFilters(): (state.threads||[]); if(!arr.length){ alert('No threads selected (use filters/search).'); return } var zip=new JSZip(); var files=0; for(var ti=0; ti<arr.length; ti++){ var t=arr[ti]; for(var mi=0; mi<t.messages.length; mi++){ var blocks=parseBlocks(t.messages[mi].text); for(var bi=0; bi<blocks.length; bi++){ var b=blocks[bi]; var base = b.path || ( (t.title.replace(/[/\:*?"<>|]/g,'_')) + '/snippet-' + String(mi).padStart(3,'0') + '-' + String(bi).padStart(2,'0') + '.' + extForLang(b.lang) ); zip.file(base, b.code); files++; } } } if(!files){ showTip('No code blocks found in filtered threads.'); return } var blob = await zip.generateAsync({type:'blob'}); saveAs(blob, 'all-code-'+Date.now()+'.zip'); });
+
+})();
+</script>
+</body>
+</html>

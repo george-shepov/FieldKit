@@ -278,6 +278,7 @@
           'linux-trainer': { name: 'Linux Trainer', desc: '163 terminal questions', icon: 'terminal.svg' },
           'js-trainer': { name: 'JavaScript Trainer', desc: 'Live REPL', icon: 'javascript.svg' },
           'math-trainer': { name: 'Math Trainer', desc: 'Practice drills', icon: 'calculator.svg' },
+          'quiz-builder': { name: 'Quiz Builder', desc: 'Build and take custom quizzes', icon: 'circle-help.svg' },
           'drivers-license': { name: 'Driver License Study', desc: 'Digest-driven permit prep with extended card bank', icon: 'id-card.svg' },
           'music-trainer': { name: 'Music Theory', desc: 'Ear training', icon: 'music-2.svg' },
           'midi-note-helper': { name: 'MIDI Note Helper', desc: 'Map MIDI numbers to notes/octaves', icon: 'piano.svg' }
@@ -306,6 +307,7 @@
             offline: 'hybrid'
           },
           'music-player': { name: 'Music Player', desc: 'Offline local audio player', icon: 'list-music.svg' },
+          'music-studio': { name: 'Music Studio', desc: 'Piano, drums, and music theory', icon: 'piano.svg' },
           'image-rater': {
             name: 'Image Rater Lab',
             desc: 'Rate images + learn preferences',
@@ -344,6 +346,11 @@
           'profile': { name: 'User Profile', desc: 'Global username/password manager', icon: 'id-card.svg' },
           'clock': { name: 'Clock', desc: 'Alarm, timer, stopwatch', icon: 'alarm-clock.svg' },
           'ui-tweaker': { name: 'UI Tweaker', desc: 'Save CSS tweaks per app/path', icon: 'settings-2.svg' }
+          ,'whiteboard': { name: 'Whiteboard', desc: 'Draw, diagram, and save boards locally', icon: 'pen-tool.svg' }
+          ,'markdown-slides': { name: 'Markdown Slides', desc: 'Build presentations from Markdown', icon: 'presentation.svg' }
+          ,'qr-generator': { name: 'QR Generator', desc: 'Create shareable QR codes', icon: 'qr-code.svg' }
+          ,'chatgpt-viewer': { name: 'ChatGPT Viewer', desc: 'Browse ChatGPT exports privately', icon: 'message-square.svg' }
+          ,'opb': { name: 'Online Poll Board', desc: 'Create polls and export results locally', icon: 'bar-chart-3.svg' }
         }
       },
       games: {
@@ -431,6 +438,34 @@
       'math-trainer': {
         feature: 'Timed arithmetic and practice drills with score feedback.',
         scenario: 'Use for daily warmups and foundational skill sharpening.'
+      },
+      'quiz-builder': {
+        feature: 'Create interactive quizzes and track answers locally.',
+        scenario: 'Use for self-study, interview prep, or team assessments.'
+      },
+      'music-studio': {
+        feature: 'Practice piano, drums, MIDI, and music theory in one offline workspace.',
+        scenario: 'Use for focused music practice without a connected service.'
+      },
+      'whiteboard': {
+        feature: 'Sketch freely, add diagram shapes and labels, and export boards.',
+        scenario: 'Use for planning flows, architecture, or quick visual notes.'
+      },
+      'markdown-slides': {
+        feature: 'Turn Markdown decks into navigable presentations.',
+        scenario: 'Use for fast technical presentations or offline workshops.'
+      },
+      'qr-generator': {
+        feature: 'Generate QR codes for text and links.',
+        scenario: 'Use for quick device-to-device sharing or printed materials.'
+      },
+      'chatgpt-viewer': {
+        feature: 'Import and search ChatGPT conversation exports locally.',
+        scenario: 'Use for private research, reference, and conversation handoff.'
+      },
+      'opb': {
+        feature: 'Create poll boards, collect local votes, and export results.',
+        scenario: 'Use for workshops, team decisions, or lightweight voting.'
       },
       'drivers-license': {
         feature: 'Driving digest in 6 languages with an expanded ~80-card Q&A + flashcard bank.',

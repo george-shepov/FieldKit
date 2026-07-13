@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Markdown → Slides with SQLite</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg: #f7f7f9;
+    --fg: #1f2328;
+    --muted: #6b7280;
+    --primary: #0d6efd;
+    --panel: #ffffff;
+    --border: #e5e7eb;
+    --accent: #111827;
+  }
+  body.dark {
+    --bg: #0b0d10;
+    --fg: #e5e7eb;
+    --muted: #9ca3af;
+    --primary: #69a6ff;
+    --panel: #12161a;
+    --border: #22262b;
+    --accent: #f9fafb;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    margin: 0;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: var(--bg);
+    color: var(--fg);
+  }
+  .app {
+    display: grid;
+    grid-template-columns: 40% 60%;
+    grid-template-rows: auto 1fr auto;
+    height: 100%;
+  }
+  header {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  header .actions { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .btn {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--fg);
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .btn:hover { border-color: var(--primary); color: var(--primary); }
+  .btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+  input[type="text"] {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--fg);
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+  .panel {
+    border-right: 1px solid var(--border);
+    display:flex; flex-direction: column;
+    background: var(--panel);
+  }
+  .panel h3 {
+    margin: 0; padding: 8px 10px; font-size: 13px; color: var(--muted);
+    border-bottom: 1px dashed var(--border);
+  }
+  textarea {
+    flex:1; width: 100%; border: none; resize: none;
+    padding: 12px; outline: none;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 14px; line-height: 1.4;
+    background: var(--bg); color: var(--fg);
+  }
+  /* visually-hidden (for accessible labels that are not shown) */
+  .sr-only {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0);
+    white-space: nowrap; border: 0;
+  }
+  .preview { display:flex; flex-direction: column; }
+  .toolbar {
+    padding: 6px 8px; display:flex; gap:8px; align-items:center;
+    border-bottom: 1px dashed var(--border);
+  }
+  .slides-viewport {
+    flex:1; display:flex; align-items: center; justify-content: center; padding: 16px;
+  }
+  .slide {
+    width: min(96%, 1200px);
+    aspect-ratio: 16 / 9;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0,0,0,.08);
+    padding: 36px 40px;
+    overflow: auto;
+  }
+  .slide h1 { font-size: 2.2em; margin:0 0 12px; }
+  .slide h2 { font-size: 1.6em; margin:0 0 10px; }
+  .slide p, .slide li { font-size: 1.1em; }
+  .hint { color: var(--muted); font-size: 12px; }
+  @media print {
+    header, .panel, .toolbar, footer { display: none !important; }
+    .slide {
+      width: 100% !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      page-break-after: always;
+      height: 100vh;
+    }
+  }
+  footer {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--border);
+    padding: 8px;
+    font-size: 12px;
+    background: var(--panel);
+  }
+  #deckControls {
+    display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:6px;
+  }
+  #deckList { list-style:none; padding:0; margin:0; display:grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap:6px; }
+  .deckItem {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px;
+    background: var(--bg);
+  }
+  .deckItem h4 {
+    margin: 0 0 4px 0; font-size: 13px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .deckMeta { color: var(--muted); font-size: 11px; margin-bottom: 6px; }
+  .deckActions { display:flex; gap:6px; flex-wrap:wrap; }
+  .deckActions button { font-size: 11px; padding: 4px 8px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div><strong>Markdown → Slides</strong> <span class="hint">use --- for slide breaks • ←/→ to navigate</span></div>
+    <div class="actions">
+      <input id="deckName" type="text" placeholder="Deck name" />
+      <button class="btn" onclick="saveDeck(document.getElementById('deckName').value)">Save Deck</button>
+      <button class="btn" onclick="exportSqlite()">Export DB</button>
+      <input type="file" id="importDb" hidden />
+      <button class="btn" onclick="document.getElementById('importDb').click()">Import DB</button>
+      <button class="btn" id="btnTheme">Theme</button>
+      <button class="btn" id="btnFullscreen">Full Screen</button>
+      <button class="btn" id="btnSample">Sample</button>
+      <button class="btn" id="btnExportMD">Export MD</button>
+      <button class="btn" id="btnExportPPTX">Export PPTX</button>
+      <button class="btn" id="btnExportPDF">Export PDF</button>
+      <label class="btn" for="fileInput">Import PPTX/PDF</label>
+      <input type="file" id="fileInput" accept=".pptx,application/pdf" hidden />
+    </div>
+  </header>
+
+  <section class="panel">
+    <h3>Markdown Editor</h3>
+    <!-- Accessible label for the textarea (visually hidden, appears to assistive tech) -->
+    <label for="markdownInput" class="sr-only">Markdown editor</label>
+    <textarea id="markdownInput" title="Markdown editor" placeholder="Enter markdown here..."></textarea>
+  </section>
+
+  <section class="preview">
+    <div class="toolbar">
+      <span class="hint">Slide <span id="slideIndex">1</span>/<span id="slideCount">1</span></span>
+      <span class="hint" style="margin-left:auto">Tip: Export Google Slides as PPTX/PDF to import here</span>
+    </div>
+    <div class="slides-viewport">
+      <article class="slide" id="slide"></article>
+    </div>
+  </section>
+
+  <footer>
+    <div id="deckControls">
+      <strong>Saved Decks</strong>
+      <input id="deckSearch" type="text" placeholder="Search decks..." oninput="applyDeckFilter()" />
+      <span class="hint">filter by name/date/words</span>
+    </div>
+    <ul id="deckList"></ul>
+  </footer>
+</div>
+
+<!-- Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
+
+<script>
+/* ================= Core Setup ================= */
+if (window['pdfjsLib']) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
+}
+const input = document.getElementById("markdownInput");
+const slideEl = document.getElementById("slide");
+const slideIndexEl = document.getElementById("slideIndex");
+const slideCountEl = document.getElementById("slideCount");
+const fileInput = document.getElementById("fileInput");
+
+let slides = [], current = 0, dark = false;
+let db;
+
+/* ================= Markdown Slides ================= */
+function mdToSlides(md){ return md.split(/^---$/m).map(s=>s.trim()).filter(Boolean); }
+function renderSlides(){
+  slides = mdToSlides(input.value);
+  slideCountEl.textContent = slides.length || 0;
+  // Preserve the user's current slide when editing; if the current index is out of range,
+  // reset to the first slide.
+  if (current >= slides.length) current = 0;
+  console.debug(`renderSlides: slides=${slides.length}, current=${current}`);
+  showSlide(current);
+}
+function showSlide(i){
+  if(!slides.length){ slideEl.innerHTML="<em>No slides</em>"; slideIndexEl.textContent=0; return; }
+  current=(i+slides.length)%slides.length;
+  slideEl.innerHTML = marked.parse(slides[current]);
+  slideIndexEl.textContent=current+1;
+}
+function nextSlide(){ showSlide(current+1); }
+function prevSlide(){ showSlide(current-1); }
+
+/* ================= Theme & Fullscreen ================= */
+document.getElementById("btnTheme").onclick=()=>{dark=!dark;document.body.classList.toggle("dark",dark);}
+document.getElementById("btnFullscreen").onclick=()=>{!document.fullscreenElement?document.documentElement.requestFullscreen():document.exitFullscreen();}
+
+/* ================= Export: MD/PDF/PPTX ================= */
+document.getElementById("btnExportMD").onclick=()=>{
+  const blob=new Blob([input.value],{type:"text/markdown"});downloadBlob(blob,"slides.md");
+};
+document.getElementById("btnExportPDF").onclick=()=>{
+  const container=document.createElement("div");
+  slides.forEach(s=>{
+    const node=document.createElement("article");node.className="slide";node.innerHTML=marked.parse(s);
+    container.appendChild(node);
+  });
+  const viewport=document.querySelector(".slides-viewport");
+  const old=slideEl;viewport.replaceChild(container,old);window.print();viewport.replaceChild(old,container);showSlide(current);
+};
+document.getElementById("btnExportPPTX").onclick=async()=>{
+  if(!slides.length) return;
+  const pptx=new PptxGenJS();pptx.layout="LAYOUT_16x9";
+  slides.forEach((s,idx)=>{
+    const slide=pptx.addSlide();
+    const lines=s.split(/\n/);let title="",body="";
+    if(lines[0]&&/^#{1,3}\s+/.test(lines[0])){title=lines.shift().replace(/^#{1,3}\s+/,"");}
+    body=lines.join("\n").trim();
+    if(title) slide.addText(title,{x:0.5,y:0.5,w:12,h:1,fontSize:28,bold:true});
+    if(body) slide.addText(body,{x:0.7,y:1.5,w:11,h:5,fontSize:18});
+    slide.addText(`${idx+1}/${slides.length}`,{x:12,y:6.7,fontSize:10});
+  });
+  await pptx.writeFile({fileName:"slides.pptx"});
+};
+
+/* ================= Import: PPTX/PDF → MD ================= */
+fileInput.addEventListener("change",async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{
+    if(f.name.toLowerCase().endsWith(".pptx")) setMarkdown(await importPptx(f));
+    else if(f.name.toLowerCase().endsWith(".pdf")) setMarkdown(await importPdf(f));
+    else alert("Unsupported file. Please select .pptx or .pdf");
+  }catch(err){console.error(err);alert("Failed to import. See console for details.");}
+  finally{ fileInput.value=""; }
+});
+async function importPptx(file){
+  const buf=await file.arrayBuffer();const zip=await JSZip.loadAsync(buf);
+  const files=Object.keys(zip.files).filter(p=>/^ppt\/slides\/slide\d+\.xml$/.test(p))
+    .sort((a,b)=>parseInt(a.match(/slide(\d+)\.xml/)[1])-parseInt(b.match(/slide(\d+)\.xml/)[1]));
+  const md=[];
+  for(const p of files){
+    const xml=await zip.files[p].async("string");
+    const texts=[]; xml.replace(/<a:t[^>]*>([\s\S]*?)<\/a:t>/g,(_,t)=>{texts.push(decodeXml(t));});
+    const cleaned = texts.join("\n").replace(/\n{3,}/g,"\n\n").trim();
+    md.push(cleaned || `Slide`);
+  }
+  return md.map(block=>{
+    const lines=block.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+    const title=lines[0]||"Slide";
+    const body=lines.slice(1).join("\n");
+    return `# ${escapeMd(title)}\n\n${escapeMd(body)}`.trim();
+  }).join("\n\n---\n\n");
+}
+async function importPdf(file){
+  const buf=await file.arrayBuffer();const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  const md=[];for(let i=1;i<=pdf.numPages;i++){
+    const pg=await pdf.getPage(i);const txt=await pg.getTextContent();
+    const t=txt.items.map(it=>it.str).join(" ").replace(/\s+/g," ").trim();
+    const title=(t.split(/(?<=\.|\!|\?|\:)\s/)[0]||t).slice(0,120)||`Slide ${i}`;
+    const rest=t.slice(title.length).trim();
+    md.push(`# ${escapeMd(title||`Slide ${i}`)}\n\n${escapeMd(rest)}`);
+  }
+  return md.join("\n\n---\n\n");
+}
+function decodeXml(s){return s.replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&apos;/g,"'");}
+function escapeMd(t){
+  // Escape markdown-significant characters (including backslash) so imported text is safe to include as literal text.
+  return (t||"").replace(/([\\#*_`>])/g, '\\$1');
+}
+
+/* ================= SQLite Persistence ================= */
+async function initDb(){
+  const SQL=await initSqlJs({locateFile:f=>`https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}`});
+  const stored=localStorage.getItem("mdslides-db");
+  db=stored?new SQL.Database(Uint8Array.from(atob(stored),c=>c.charCodeAt(0))):new SQL.Database();
+  db.run("CREATE TABLE IF NOT EXISTS decks(id INTEGER PRIMARY KEY,name TEXT,markdown TEXT,created_at TEXT)");
+  refreshDecks();
+}
+function persistDb(){const data=db.export();const b64=btoa(String.fromCharCode(...data));localStorage.setItem("mdslides-db",b64);}
+function saveDeck(name){
+  if(!name)return alert("Enter a name");
+  db.run("INSERT INTO decks(name,markdown,created_at) VALUES(?,?,?)",[name,input.value,new Date().toISOString()]);
+  persistDb();refreshDecks();
+}
+function loadDeck(id){
+  const r=db.exec("SELECT markdown FROM decks WHERE id=?",[id]);if(r.length) setMarkdown(r[0].values[0][0]);
+}
+function deleteDeck(id){
+  if(!confirm("Delete this deck?")) return;
+  db.run("DELETE FROM decks WHERE id=?",[id]);persistDb();refreshDecks();
+}
+function exportSqlite(){
+  const blob=new Blob([db.export()],{type:"application/x-sqlite3"});
+  downloadBlob(blob,"decks.sqlite");
+}
+document.getElementById("importDb").addEventListener("change",async e=>{
+  const f=e.target.files[0];if(!f)return;const buf=new Uint8Array(await f.arrayBuffer());
+  const SQL=await initSqlJs({locateFile:f=>`https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}`});
+  db=new SQL.Database(buf);persistDb();refreshDecks();e.target.value="";
+});
+
+/* ===== Deck List + Search/Filter ===== */
+let deckCache = []; // [{id,name,created_at,preview}]
+function refreshDecks(){
+  const r=db.exec("SELECT id,name,created_at,substr(markdown,1,200) as preview FROM decks ORDER BY created_at DESC");
+  deckCache = (r[0]?.values || []).map(([id,name,created_at,preview])=>({id,name,created_at,preview:preview||""}));
+  renderDeckList(deckCache);
+}
+function applyDeckFilter(){
+  const q = (document.getElementById("deckSearch").value || "").toLowerCase().trim();
+  if(!q){ renderDeckList(deckCache); return; }
+  const filtered = deckCache.filter(d =>
+    (d.name||"").toLowerCase().includes(q) ||
+    new Date(d.created_at).toLocaleString().toLowerCase().includes(q) ||
+    (d.preview||"").toLowerCase().includes(q)
+  );
+  renderDeckList(filtered);
+}
+function renderDeckList(list){
+  const ul=document.getElementById("deckList");
+  ul.innerHTML="";
+  if(!list.length){ ul.innerHTML='<li class="hint">No saved decks</li>'; return; }
+  list.forEach(d=>{
+    const li=document.createElement("li"); li.className="deckItem";
+    li.innerHTML=`
+      <h4 title="${escapeHtml(d.name)}">${escapeHtml(d.name)}</h4>
+      <div class="deckMeta">${new Date(d.created_at).toLocaleString()}</div>
+      <div class="deckActions">
+        <button class="btn" onclick="loadDeck(${d.id})">Load</button>
+        <button class="btn" onclick="exportDeckMd(${d.id})">Export MD</button>
+        <button class="btn" onclick="deleteDeck(${d.id})">Delete</button>
+      </div>`;
+    ul.appendChild(li);
+  });
+}
+function exportDeckMd(id){
+  const r=db.exec("SELECT name, markdown FROM decks WHERE id=?",[id]);
+  if(!r.length) return;
+  const name=r[0].values[0][0]||"deck";
+  const md=r[0].values[0][1]||"";
+  const safeName = name.replace(/[^\w\-]+/g,'_').slice(0,64) || "deck";
+  downloadBlob(new Blob([md],{type:"text/markdown"}), `${safeName}.md`);
+}
+function escapeHtml(s){return (s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
+
+/* ================= Helpers & Events ================= */
+function setMarkdown(md){input.value=md;renderSlides();}
+function downloadBlob(blob,name){
+  const a = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  a.href = url;
+  a.download = name;
+  // Append to DOM to ensure click works in browsers that require the element to be attached.
+  document.body.appendChild(a);
+  a.click();
+  // Revoke the object URL after a short delay to ensure the download has started.
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+    a.remove();
+  }, 100);
+}
+document.getElementById("btnSample").onclick=()=>setMarkdown(`# Quarterly Business Review
+**Acme Corp** — Q3 Highlights
+
+- Growth: +18% YoY
+- Net Revenue: $12.4M
+- NPS: 62 (↑ 4pts)
+
+---
+
+## Agenda
+1. Wins & Signals
+2. KPI Deep Dive
+3. Risks & Mitigations
+4. Roadmap Q4
+5. Q&A
+
+---
+
+## KPI Deep Dive
+- Conversion: 4.8% (target 5.2%)
+- Churn: 2.1% (target < 2.0%)
+- CAC Payback: 8.5 months
+
+> Focus: Onboarding friction & pricing tests
+
+---
+
+## Roadmap (Q4)
+- Usage-based billing (beta)
+- Analytics 2.0 dashboards
+- AI-assisted support playbooks
+
+---
+
+# Thank You
+Questions?`);
+
+input.addEventListener("input",renderSlides);
+document.addEventListener("keydown",e=>{
+  if(e.target===input) return;
+  if(e.key==="ArrowRight"||e.key==="PageDown"){e.preventDefault();nextSlide();}
+  if(e.key==="ArrowLeft" ||e.key==="PageUp"){e.preventDefault();prevSlide();}
+});
+
+initDb().then(()=>setMarkdown(`# Welcome
+This is your first slide.
+
+---
+
+# Use ---
+To split slides.`));
+</script>
+</body>
+</html>

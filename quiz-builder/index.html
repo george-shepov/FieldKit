@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>USA Basics — Trivia Quiz + Builder</title>
+<style>
+  :root{
+    --bg:#0b0f14; --card:#0f172a; --ink:#e5e7eb; --muted:#9ca3af; --accent:#3b82f6;
+    --ok:#16a34a; --bad:#ef4444;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f3f6fb; --card:#ffffff; --ink:#0f172a; --muted:#475569; --accent:#2563eb }
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0; background:linear-gradient(180deg,var(--bg),#0a0a0a);
+    color:var(--ink); font:500 18px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial;
+    display:grid; grid-template-rows:auto 1fr auto; min-height:100vh; padding:18px}
+  header,.wrap{width:min(980px,100%); margin-inline:auto}
+  header{display:flex; gap:12px; align-items:center; margin-bottom:12px}
+  .brand{font-weight:900; letter-spacing:.2px}
+  .tabs{margin-left:auto; display:flex; gap:8px}
+  .tab{border:1px solid rgba(148,163,184,.35); background:transparent; color:var(--ink);
+    padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:800}
+  .tab.active{background:var(--accent); color:#fff; border-color:transparent}
+
+  .progress{height:14px; background:rgba(148,163,184,.25); border-radius:999px; overflow:hidden}
+  .bar{height:100%; width:0%; background:linear-gradient(90deg,var(--accent),#22d3ee); transition:width .35s ease}
+
+  .card{background:var(--card); border-radius:18px; padding:22px; box-shadow:
+    0 14px 32px rgba(0,0,0,.35), 0 0 0 1px rgba(148,163,184,.15); display:grid; gap:16px; margin-top:12px}
+  .q{font-size:clamp(22px,3.4vw,32px); font-weight:900; line-height:1.2}
+
+  .answers{display:grid; gap:12px}
+  .answer{position:relative; border:0; width:100%; text-align:left; padding:15px 18px; border-radius:14px;
+    background:rgba(148,163,184,.12); color:var(--ink); font-size:clamp(18px,2.4vw,22px); font-weight:800; cursor:pointer}
+  .answer:hover{background:rgba(148,163,184,.18)}
+  .answer:disabled{opacity:.9; cursor:default}
+  .k{min-width:2ch; display:inline-grid; place-items:center; margin-right:10px; padding:.15em .45em;
+     border-radius:8px; background:rgba(148,163,184,.18); color:var(--muted); font-weight:900; font-size:.9em}
+  .result-icon{position:absolute; inset:0; display:grid; place-items:center; pointer-events:none; opacity:0; transform:scale(.9)}
+  .answer.ok{background:rgba(22,163,74,.18)!important; box-shadow:0 0 0 1px rgba(22,163,74,.35) inset, 0 12px 28px rgba(22,163,74,.25)}
+  .answer.bad{background:rgba(239,68,68,.18)!important; box-shadow:0 0 0 1px rgba(239,68,68,.35) inset, 0 12px 28px rgba(239,68,68,.25)}
+  .answer.ok .result-icon{animation:popOk .45s ease forwards}
+  .answer.bad .result-icon{animation:popBad .45s ease forwards}
+  @keyframes popOk{0%{opacity:0; transform:scale(.7) rotate(-10deg)}60%{opacity:1; transform:scale(1.05)}100%{opacity:1; transform:scale(1)}}
+  @keyframes popBad{0%{opacity:0; transform:scale(.7) rotate(10deg)}60%{opacity:1; transform:scale(1.08)}100%{opacity:1; transform:scale(1)}}
+
+  .footer{display:flex; gap:12px; align-items:center; justify-content:space-between; color:var(--muted); margin-top:10px}
+  .btn{background:linear-gradient(180deg,var(--accent),#155e75); border:0; color:#fff; font-weight:900; padding:12px 16px; border-radius:12px; cursor:pointer}
+  .btn.secondary{background:transparent; border:2px solid var(--accent); color:var(--ink)}
+  .pill{padding:.35em .7em; border-radius:999px; background:rgba(148,163,184,.18); color:var(--muted); font-weight:800; font-size:.85rem}
+
+  /* Builder */
+  .grid{display:grid; gap:12px}
+  .row{display:grid; grid-template-columns:1fr; gap:10px}
+  .half{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  label{font-weight:800; color:var(--muted)}
+  input[type="text"], textarea, select{
+    width:100%; padding:12px 12px; border-radius:12px; border:1px solid rgba(148,163,184,.35);
+    background:rgba(148,163,184,.08); color:var(--ink); font:inherit
+  }
+  textarea{min-height:88px; resize:vertical}
+  table{width:100%; border-collapse:separate; border-spacing:0 8px}
+  th,td{padding:10px 12px; text-align:left}
+  tr{background:rgba(148,163,184,.08)}
+  tr td:first-child, tr th:first-child{border-top-left-radius:10px; border-bottom-left-radius:10px}
+  tr td:last-child, tr th:last-child{border-top-right-radius:10px; border-bottom-right-radius:10px}
+  .row-actions{display:flex; gap:8px}
+  .small{font-size:14px}
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">🇺🇸 USA Basics — Trivia Quiz</div>
+    <div class="pill" id="counter">Q 1 / 10</div>
+    <div class="tabs">
+      <button class="tab active" id="tabPlay" aria-controls="panelPlay">Play</button>
+      <button class="tab" id="tabBuild" aria-controls="panelBuild">Build</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="progress" aria-label="Progress"><div id="bar" class="bar"></div></div>
+
+    <!-- PLAY PANEL -->
+    <section id="panelPlay" class="card" role="region" aria-live="polite" aria-atomic="true">
+      <div class="q" id="question">Loading…</div>
+      <div class="answers" id="answers"></div>
+      <div class="footer">
+        <div class="small">Keys: 1–4 answer • Enter next</div>
+        <button id="next" class="btn" disabled>Next →</button>
+      </div>
+    </section>
+
+    <!-- BUILD PANEL -->
+    <section id="panelBuild" class="card" hidden>
+      <h2 style="margin:0">Quiz Builder</h2>
+      <div class="grid">
+        <div class="row">
+          <label for="qText">Question</label>
+          <textarea id="qText" placeholder="Type the question text…"></textarea>
+        </div>
+        <div class="half">
+          <div><label for="a0">Answer A</label><input id="a0" type="text" placeholder="Option A" /></div>
+          <div><label for="a1">Answer B</label><input id="a1" type="text" placeholder="Option B" /></div>
+          <div><label for="a2">Answer C</label><input id="a2" type="text" placeholder="Option C" /></div>
+          <div><label for="a3">Answer D</label><input id="a3" type="text" placeholder="Option D" /></div>
+        </div>
+        <div class="row">
+          <label for="correct">Correct answer</label>
+          <select id="correct">
+            <option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option>
+          </select>
+        </div>
+        <div class="row">
+          <button id="saveItem" class="btn">Save Question</button>
+          <div class="small" id="saveHint">Tip: “Save Question” adds or updates below. Click Edit to modify an existing row.</div>
+        </div>
+
+        <div class="row">
+          <h3 style="margin:8px 0 0">Question Bank</h3>
+          <table id="bankTable" aria-describedby="bankHelp">
+            <thead><tr><th>#</th><th>Question</th><th>Answers</th><th>Correct</th><th>Actions</th></tr></thead>
+            <tbody id="bankBody"></tbody>
+          </table>
+          <div id="bankHelp" class="small">Your question bank is saved to your browser (localStorage).</div>
+        </div>
+
+        <div class="row">
+          <div class="row-actions">
+            <button id="exportBtn" class="btn secondary">Export JSON</button>
+            <label class="btn secondary" for="importFile" style="display:inline-block; cursor:pointer">Import JSON<input id="importFile" type="file" accept="application/json" hidden></label>
+            <button id="resetDefaults" class="btn secondary" title="Restore the original 10 questions">Reset to Defaults</button>
+            <button id="startQuiz" class="btn">Start Quiz From Bank</button>
+          </div>
+          <div class="small">Export creates a `.json` you can share. Import merges/overwrites by position.</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer class="wrap footer">
+    <div class="small">Built-in questions are basic U.S. civics. You can fully customize.</div>
+  </footer>
+
+<script>
+/* ------------------ Data & Storage ------------------ */
+const LS_KEY = 'usa_quiz_bank_v1';
+const DEFAULTS = [
+  { q:"What is the capital of the United States?", a:["New York City","Washington, D.C.","Philadelphia","Boston"], correct:1 },
+  { q:"How many stars are on the U.S. flag?", a:["13","48","50","52"], correct:2 },
+  { q:"Independence Day is celebrated on what date?", a:["July 4","June 14","September 17","December 15"], correct:0 },
+  { q:"Who was the first President of the United States?", a:["Thomas Jefferson","George Washington","Abraham Lincoln","John Adams"], correct:1 },
+  { q:"How many states are in the United States?", a:["48","49","50","51"], correct:2 },
+  { q:"Which are the three branches of the U.S. government?", a:["Federal, State, Local","Executive, Legislative, Judicial","President, Congress, Governors","Army, Navy, Air Force"], correct:1 },
+  { q:"What is the highest court in the United States?", a:["Court of Appeals","Supreme Court","District Court","State Supreme Court"], correct:1 },
+  { q:"What is the national anthem of the United States?", a:["America the Beautiful","God Bless America","The Star-Spangled Banner","Yankee Doodle"], correct:2 },
+  { q:"What are the two major political parties in the U.S.?", a:["Democratic and Republican","Green and Libertarian","Federalist and Whig","Labor and Conservative"], correct:0 },
+  { q:"What is the U.S. currency called?", a:["Euro","Dollar","Pound","Peso"], correct:1 },
+];
+function loadBank(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw){ localStorage.setItem(LS_KEY, JSON.stringify(DEFAULTS)); return [...DEFAULTS]; }
+    const parsed = JSON.parse(raw);
+    if(!Array.isArray(parsed) || parsed.length === 0) throw new Error("bad");
+    return parsed;
+  }catch{ localStorage.setItem(LS_KEY, JSON.stringify(DEFAULTS)); return [...DEFAULTS]; }
+}
+function saveBank(bank){ localStorage.setItem(LS_KEY, JSON.stringify(bank)); renderBank(); }
+
+let BANK = loadBank();
+
+/* ------------------ Quiz Runtime ------------------ */
+const bar = document.getElementById('bar');
+const counter = document.getElementById('counter');
+const qEl = document.getElementById('question');
+const answersEl = document.getElementById('answers');
+const nextBtn = document.getElementById('next');
+
+let order = [];     // shuffled indices
+let index = 0;      // current question index into order
+let score = 0;
+let answered = false;
+
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  return arr;
+}
+function startQuiz(){
+  BANK = loadBank();
+  order = shuffle([...Array(BANK.length).keys()]);
+  index = 0; score = 0; answered = false;
+  renderQuestion();
+}
+function renderQuestion(){
+  const pct = (index / BANK.length) * 100;
+  bar.style.width = `${pct}%`;
+  counter.textContent = `Q ${Math.min(index+1,BANK.length)} / ${BANK.length}`;
+  nextBtn.disabled = true;
+
+  const q = BANK[order[index]];
+  qEl.textContent = q.q;
+
+  const perm = shuffle([0,1,2,3]);
+  answersEl.innerHTML = perm.map((ai,i)=>`
+      <button class="answer" data-ans="${ai}">
+        <span class="k">${i+1}</span>${q.a[ai]}
+        <span class="result-icon"></span>
+      </button>
+  `).join('');
+  document.querySelectorAll('.answer').forEach(btn=>{
+    btn.addEventListener('click', ()=> handleAnswer(btn, q.correct));
+  });
+}
+
+function handleAnswer(btn, correctIdx){
+  if(answered) return; answered = true;
+  const chosen = Number(btn.dataset.ans);
+  const all = document.querySelectorAll('.answer');
+  const iconGood = `<svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`;
+  const iconBad  = `<svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="var(--bad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+
+  all.forEach(b=>b.disabled = true);
+  if(chosen === correctIdx){ score++; btn.classList.add('ok'); btn.querySelector('.result-icon').innerHTML = iconGood; }
+  else{
+    btn.classList.add('bad'); btn.querySelector('.result-icon').innerHTML = iconBad;
+    all.forEach(b=>{ if(Number(b.dataset.ans)===correctIdx){ b.classList.add('ok'); b.querySelector('.result-icon').innerHTML = iconGood; }});
+  }
+  nextBtn.disabled = false; nextBtn.focus();
+}
+function renderScore(){
+  bar.style.width = '100%'; counter.textContent = `Done`;
+  const total = BANK.length; const pct = Math.round((score/total)*100);
+  const remark = pct===100?"Perfect! 🇺🇸": pct>=80?"Great job!": pct>=60?"Nice — keep practicing!":"You’ve got this. Try again!";
+  qEl.innerHTML = `Final Score: ${score} / ${total} (${pct}%)`;
+  answersEl.innerHTML = `
+    <div class="small" style="margin-bottom:10px">${remark}</div>
+    <button class="btn" id="playAgain">↻ Play Again</button>
+  `;
+  document.getElementById('playAgain').addEventListener('click', startQuiz);
+  nextBtn.disabled = true;
+}
+
+nextBtn.addEventListener('click', ()=>{
+  if(nextBtn.disabled) return;
+  index++;
+  if(index >= BANK.length) renderScore(); else { answered=false; renderQuestion(); }
+});
+document.addEventListener('keydown', (e)=>{
+  const k=e.key;
+  if(!answered && ['1','2','3','4'].includes(k)){
+    const i = Number(k)-1; const btn = document.querySelectorAll('.answer')[i]; if(btn) btn.click();
+  }else if(answered && (k==='Enter' || k===' ')){ nextBtn.click(); }
+});
+
+/* ------------------ Builder ------------------ */
+const tabPlay = document.getElementById('tabPlay');
+const tabBuild = document.getElementById('tabBuild');
+const panelPlay = document.getElementById('panelPlay');
+const panelBuild = document.getElementById('panelBuild');
+
+function switchTab(which){
+  if(which==='play'){
+    tabPlay.classList.add('active'); tabBuild.classList.remove('active');
+    panelPlay.hidden = false; panelBuild.hidden = true;
+  }else{
+    tabBuild.classList.add('active'); tabPlay.classList.remove('active');
+    panelBuild.hidden = false; panelPlay.hidden = true;
+    renderBank();
+  }
+}
+tabPlay.onclick = ()=> switchTab('play');
+tabBuild.onclick = ()=> switchTab('build');
+
+const qText = document.getElementById('qText');
+const a0 = document.getElementById('a0');
+const a1 = document.getElementById('a1');
+const a2 = document.getElementById('a2');
+const a3 = document.getElementById('a3');
+const correctSel = document.getElementById('correct');
+const bankBody = document.getElementById('bankBody');
+const saveItemBtn = document.getElementById('saveItem');
+const exportBtn = document.getElementById('exportBtn');
+const importFile = document.getElementById('importFile');
+const resetDefaultsBtn = document.getElementById('resetDefaults');
+const startQuizBtn = document.getElementById('startQuiz');
+
+let editIndex = null; // if not null, we’re editing BANK[editIndex]
+
+function clearForm(){
+  qText.value = ''; a0.value=''; a1.value=''; a2.value=''; a3.value=''; correctSel.value='0'; editIndex=null;
+}
+function formToItem(){
+  const q = qText.value.trim();
+  const A = [a0.value.trim(), a1.value.trim(), a2.value.trim(), a3.value.trim()];
+  const correct = Number(correctSel.value);
+  if(!q) throw new Error("Question is required");
+  if(A.some(x=>!x)) throw new Error("All four answers are required");
+  if(correct<0 || correct>3) throw new Error("Correct index out of range");
+  return { q, a:A, correct };
+}
+function renderBank(){
+  BANK = loadBank();
+  bankBody.innerHTML = BANK.map((item, i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td title="${escapeHtml(item.q)}">${escapeHtml(shorten(item.q, 80))}</td>
+      <td>${item.a.map(escapeHtml).map((t,ix)=>`<span class="pill" style="margin-right:6px">${String.fromCharCode(65+ix)}. ${t}</span>`).join(' ')}</td>
+      <td><strong>${['A','B','C','D'][item.correct]}</strong></td>
+      <td class="row-actions">
+        <button class="btn secondary" data-edit="${i}">Edit</button>
+        <button class="btn secondary" data-del="${i}">Delete</button>
+        <button class="btn secondary" data-up="${i}" title="Move up">↑</button>
+        <button class="btn secondary" data-down="${i}" title="Move down">↓</button>
+      </td>
+    </tr>
+  `).join('');
+
+  bankBody.querySelectorAll('[data-edit]').forEach(b=> b.addEventListener('click', ()=>{
+    const i = Number(b.dataset.edit); const it = BANK[i];
+    qText.value = it.q; [a0.value,a1.value,a2.value,a3.value] = it.a; correctSel.value = String(it.correct); editIndex = i;
+    switchTab('build');
+    qText.focus();
+  }));
+  bankBody.querySelectorAll('[data-del]').forEach(b=> b.addEventListener('click', ()=>{
+    const i = Number(b.dataset.del);
+    if(confirm('Delete this question?')){ BANK.splice(i,1); saveBank(BANK); }
+  }));
+  bankBody.querySelectorAll('[data-up]').forEach(b=> b.addEventListener('click', ()=>{
+    const i = Number(b.dataset.up); if(i<=0) return; [BANK[i-1],BANK[i]]=[BANK[i],BANK[i-1]]; saveBank(BANK);
+  }));
+  bankBody.querySelectorAll('[data-down]').forEach(b=> b.addEventListener('click', ()=>{
+    const i = Number(b.dataset.down); if(i>=BANK.length-1) return; [BANK[i+1],BANK[i]]=[BANK[i],BANK[i+1]]; saveBank(BANK);
+  }));
+}
+saveItemBtn.addEventListener('click', ()=>{
+  try{
+    const item = formToItem();
+    if(editIndex===null){ BANK.push(item); } else { BANK[editIndex]=item; }
+    saveBank(BANK); clearForm();
+  }catch(err){ alert(err.message); }
+});
+exportBtn.addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(loadBank(), null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'usa_trivia_bank.json'; a.click();
+  URL.revokeObjectURL(url);
+});
+importFile.addEventListener('change', async (e)=>{
+  const f = e.target.files?.[0]; if(!f) return;
+  try{
+    const text = await f.text();
+    const arr = JSON.parse(text);
+    if(!Array.isArray(arr)) throw new Error('Invalid JSON format (expecting array)');
+    // Merge/overwrite by position
+    const merged = [...loadBank()];
+    arr.forEach((it, idx)=>{
+      if(it && typeof it.q==='string' && Array.isArray(it.a) && typeof it.correct==='number'){
+        merged[idx] = { q:String(it.q), a:[String(it.a[0]||''),String(it.a[1]||''),String(it.a[2]||''),String(it.a[3]||'')], correct:Math.max(0,Math.min(3,Number(it.correct))) };
+      }
+    });
+    saveBank(merged);
+    alert('Imported successfully.');
+    importFile.value = '';
+  }catch(err){ alert('Import failed: '+err.message); }
+});
+resetDefaultsBtn.addEventListener('click', ()=>{
+  if(confirm('Restore the original 10 civics questions? This overwrites your current bank.')){
+    saveBank([...DEFAULTS]);
+  }
+});
+startQuizBtn.addEventListener('click', ()=>{
+  switchTab('play'); startQuiz();
+});
+
+/* ------------------ Utils ------------------ */
+function shorten(s, n){ return s.length>n ? s.slice(0,n-1)+'…' : s; }
+function escapeHtml(s){ return s.replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+
+/* ------------------ Boot ------------------ */
+renderBank(); // ensure table exists in case user opens Builder first
+startQuiz();  // start immediately in Play tab
+</script>
+</body>
+</html>

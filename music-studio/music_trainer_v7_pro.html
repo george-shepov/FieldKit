@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Music Theory Trainer v7 Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #f5f7fa;
+    --panel: #ffffff;
+    --border: #d0d7de;
+    --accent: #2563eb;
+    --accent-light: #3b82f6;
+    --ok: #16a34a;
+    --err: #dc2626;
+  }
+  body {
+    margin:0; font-family: Inter, Roboto, Arial, sans-serif;
+    background: var(--bg); color:#111;
+  }
+  header {
+    background: var(--accent); color:#fff; padding:14px 20px;
+    box-shadow:0 2px 4px rgba(0,0,0,.1);
+  }
+  h1 { margin:0; font-size:1.6rem }
+  .panel {
+    background: var(--panel);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px;
+    margin:16px auto;
+    max-width:1100px;
+    box-shadow:0 1px 3px rgba(0,0,0,.05);
+  }
+  h2 { margin-top:0; font-size:1.2rem }
+  button {
+    background:var(--accent); border:none; color:#fff;
+    padding:8px 14px; border-radius:6px;
+    font-weight:600; cursor:pointer;
+  }
+  button:hover { background:var(--accent-light) }
+  input,select {
+    border:1px solid var(--border); border-radius:6px;
+    padding:6px; font-size:.95rem;
+  }
+  .piano { display:flex; height:120px; user-select:none; -webkit-user-select:none; }
+  .white {
+    flex:1; background:#fff; border:1px solid #999;
+    position:relative;
+  }
+  .black {
+    position:absolute; top:0; right:-15px;
+    width:30px; height:70px; background:#111;
+    border:1px solid #333; z-index:2;
+  }
+  .pressed { background:var(--accent)!important; }
+  /* Piano roll */
+  #rollWrap { overflow:auto; border:1px solid var(--border); border-radius:6px; }
+  #roll { background:#fafafa; }
+  table { width:100%; border-collapse:collapse; font-size:.9rem }
+  th,td { border-bottom:1px solid var(--border); padding:4px 6px; text-align:left }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎹 Music Theory Trainer v7 Pro</h1>
+</header>
+
+<div class="panel">
+  <h2>Piano Roll & Recording</h2>
+  <div style="margin-bottom:8px">
+    <button id="recToggle">Record</button>
+    <button id="playSheet">Play</button>
+    <button id="clearSheet">Clear</button>
+  </div>
+  <div id="rollWrap">
+    <canvas id="roll" width="1600" height="600"></canvas>
+  </div>
+  <table>
+    <thead><tr><th>#</th><th>Bar</th><th>Beat</th><th>Note</th><th>Len</th><th>Vel</th></tr></thead>
+    <tbody id="sheetBody"></tbody>
+  </table>
+</div>
+
+<div class="panel">
+  <h2>Virtual Piano</h2>
+  <div class="piano" id="piano"></div>
+</div>
+
+<script>
+const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+const NOTE_NAMES=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+
+function midiToName(m){ return NOTE_NAMES[m%12]+Math.floor(m/12-1); }
+function freqFromMidi(m){ return 440*Math.pow(2,(m-69)/12); }
+
+function playSynth(midi,vel=100,len=0.8){
+  const osc=audioCtx.createOscillator(),g=audioCtx.createGain();
+  osc.type="sine"; osc.frequency.value=freqFromMidi(midi);
+  g.gain.value=vel/127; osc.connect(g).connect(audioCtx.destination);
+  osc.start(); osc.stop(audioCtx.currentTime+len);
+}
+
+// === Piano UI ===
+const piano=document.getElementById("piano");
+const keyMap={};
+for(let midi=60;midi<72;midi++){ // one octave shown on keys
+  const n=NOTE_NAMES[midi%12];
+  if(n.includes("#")) continue;
+  const w=document.createElement("div");
+  w.className="white"; w.dataset.midi=midi;
+  w.onmousedown=()=>{playSynth(midi);w.classList.add("pressed");};
+  w.onmouseup=()=>w.classList.remove("pressed");
+  piano.appendChild(w); keyMap[midi]=w;
+  if(NOTE_NAMES[(midi+1)%12].includes("#")){
+    const b=document.createElement("div");
+    b.className="black"; b.dataset.midi=midi+1;
+    b.onmousedown=()=>{playSynth(midi+1);b.classList.add("pressed");};
+    b.onmouseup=()=>b.classList.remove("pressed");
+    w.appendChild(b); keyMap[midi+1]=b;
+  }
+}
+
+// === Piano Roll ===
+const roll=document.getElementById("roll"),ctx=roll.getContext("2d");
+const rollLow=36,rollHigh=96; // C2..C7
+const notes=[]; // {midi,start,end,vel}
+const PPQ=480,bpm=90;
+function beatsToX(b){ return b*40; }
+function midiToY(m){ return (rollHigh-m)*10; }
+function drawRoll(){
+  ctx.clearRect(0,0,roll.width,roll.height);
+  // grid
+  for(let m=rollLow;m<=rollHigh;m++){
+    const y=midiToY(m);
+    ctx.strokeStyle=(m%12===0)?"#ccc":"#eee";
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(roll.width,y); ctx.stroke();
+  }
+  // notes
+  for(const n of notes){
+    const x=beatsToX(n.start), w=beatsToX(n.end-n.start);
+    const y=midiToY(n.midi)-8,h=8;
+    ctx.fillStyle="rgba(37,99,235,"+(n.vel/127)+")";
+    ctx.fillRect(x,y,w,h);
+  }
+}
+drawRoll();
+
+// === Recording simulation ===
+let isRec=false, recStart=0;
+document.getElementById("recToggle").onclick=()=>{
+  if(!isRec){isRec=true;recStart=audioCtx.currentTime;notes.length=0;}else{isRec=false;}
+};
+document.getElementById("playSheet").onclick=()=>{
+  for(const n of notes){ setTimeout(()=>playSynth(n.midi,n.vel,(n.end-n.start)*(60/bpm)), (n.start*60/bpm*1000)); }
+};
+document.getElementById("clearSheet").onclick=()=>{notes.length=0;drawRoll();};
+
+function addNote(midi){
+  if(isRec){
+    const beat=(audioCtx.currentTime-recStart)/(60/bpm);
+    notes.push({midi,start:beat,end:beat+1,vel:100});
+    drawRoll(); renderTable();
+  }
+}
+function renderTable(){
+  const tb=document.getElementById("sheetBody"); tb.innerHTML="";
+  notes.forEach((n,i)=>{
+    tb.innerHTML+=`<tr><td>${i+1}</td><td>${Math.floor(n.start/4)+1}</td><td>${(n.start%4).toFixed(2)}</td><td>${midiToName(n.midi)}</td><td>${(n.end-n.start).toFixed(2)}</td><td>${n.vel}</td></tr>`;
+  });
+}
+piano.querySelectorAll("[data-midi]").forEach(el=>{
+  el.addEventListener("mousedown",()=>addNote(+el.dataset.midi));
+});
+</script>
+</body>
+</html>

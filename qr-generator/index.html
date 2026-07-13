@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Custom QR Code Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --fg:#000000; --bg:#ffffff; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin: 0; padding: 20px;
+      display: flex; flex-direction: column; align-items: center;
+      background: #f7f7f7; color: #222;
+    }
+    h1 { margin: 0 0 10px; font-weight: 700; }
+    .controls {
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center;
+      margin: 10px 0 0;
+    }
+    .controls input[type="text"] {
+      width: min(90vw, 420px);
+      padding: 10px 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 8px;
+      background: #fff;
+    }
+    .swatch {
+      display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px;
+      border: 1px solid #ddd; border-radius: 8px; background: #fff;
+      font-size: 14px;
+    }
+    input[type="color"] {
+      width: 44px; height: 36px; border: none; padding: 0; background: none; cursor: pointer;
+    }
+    button {
+      padding: 10px 14px; font-size: 15px; border: none; border-radius: 8px; cursor: pointer;
+      background: #222; color: #fff;
+    }
+    #frame {
+      margin-top: 20px; padding: 20px; background: #fff; border: 1px solid #ddd; border-radius: 12px;
+    }
+    #qrcode { display: grid; place-items: center; }
+    canvas, img {
+      width: min(70vw, 320px);
+      height: auto; image-rendering: pixelated;
+    }
+    .hint { margin-top: 8px; font-size: 12px; color: #666; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>Custom QR Code Generator</h1>
+
+  <div class="controls">
+    <input id="text" type="text" placeholder="Enter text or URL" />
+    <label class="swatch" title="Foreground (dark) color">
+      Foreground
+      <input id="colorDark" type="color" value="#000000" />
+    </label>
+    <label class="swatch" title="Background (light) color">
+      Background
+      <input id="colorLight" type="color" value="#ffffff" />
+    </label>
+    <button id="btnGen">Generate</button>
+    <button id="btnDl">Download PNG</button>
+  </div>
+
+  <div id="frame">
+    <div id="qrcode" aria-live="polite"></div>
+    <div class="hint">Large live preview. Use the color pickers, then “Generate” and “Download PNG”.</div>
+  </div>
+
+  <!-- QRCode library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    let qr;
+    const elText = document.getElementById("text");
+    const elDark = document.getElementById("colorDark");
+    const elLight = document.getElementById("colorLight");
+    const elQR = document.getElementById("qrcode");
+
+    function generateQRCode() {
+      const text = (elText.value || "https://example.com").trim();
+      const colorDark = elDark.value || "#000000";
+      const colorLight = elLight.value || "#ffffff";
+
+      // Rebuild to apply new colors
+      elQR.innerHTML = "";
+      qr = new QRCode(elQR, {
+        text,
+        width: 512,
+        height: 512,
+        colorDark,
+        colorLight,
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }
+
+    function getCanvasFromQR() {
+      // qrcodejs may produce <canvas> or <img> depending on support
+      const canvas = elQR.querySelector("canvas");
+      if (canvas) return canvas;
+
+      const img = elQR.querySelector("img");
+      if (!img) return null;
+
+      // Draw <img> onto a canvas to export
+      const tmp = document.createElement("canvas");
+      tmp.width = img.naturalWidth || 512;
+      tmp.height = img.naturalHeight || 512;
+      const ctx = tmp.getContext("2d");
+      // Fill background to preserve chosen light color if present in options
+      ctx.fillStyle = elLight.value || "#ffffff";
+      ctx.fillRect(0, 0, tmp.width, tmp.height);
+      ctx.drawImage(img, 0, 0, tmp.width, tmp.height);
+      return tmp;
+    }
+
+    function downloadQRCode() {
+      if (!qr) { alert("Please generate a QR code first."); return; }
+      const canvas = getCanvasFromQR();
+      if (!canvas) { alert("Could not access QR image. Try generating again."); return; }
+      const link = document.createElement("a");
+      link.download = "qrcode.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    }
+
+    // Live-ish: re-generate when colors change (debounced)
+    let t;
+    function queueRegen() {
+      clearTimeout(t);
+      t = setTimeout(generateQRCode, 120);
+    }
+
+    document.getElementById("btnGen").addEventListener("click", generateQRCode);
+    document.getElementById("btnDl").addEventListener("click", downloadQRCode);
+    elDark.addEventListener("input", queueRegen);
+    elLight.addEventListener("input", queueRegen);
+    elText.addEventListener("keydown", e => { if (e.key === "Enter") generateQRCode(); });
+
+    // Initial placeholder QR
+    generateQRCode();
+  </script>
+</body>
+</html>
