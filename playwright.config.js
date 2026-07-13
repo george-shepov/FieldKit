@@ -11,7 +11,7 @@ module.exports = defineConfig({
   workers: 1,
   reporter: 'list',
   use: {
-    baseURL: 'file://' + process.cwd(),
+    baseURL: 'file://' + process.cwd() + '/',
     trace: 'retain-on-failure',
     headless: Boolean(process.env.CI),
     viewport: { width: 1400, height: 900 },
