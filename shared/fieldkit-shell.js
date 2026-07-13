@@ -10,6 +10,32 @@
     : new URL('shared/fieldkit-shell.js', document.baseURI);
   const rootURL = new URL('../', scriptURL);
 
+  function installResponsiveStyles() {
+    if (document.getElementById('fieldkitShellResponsiveStyle')) return;
+    const style = document.createElement('style');
+    style.id = 'fieldkitShellResponsiveStyle';
+    style.textContent = `
+      @media (max-width: 700px) {
+        .fk-shell-link span:first-child { display: inline !important; }
+        .fk-shell-link span:last-child,
+        .fk-shell-action-label { display: none !important; }
+        .fk-shell-icon-action { width: 36px; min-width: 36px; padding: 0 !important; }
+        .fk-shell-right { justify-content: flex-end !important; }
+        .fk-shell-status { margin-right: auto; font-size: .68rem !important; }
+      }
+      @media (max-width: 430px) {
+        .fk-shell-header { padding: 8px 10px !important; gap: 7px !important; }
+        .fk-shell-left { gap: 8px !important; }
+        .fk-shell-logo { width: 30px !important; height: 30px !important; }
+        .fk-shell-product { display: none; }
+        .fk-shell-app { margin-top: 0 !important; font-size: .88rem !important; max-width: 48vw; }
+        .fk-shell-status-label { display: none; }
+        .fk-shell-status { width: 34px; min-width: 34px; padding: 0 !important; justify-content: center; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   function titleFromSlug(slug) {
     return String(slug || 'FieldKit App')
       .replace(/[-_]+/g, ' ')
@@ -59,6 +85,7 @@
   function createShell() {
     if (!document.body || document.querySelector('.fk-shell-header')) return;
 
+    installResponsiveStyles();
     document.body.classList.add('fieldkit-app-shell');
 
     // The canonical shell replaces all legacy app-level navigation. Removing
