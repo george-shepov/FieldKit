@@ -1,4 +1,4 @@
-const CACHE_NAME = "fieldkit-shell-v18";
+const CACHE_NAME = "fieldkit-shell-v19";
 
 function scopedPath(path) {
   const normalized = String(path || "").replace(/^\/+/, "");
@@ -21,6 +21,11 @@ const PRECACHE_URLS = [
   "shared/global-auth.js",
   "shared/pwa-init.js",
   "shared/app-extensions.js",
+  "shared/launcher-explorer.css",
+  "shared/launcher-explorer.js",
+  "shared/components.js",
+  "shared/shadcn.css",
+  "shared/tic-tac-toe-layout.js",
   "shared/ui-tweaks-runtime.js",
   "shared/fieldkit-shell.css",
   "shared/fieldkit-shell.js",
