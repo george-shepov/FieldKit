@@ -1,6 +1,6 @@
 const { test, expect } = require('@playwright/test');
 
-const APP_PATH = '/drivers-license/index.html';
+const APP_PATH = 'drivers-license/index.html';
 const PRIVATE_MODE = {
   mode: 'offline_private',
   allowSync: false,
