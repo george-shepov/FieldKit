@@ -180,3 +180,176 @@ body {
 .gap-2 { gap: 0.5rem; }
 .p-4 { padding: 1rem; }
 .m-b-4 { margin-bottom: 1rem; }
+
+/* FieldKit launcher: edge-to-edge, explicit actions, and touch-safe mobile layout. */
+body:has(.launcher-controls) {
+  width: 100%;
+  overflow-x: hidden;
+  padding: clamp(0.5rem, 2vw, 1.5rem) !important;
+}
+
+.container:has(.launcher-controls) {
+  width: 100%;
+  max-width: none !important;
+}
+
+.container:has(.launcher-controls) .header {
+  padding-inline: clamp(0.75rem, 3vw, 2rem);
+}
+
+.container:has(.launcher-controls) .app-item {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.container:has(.launcher-controls) .app-info,
+.container:has(.launcher-controls) .app-info > div:last-child {
+  min-width: 0;
+}
+
+.container:has(.launcher-controls) .app-name,
+.container:has(.launcher-controls) .app-desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.container:has(.launcher-controls) .app-desc {
+  white-space: nowrap;
+}
+
+.container:has(.launcher-controls) .badges {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.container:has(.launcher-controls) .app-item::after {
+  content: "Launch";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 5.5rem;
+  min-height: 2.5rem;
+  padding: 0.625rem 1rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.65rem;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  pointer-events: none;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.container:has(.launcher-controls) .app-item:hover::after {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.container:has(.launcher-controls) .app-item:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: -2px;
+}
+
+@media (max-width: 760px) {
+  body:has(.launcher-controls) {
+    padding: 0.5rem !important;
+  }
+
+  .container:has(.launcher-controls) .header {
+    padding: 1.5rem 0.5rem 1rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .container:has(.launcher-controls) .header h1 {
+    font-size: clamp(2rem, 12vw, 3rem);
+  }
+
+  .container:has(.launcher-controls) .header-tools {
+    flex-wrap: wrap;
+  }
+
+  .container:has(.launcher-controls) .header-tools .s-btn {
+    flex: 1 1 8rem;
+  }
+
+  .container:has(.launcher-controls) .launcher-controls {
+    margin-bottom: 0.75rem;
+    padding: 0.75rem !important;
+  }
+
+  .container:has(.launcher-controls) .launcher-controls > div,
+  .container:has(.launcher-controls) .launcher-controls > div > div {
+    width: 100%;
+  }
+
+  .container:has(.launcher-controls) .launcher-controls .s-select,
+  .container:has(.launcher-controls) #clearRecentBtn {
+    width: 100% !important;
+    min-height: 2.75rem;
+  }
+
+  .container:has(.launcher-controls) .category {
+    margin-bottom: 0.75rem;
+  }
+
+  .container:has(.launcher-controls) .category-header {
+    padding: 0.875rem 0.75rem !important;
+  }
+
+  .container:has(.launcher-controls) .app-item {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 0.75rem !important;
+    gap: 0.625rem;
+  }
+
+  .container:has(.launcher-controls) .app-info {
+    gap: 0.75rem !important;
+  }
+
+  .container:has(.launcher-controls) .app-icon {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+  }
+
+  .container:has(.launcher-controls) .badges {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
+    gap: 0.25rem;
+  }
+
+  .container:has(.launcher-controls) .badges .badge-connectivity,
+  .container:has(.launcher-controls) .badges > .s-badge:not(.badge-connectivity) {
+    display: none;
+  }
+
+  .container:has(.launcher-controls) .app-item::after {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: 2.75rem;
+    margin-top: 0.125rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .container:has(.launcher-controls) .header-tools .s-btn {
+    flex-basis: 100%;
+  }
+
+  .container:has(.launcher-controls) .category-title {
+    min-width: 0;
+    gap: 0.5rem !important;
+  }
+
+  .container:has(.launcher-controls) .category-title > span:not(.s-badge) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
