@@ -615,7 +615,27 @@
           "Short high-focus challenge rounds."
         ]
       },
-      "snake": {
+      "snake": {      "tetris": {
+        title: "Block Drop",
+        about: "Offline falling-block arcade game with a modern 7-bag piece system, hold slot, ghost piece, next queue, scoring, and local best score.",
+        operations: [
+          "Move and rotate pieces to complete horizontal lines.",
+          "Use Hold once per piece to save a difficult shape for later.",
+          "Clear ten lines to advance a level and increase the drop speed.",
+          "Use New game to restart a run; the best score remains on this device."
+        ],
+        keys: [
+          "Arrow keys move, rotate, and soft drop; Space hard drops.",
+          "C holds the active piece and P pauses or resumes.",
+          "On touch screens, swipe left/right/down or tap the board to rotate."
+        ],
+        commands: ["No CLI commands."],
+        scenarios: [
+          "Quick offline arcade break.",
+          "Practice planning, spatial rotation, and increasing-speed play."
+        ]
+      },
+      
         title: "Snake",
         about: "Classic snake game for quick breaks.",
         operations: [
