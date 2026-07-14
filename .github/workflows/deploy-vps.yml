@@ -1,0 +1,133 @@
+name: Deploy FieldKit demo to VPS
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fieldkit-vps-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # A push deploy can only begin after the CI workflow for main passed. Manual
+    # dispatch remains available for a controlled re-deploy of the current main.
+    if: >-
+      vars.FIELDKIT_VPS_DEPLOY_ENABLED == 'true' &&
+      ((github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DEPLOY_HOST: ${{ secrets.FIELDKIT_VPS_HOST }}
+      DEPLOY_USER: ${{ secrets.FIELDKIT_VPS_USER }}
+      DEPLOY_PORT: ${{ secrets.FIELDKIT_VPS_PORT }}
+      DEPLOY_PATH: ${{ secrets.FIELDKIT_VPS_PATH }}
+      KNOWN_HOSTS: ${{ secrets.FIELDKIT_VPS_KNOWN_HOSTS }}
+      SSH_KEY: ${{ secrets.FIELDKIT_VPS_SSH_KEY }}
+      PUBLIC_URL: ${{ vars.FIELDKIT_DEMO_URL || 'https://fieldkit.giorgiy.org' }}
+
+    steps:
+      - name: Choose the verified commit
+        id: commit
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+            echo "sha=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check out verified commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.commit.outputs.sha }}
+
+      - name: Validate deployment configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in DEPLOY_HOST DEPLOY_USER DEPLOY_PORT DEPLOY_PATH KNOWN_HOSTS SSH_KEY; do
+            if [[ -z "${!name}" ]]; then
+              echo "A required FieldKit VPS GitHub secret is missing ($name)." >&2
+              exit 1
+            fi
+          done
+          [[ "$DEPLOY_PATH" == /* ]] || { echo 'FIELDKIT_VPS_PATH must be absolute.' >&2; exit 1; }
+
+      - name: Build immutable static release
+        shell: bash
+        env:
+          DEPLOY_SHA: ${{ steps.commit.outputs.sha }}
+        run: |
+          set -euo pipefail
+          mkdir release
+          git archive --format=tar "$DEPLOY_SHA" | tar -x -C release
+          cat > release/fieldkit-release.json <<EOF
+          {"commit":"$DEPLOY_SHA","built_at":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","source":"github-actions"}
+          EOF
+          tar -C release -czf fieldkit-release.tar.gz .
+
+      - name: Configure trusted SSH connection
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+      - name: Upload release archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          scp -P "$DEPLOY_PORT" -i ~/.ssh/id_ed25519 \
+            fieldkit-release.tar.gz "$DEPLOY_USER@$DEPLOY_HOST:/tmp/fieldkit-release-${{ steps.commit.outputs.sha }}.tar.gz"
+
+      - name: Activate release atomically
+        shell: bash
+        env:
+          DEPLOY_SHA: ${{ steps.commit.outputs.sha }}
+        run: |
+          set -euo pipefail
+          ssh -p "$DEPLOY_PORT" -i ~/.ssh/id_ed25519 "$DEPLOY_USER@$DEPLOY_HOST" \
+            "DEPLOY_PATH='$DEPLOY_PATH' DEPLOY_SHA='$DEPLOY_SHA' bash -s" <<'REMOTE'
+          set -euo pipefail
+          archive="/tmp/fieldkit-release-${DEPLOY_SHA}.tar.gz"
+          releases="${DEPLOY_PATH}/releases"
+          release="${releases}/${DEPLOY_SHA}"
+          staging="${releases}/.${DEPLOY_SHA}.staging"
+
+          test -f "$archive"
+          install -d -m 0755 "$releases"
+          rm -rf "$staging"
+          install -d -m 0755 "$staging"
+          tar -xzf "$archive" -C "$staging"
+          test -f "$staging/index.html"
+          test -f "$staging/fieldkit-release.json"
+          rm -rf "$release"
+          mv "$staging" "$release"
+          ln -s "$release" "${DEPLOY_PATH}/.current-next"
+          mv -Tf "${DEPLOY_PATH}/.current-next" "${DEPLOY_PATH}/current"
+          rm -f "$archive"
+          find "$releases" -mindepth 1 -maxdepth 1 -type d -name '[0-9a-f]*' -printf '%T@ %p\n' |
+            sort -nr | tail -n +6 | cut -d' ' -f2- | xargs -r rm -rf
+          REMOTE
+
+      - name: Verify the public demo release
+        shell: bash
+        env:
+          DEPLOY_SHA: ${{ steps.commit.outputs.sha }}
+        run: |
+          set -euo pipefail
+          curl --fail --show-error --silent --retry 8 --retry-all-errors --retry-delay 3 \
+            "$PUBLIC_URL/fieldkit-release.json" -o fieldkit-release.json
+          grep -Fq "$DEPLOY_SHA" fieldkit-release.json
