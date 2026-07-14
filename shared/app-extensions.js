@@ -6,6 +6,7 @@
     ? new URL(currentScript.src, window.location.href)
     : new URL('shared/app-extensions.js', document.baseURI);
   const sharedRoot = new URL('./', scriptURL);
+  const LIBRARY_VERSION = '2026.07.14.2';
 
   const EXTERNAL_APPS = {
     'vocabulary-expander': {
@@ -32,26 +33,29 @@
     return Boolean(
       document.getElementById('content') &&
       document.querySelector('.launcher-controls') &&
-      document.getElementById('sortModeSelect') &&
       typeof APP_REGISTRY !== 'undefined'
     );
   }
 
-  function loadLauncherExplorer() {
+  function loadLauncherLibrary() {
     if (!isLauncherPage()) return;
 
-    if (!document.getElementById('fieldkitLauncherExplorerStyle')) {
+    if (!document.getElementById('fieldkitLauncherLibraryStyle')) {
       const link = document.createElement('link');
-      link.id = 'fieldkitLauncherExplorerStyle';
+      link.id = 'fieldkitLauncherLibraryStyle';
       link.rel = 'stylesheet';
-      link.href = new URL('launcher-explorer.css', sharedRoot).toString();
+      const href = new URL('launcher-library.css', sharedRoot);
+      href.searchParams.set('v', LIBRARY_VERSION);
+      link.href = href.toString();
       document.head.appendChild(link);
     }
 
-    if (!document.getElementById('fieldkitLauncherExplorerScript')) {
+    if (!document.getElementById('fieldkitLauncherLibraryScript')) {
       const script = document.createElement('script');
-      script.id = 'fieldkitLauncherExplorerScript';
-      script.src = new URL('launcher-explorer.js', sharedRoot).toString();
+      script.id = 'fieldkitLauncherLibraryScript';
+      const src = new URL('launcher-library.js', sharedRoot);
+      src.searchParams.set('v', LIBRARY_VERSION);
+      script.src = src.toString();
       script.defer = true;
       document.body.appendChild(script);
     }
@@ -74,11 +78,6 @@
         };
       }
 
-      if (typeof scanApps === 'function' && typeof renderCurrentLauncher === 'function') {
-        cachedApps = scanApps();
-        renderCurrentLauncher(cachedApps);
-        if (typeof renderHelp === 'function') renderHelp(cachedApps);
-      }
       return true;
     } catch (error) {
       console.warn('[FieldKit] External app registration failed:', error);
@@ -92,7 +91,7 @@
     const registered = registerExternalLearningApps();
     if (registered || attempts >= 20) {
       window.clearInterval(timer);
-      loadLauncherExplorer();
+      loadLauncherLibrary();
     }
   }, 50);
 })();
