@@ -380,7 +380,12 @@
   </div>
 
   <div id="message" role="status" aria-live="polite"></div>
-  <div id="turnbar" aria-hidden="true">Turn: <span id="turnWho">X</span></div>
+  <div id="turnbar" aria-live="polite">
+    Turn: <span id="turnWho">X</span>
+    <span aria-hidden="true"> · </span>Level <span id="levelValue">1</span>
+    <span aria-hidden="true"> · </span>Streak <span id="streakValue">0 / 3</span>
+    <span aria-hidden="true"> · </span><span id="challengeValue">10×10 · 5 in a row</span>
+  </div>
 
   <div id="board" role="grid" aria-label="Tic Tac Toe Board"></div>
 
@@ -403,7 +408,7 @@
       <p id="overlaySub">Ascend to next tier?</p>
       <div class="row">
         <button id="btnReplay" class="btn-primary">Play Again</button>
-        <button id="btnTierUp" class="btn-ghost">Level Up</button>
+        <button id="btnTierUp" class="btn-ghost">Next Level</button>
         <button id="btnTierDown" class="btn-ghost">Level Down</button>
       </div>
     </div>
@@ -422,6 +427,9 @@
     const scoreXEl = document.getElementById('scoreX');
     const scoreOEl = document.getElementById('scoreO');
     const scoreDrawEl = document.getElementById('scoreDraw');
+    const levelValueEl = document.getElementById('levelValue');
+    const streakValueEl = document.getElementById('streakValue');
+    const challengeValueEl = document.getElementById('challengeValue');
     const downloadScoreBtn = document.getElementById('downloadScoreBtn');
     const uploadScoreBtn = document.getElementById('uploadScoreBtn');
     const uploadScoreInput = document.getElementById('uploadScoreInput');
@@ -454,6 +462,8 @@
     let styleMode = 'neon';
 
     let scoreboard = { xWins: 0, oWins: 0, draws: 0 };
+    const WINS_PER_CHALLENGE = 3;
+    let progression = { level: 1, winStreak: 0, challengeCursor: 0 };
 
     const STORE_KEY = 'gttt_state_v2';
 
@@ -461,6 +471,21 @@
       'Seed','Sprout','Trailblazer','Strategist','Analyst',
       'Visionary','Tactician','Architect','Oracle','Zenith'
     ];
+
+    // Each entry is a different board + win-condition combination. There are
+    // 1,176 combinations before the sequence cycles, which keeps progression
+    // fresh without relying on a server or random state.
+    const CHALLENGES = (() => {
+      const entries = [];
+      for (let size = 3; size <= 50; size++) {
+        for (let win = 3; win <= size; win++) entries.push({ size, win });
+      }
+      // Stable shuffle spreads small and large boards across the campaign.
+      return entries.sort((a, b) => {
+        const hash = ({ size, win }) => ((size * 1103515245) ^ (win * 12345)) >>> 0;
+        return hash(a) - hash(b);
+      });
+    })();
 
     function tierLabel(v){ return TIERS[(v-1)|0] || '—'; }
 
@@ -507,6 +532,11 @@
         const raw = localStorage.getItem(STORE_KEY); if(!raw) return;
         const s = JSON.parse(raw);
         if (s.scoreboard) scoreboard = s.scoreboard;
+        if (s.progression) {
+          progression.level = Math.max(1, Number(s.progression.level) || 1);
+          progression.winStreak = Math.max(0, Number(s.progression.winStreak) || 0);
+          progression.challengeCursor = Math.max(0, Number(s.progression.challengeCursor) || 0);
+        }
         if (s.boardSize) { boardSize = clampInt(s.boardSize,3,50); sizeInput.value = boardSize; }
         if (s.winLength){ winLength = clampInt(s.winLength,3,50); winInput.value = winLength; }
         if (s.tier){ tier = clampInt(s.tier,1,10); tierInput.value = tier; updateTierPill(); }
@@ -517,7 +547,7 @@
       }catch{}
     }
     function saveState(){
-      localStorage.setItem(STORE_KEY, JSON.stringify({ scoreboard, boardSize, winLength, tier, styleMode }));
+      localStorage.setItem(STORE_KEY, JSON.stringify({ scoreboard, progression, boardSize, winLength, tier, styleMode }));
     }
 
     function applyBoardStyle(){
@@ -527,6 +557,46 @@
 
     /** Utils **/
     function clampInt(n,min,max){ n = parseInt(n,10); if(isNaN(n)) n=min; return Math.max(min, Math.min(max, n)); }
+
+    function challengeLabel(){ return `${boardSize}×${boardSize} · ${winLength} in a row`; }
+
+    function updateProgress(){
+      levelValueEl.textContent = String(progression.level);
+      streakValueEl.textContent = `${progression.winStreak} / ${WINS_PER_CHALLENGE}`;
+      challengeValueEl.textContent = challengeLabel();
+    }
+
+    function startFreshChallenge(){
+      const current = `${boardSize}:${winLength}`;
+      let challenge;
+      do {
+        challenge = CHALLENGES[progression.challengeCursor % CHALLENGES.length];
+        progression.challengeCursor++;
+      } while (`${challenge.size}:${challenge.win}` === current && progression.challengeCursor < CHALLENGES.length + 1);
+      boardSize = challenge.size;
+      winLength = challenge.win;
+      sizeInput.value = boardSize;
+      winInput.value = winLength;
+      updateProgress();
+    }
+
+    function recordPlayerWin(){
+      progression.level += 1;
+      progression.winStreak += 1;
+      // The computer gets stronger with the player until its tuned ceiling;
+      // levels themselves remain unbounded.
+      tier = Math.max(tier, Math.min(10, progression.level));
+      tierInput.value = tier;
+      updateTierPill();
+      const unlockedChallenge = progression.winStreak % WINS_PER_CHALLENGE === 0;
+      if (unlockedChallenge) {
+        progression.winStreak = 0;
+        startFreshChallenge();
+      }
+      updateProgress();
+      saveState();
+      return unlockedChallenge;
+    }
 
     /** Init **/
     sizeInput.addEventListener('change', ()=>{ sizeInput.value = clampInt(sizeInput.value,3,50); });
@@ -584,6 +654,7 @@
       currentPlayer = 'X'; gameOver = false; moveHistory = [];
       messageEl.textContent = 'Your turn (X).'; turnWhoEl.textContent = 'X';
       renderBoard();
+      updateProgress();
       fitBoardToViewport();
     }
 
@@ -631,11 +702,29 @@
       clearWinHighlights();
       const line = getWinLine(r,c);
       if(line){ gameOver=true; line.forEach(({r,c})=>cellEls[r][c].classList.add('win'));
-        if(sym==='X'){ scoreboard.xWins++; messageEl.textContent='You win!'; showOverlay('win'); }
-        else { scoreboard.oWins++; messageEl.textContent='Computer wins!'; showOverlay('loss'); }
+        if(sym==='X'){
+          scoreboard.xWins++;
+          const unlockedChallenge = recordPlayerWin();
+          messageEl.textContent = unlockedChallenge ? 'You win! A new challenge is unlocked.' : `You win! Level ${progression.level}.`;
+          showOverlay('win', unlockedChallenge);
+        }
+        else {
+          scoreboard.oWins++;
+          progression.winStreak = 0;
+          updateProgress();
+          messageEl.textContent='Computer wins!';
+          showOverlay('loss');
+        }
         updateScores(); disableAll(); saveState(); sendGameOver(sym==='X'?'win':'loss'); return; }
 
-      if(isFull()){ gameOver=true; scoreboard.draws++; messageEl.textContent='Draw.'; updateScores(); saveState(); showOverlay('draw'); sendGameOver('draw'); return; }
+      if(isFull()){
+        gameOver=true;
+        scoreboard.draws++;
+        progression.winStreak = 0;
+        updateProgress();
+        messageEl.textContent='Draw.';
+        updateScores(); saveState(); showOverlay('draw'); sendGameOver('draw'); return;
+      }
 
       currentPlayer = (sym==='X') ? 'O' : 'X';
       messageEl.textContent = currentPlayer==='X' ? 'Your turn (X).' : 'Computer\'s turn (O).';
@@ -726,13 +815,30 @@
     function updateTierPill(){ tierPill.textContent = `${tier} - ${tierLabel(tier)}`; }
 
     /** Overlay **/
-    function showOverlay(result){ overlay.style.display='grid'; let nextUp = Math.min(10, tier+1), nextDown = Math.max(1, tier-1);
-      if(result==='win'){ overlayTitle.textContent='You Win!'; overlaySub.textContent=`Ascend to ${nextUp} - ${tierLabel(nextUp)}?`; btnTierUp.style.display='inline-block'; btnTierDown.style.display='none'; }
-      else if(result==='loss'){ overlayTitle.textContent='Game Over'; overlaySub.textContent=`Try ${nextDown} - ${tierLabel(nextDown)} for a different challenge?`; btnTierUp.style.display='none'; btnTierDown.style.display='inline-block'; }
-      else { overlayTitle.textContent='Draw'; overlaySub.textContent='Replay or adjust tier?'; btnTierUp.style.display='inline-block'; btnTierDown.style.display='inline-block'; }
+    function showOverlay(result, unlockedChallenge = false){
+      overlay.style.display='grid';
+      btnTierDown.style.display='none';
+      if(result==='win'){
+        overlayTitle.textContent=`Level ${progression.level} unlocked!`;
+        overlaySub.textContent = unlockedChallenge
+          ? `Fresh challenge: ${challengeLabel()}. You have not played this board and win condition in this campaign.`
+          : `Keep the streak going — ${WINS_PER_CHALLENGE - progression.winStreak} more win${WINS_PER_CHALLENGE - progression.winStreak === 1 ? '' : 's'} unlocks a fresh challenge.`;
+        btnReplay.textContent='Practice this challenge';
+        btnTierUp.textContent=`Start Level ${progression.level}`;
+        btnTierUp.style.display='inline-block';
+      } else if(result==='loss'){
+        overlayTitle.textContent='Game Over';
+        overlaySub.textContent=`Level ${progression.level} is still yours. Try the current challenge again.`;
+        btnReplay.textContent='Try again';
+        btnTierUp.style.display='none';
+      } else {
+        overlayTitle.textContent='Draw';
+        overlaySub.textContent=`Your level stays at ${progression.level}. Try the challenge again.`;
+        btnReplay.textContent='Play again';
+        btnTierUp.style.display='none';
+      }
       btnReplay.onclick = ()=>{ overlay.style.display='none'; resetGame(); };
-      btnTierUp.onclick = ()=>{ tier = Math.min(10, tier+1); tierInput.value=tier; updateTierPill(); overlay.style.display='none'; resetGame(); saveState(); };
-      btnTierDown.onclick = ()=>{ tier = Math.max(1, tier-1); tierInput.value=tier; updateTierPill(); overlay.style.display='none'; resetGame(); saveState(); };
+      btnTierUp.onclick = ()=>{ overlay.style.display='none'; resetGame(); saveState(); };
     }
 
     /** postMessage to launcher **/
