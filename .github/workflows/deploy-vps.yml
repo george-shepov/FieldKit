@@ -19,8 +19,9 @@ jobs:
     # A push deploy can only begin after the CI workflow for main passed. Manual
     # dispatch remains available for a controlled re-deploy of the current main.
     if: >-
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
-      github.event_name == 'workflow_dispatch'
+      vars.FIELDKIT_VPS_DEPLOY_ENABLED == 'true' &&
+      ((github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
