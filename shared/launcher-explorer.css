@@ -26,6 +26,49 @@ body {
   gap: 12px;
 }
 
+/* The launcher is the product home screen: give it the whole desktop canvas. */
+body.fieldkit-launcher-explorer {
+  padding: 12px;
+}
+
+body.fieldkit-launcher-explorer .container {
+  width: 100%;
+  max-width: none;
+}
+
+body.fieldkit-launcher-explorer .header {
+  padding: 18px 16px 14px;
+  margin-bottom: 8px;
+}
+
+body.fieldkit-launcher-explorer .header h1 {
+  font-size: clamp(2.2rem, 4vw, 3.4rem);
+  margin-bottom: 5px;
+}
+
+body.fieldkit-launcher-explorer .header-tools {
+  margin-top: 14px;
+}
+
+body.fieldkit-launcher-explorer .fk-explorer-workspace {
+  min-height: clamp(440px, calc(100vh - 252px), 900px);
+  align-items: stretch;
+}
+
+body.fieldkit-launcher-explorer .fk-explorer-browser,
+body.fieldkit-launcher-explorer .fk-explorer-details {
+  min-height: 0;
+}
+
+body.fieldkit-launcher-explorer .fk-explorer-browser {
+  overflow-y: auto;
+}
+
+body.fieldkit-launcher-explorer .fk-explorer-details {
+  top: 12px;
+  max-height: none;
+}
+
 .fk-explorer button,
 .fk-explorer input,
 .fk-explorer a {
@@ -819,6 +862,18 @@ body {
 @media (max-width: 860px) {
   body {
     padding: 12px !important;
+  }
+
+  body.fieldkit-launcher-explorer .container {
+    max-width: 100%;
+  }
+
+  body.fieldkit-launcher-explorer .fk-explorer-workspace {
+    min-height: 0;
+  }
+
+  body.fieldkit-launcher-explorer .fk-explorer-browser {
+    overflow: hidden;
   }
 
   .header {
