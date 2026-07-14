@@ -1,5 +1,4 @@
-const CACHE_NAME = "fieldkit-shell-v20";
-
+const CACHE_NAME = "fieldkit-shell-v21";
 
 function scopedPath(path) {
   const normalized = String(path || "").replace(/^\/+/, "");
@@ -22,8 +21,8 @@ const PRECACHE_URLS = [
   "shared/global-auth.js",
   "shared/pwa-init.js",
   "shared/app-extensions.js",
-  "shared/launcher-explorer.css",
-  "shared/launcher-explorer.js",
+  "shared/launcher-library.css",
+  "shared/launcher-library.js",
   "shared/components.js",
   "shared/shadcn.css",
   "shared/tic-tac-toe-layout.js",
@@ -32,6 +31,11 @@ const PRECACHE_URLS = [
   "shared/fieldkit-shell.js",
   "shared/icons/tictak-icon-192.png",
   "shared/icons/tictak-icon-512.png",
+  "shared/icons/pen-tool.svg",
+  "shared/icons/presentation.svg",
+  "shared/icons/qr-code.svg",
+  "shared/icons/message-square.svg",
+  "shared/icons/bar-chart-3.svg",
   "accent-speaker/index.html",
   "authority-assistant/index.html",
   "legal-library/index.html",
