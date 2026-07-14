@@ -38,6 +38,7 @@ In `george-shepov/FieldKit` → **Settings** → **Secrets and variables** → *
 | `FIELDKIT_VPS_KNOWN_HOSTS` | exact `ssh-keyscan -H <host>` output, reviewed before saving |
 
 Set the `FIELDKIT_DEMO_URL` repository variable to `https://fieldkit.giorgiy.org` if it ever changes.
+Set the `FIELDKIT_VPS_DEPLOY_ENABLED` repository variable to `true` only after the VPS root and every secret above are in place. Until then, the deployment job is skipped rather than failing CI.
 
 After CI succeeds on `main`, the workflow publishes the same commit to the VPS and verifies:
 
