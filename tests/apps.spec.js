@@ -66,6 +66,9 @@ test.describe('Tic-Tac-Toe App', () => {
     await expect(page.locator('#startBtn')).toBeVisible();
     await expect(page.locator('#undoBtn')).toBeVisible();
     await expect(page.locator('#boardSize')).toBeVisible();
+    await expect(page.locator('#levelValue')).toHaveText(/\d+/);
+    await expect(page.locator('#streakValue')).toHaveText(/\/ 3/);
+    await expect(page.locator('#challengeValue')).toContainText('in a row');
   });
 
   test('should make a move', async ({ page }) => {
