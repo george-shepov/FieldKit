@@ -86,7 +86,7 @@ test.describe('Block Drop App', () => {
   test('should load the board and game controls', async ({ page }) => {
     await page.goto(appUrl('tetris'));
     await expect(page.locator('#board')).toBeVisible();
-    await expect(page.locator('#score')).toHaveText(/\\d+/);
+    await expect(page.locator('#score')).toHaveText(/\d+/);
     await expect(page.locator('#restart')).toBeVisible();
     await expect(page.locator('[data-control="hard"]')).toBeVisible();
   });

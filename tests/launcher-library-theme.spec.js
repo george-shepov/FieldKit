@@ -1,16 +1,26 @@
 const { test, expect } = require('@playwright/test');
 
 const rootUrl = `file://${process.cwd()}/index.html`;
+const PRIVATE_MODE = {
+  mode: 'offline_private',
+  allowSync: false,
+  allowSupport: false,
+  allowAI: false,
+  managedEndpoint: '',
+  customEndpoint: ''
+};
 
 test.describe('FieldKit launcher library appearance', () => {
   test.beforeEach(async ({ page }) => {
-    await page.addInitScript(() => {
-      localStorage.removeItem('fieldkit_library_theme_v1');
-    });
+    await page.addInitScript((config) => {
+      localStorage.setItem('suite.privacy.mode.v1', JSON.stringify(config));
+    }, PRIVATE_MODE);
   });
 
   test('keeps the tag cloud compact and persists appearance settings', async ({ page }) => {
     await page.goto(rootUrl);
+    await page.evaluate(() => localStorage.removeItem('fieldkit_library_theme_v1'));
+    await page.reload();
     await expect(page.locator('#fkAppLibrary')).toBeVisible({ timeout: 5000 });
 
     const tagCloud = page.locator('.fk-tag-cloud');
@@ -18,7 +28,7 @@ test.describe('FieldKit launcher library appearance', () => {
     const tagCloudHeight = await tagCloud.evaluate((element) => element.getBoundingClientRect().height);
     expect(tagCloudHeight).toBeLessThanOrEqual(170);
 
-    await page.getByRole('button', { name: 'Theme' }).click();
+    await page.locator('.fk-library-toolbar [data-action="theme-settings"]').click();
     await expect(page.locator('.fk-theme-settings.is-open')).toBeVisible();
 
     await page.locator('[data-theme-field="accent"]').evaluate((input) => {
@@ -31,7 +41,7 @@ test.describe('FieldKit launcher library appearance', () => {
       .toContain('"accent":"#22c55e"');
 
     await page.reload();
-    await page.getByRole('button', { name: 'Theme' }).click();
+    await page.locator('.fk-library-toolbar [data-action="theme-settings"]').click();
     await expect(page.locator('[data-theme-field="accent"]')).toHaveValue('#22c55e');
     await expect(page.locator('[data-theme-field="fontScale"]')).toHaveValue('1.10');
   });

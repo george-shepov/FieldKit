@@ -464,7 +464,6 @@
     state.apps = collected.apps;
     state.categories = collected.categories;
     document.body.classList.add('fieldkit-app-library');
-    applyTheme(document.getElementById('fkAppLibrary'));
     const legacyControls = document.querySelector('.launcher-controls');
     if (legacyControls) legacyControls.hidden = true;
 
