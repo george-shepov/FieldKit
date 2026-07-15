@@ -15,12 +15,12 @@ test.describe('FieldKit launcher library appearance', () => {
     await page.addInitScript((config) => {
       localStorage.setItem('suite.privacy.mode.v1', JSON.stringify(config));
     }, PRIVATE_MODE);
-  });
-
-  test('keeps the tag cloud compact and persists appearance settings', async ({ page }) => {
     await page.goto(rootUrl);
     await page.evaluate(() => localStorage.removeItem('fieldkit_library_theme_v1'));
     await page.reload();
+  });
+
+  test('keeps the tag cloud compact and persists appearance settings', async ({ page }) => {
     await expect(page.locator('#fkAppLibrary')).toBeVisible({ timeout: 5000 });
 
     const tagCloud = page.locator('.fk-tag-cloud');
