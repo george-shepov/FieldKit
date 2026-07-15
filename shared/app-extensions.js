@@ -6,7 +6,7 @@
     ? new URL(currentScript.src, window.location.href)
     : new URL('shared/app-extensions.js', document.baseURI);
   const sharedRoot = new URL('./', scriptURL);
-  const LIBRARY_VERSION = '2026.07.14.2';
+  const LIBRARY_VERSION = '2026.07.15.1';
 
   const EXTERNAL_APPS = {
     'vocabulary-expander': {
