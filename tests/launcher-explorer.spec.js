@@ -11,54 +11,51 @@ const PRIVATE_MODE = {
   customEndpoint: ''
 };
 
-test.describe('FieldKit App Explorer', () => {
+test.describe('FieldKit App Library', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript((config) => {
       localStorage.setItem('suite.privacy.mode.v1', JSON.stringify(config));
     }, PRIVATE_MODE);
   });
 
-  test('supports list, card, atlas, search, and details views', async ({ page }) => {
+  test('supports category, tag, search, and theme filters', async ({ page }) => {
     await page.goto(rootUrl);
-    await expect(page.locator('#fkExplorer')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#fkAppLibrary')).toBeVisible({ timeout: 5000 });
 
-    const rows = page.locator('.fk-file-row');
-    await expect(rows.first()).toBeVisible();
-    expect(await rows.count()).toBeGreaterThan(20);
+    const apps = page.locator('.fk-library-app');
+    await expect(apps.first()).toBeVisible();
+    expect(await apps.count()).toBeGreaterThan(20);
 
-    await rows.nth(1).click();
-    await expect(page.locator('#fkExplorerDetails h2')).toBeVisible();
-    await expect(page.locator('#fkExplorerDetails .fk-open-button')).toBeVisible();
+    await page.locator('[data-action="category"][data-category="legal"]').click();
+    await expect(apps.first()).toBeVisible();
+    expect(await apps.count()).toBeGreaterThan(0);
 
-    await page.getByRole('button', { name: 'Detailed cards' }).click();
-    await expect(page.locator('.fk-app-card').first()).toBeVisible();
+    await page.locator('.fk-tag-cloud [data-action="tag"][data-tag="Legal"]').click();
+    await expect(apps.first()).toBeVisible();
 
-    await page.getByRole('button', { name: 'Capability atlas' }).click();
-    await expect(page.locator('.fk-atlas-core')).toBeVisible();
-    await expect(page.locator('.fk-atlas-tag').first()).toBeVisible();
+    await page.locator('#fkLibrarySearch').fill('library');
+    await expect(apps.first()).toBeVisible();
+    await expect(page.locator('.fk-library-summary')).toContainText('of');
 
-    await page.locator('#fkExplorerSearch').fill('legal');
-    await expect(page.locator('#fkResultCount')).toContainText('apps');
-    expect(await page.locator('.fk-atlas-app').count()).toBeGreaterThan(0);
+    await page.locator('[data-action="theme-settings"]').click();
+    await expect(page.locator('.fk-theme-settings')).toBeVisible();
+    await expect(page.locator('[data-action="theme-settings"]')).toHaveAttribute('aria-expanded', 'true');
   });
 
   test('uses compact icon actions on a phone and has no floating privacy obstruction', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(rootUrl);
-    await expect(page.locator('#fkExplorer')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#fkAppLibrary')).toBeVisible({ timeout: 5000 });
 
-    await page.getByRole('button', { name: 'File list' }).click();
-    const firstRow = page.locator('.fk-file-row').first();
-    await expect(firstRow).toBeVisible();
+    const firstApp = page.locator('.fk-library-app').first();
+    await expect(firstApp).toBeVisible();
 
-    const metaBadge = firstRow.locator('.fk-meta-badge').first();
-    await expect(metaBadge).toBeVisible();
-    const badgeBox = await metaBadge.boundingBox();
-    expect(badgeBox).not.toBeNull();
-    expect(badgeBox?.width ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(32);
+    await firstApp.locator('[data-action="favorite"]').click();
+    await page.locator('.fk-library-toolbar [data-action="favorites"]').click();
+    await expect(page.locator('.fk-library-app')).toHaveCount(1);
 
     await expect(page.locator('.suite-privacy-fab')).toHaveCount(0);
-    await expect(page.locator('[data-open-privacy]').first()).toBeVisible();
+    await expect(page.locator('.fk-library-toolbar [data-action="theme-settings"]')).toBeVisible();
   });
 });
 

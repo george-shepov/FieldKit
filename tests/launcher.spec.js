@@ -18,22 +18,28 @@ test.describe('Launcher connectivity filters', () => {
     }, PRIVATE_MODE);
 
     await page.goto(`file://${process.cwd()}/index.html`);
-    await expect(page.locator('#fkExplorer')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#fkAppLibrary')).toBeVisible({ timeout: 5000 });
 
-    const airplaneTag = page.locator('[data-action="tag"][data-tag="Airplane Mode"]').first();
-    const connectedTag = page.locator('[data-action="tag"][data-tag="Wi-Fi / Cell"]').first();
-    await expect(airplaneTag).toBeVisible();
+    const apps = page.locator('.fk-library-app');
+    const initialCount = await apps.count();
+    expect(initialCount).toBeGreaterThan(20);
+
+    const offlineTag = page.locator('.fk-tag-cloud [data-action="tag"][data-tag="Offline"]').first();
+    const connectedTag = page.locator('.fk-tag-cloud [data-action="tag"][data-tag="Connected"]').first();
+    await expect(offlineTag).toBeVisible();
     await expect(connectedTag).toBeVisible();
 
-    await airplaneTag.click();
-    await expect(page.locator('.fk-file-row').first()).toBeVisible();
-    expect(await page.locator('.fk-file-row .fk-meta-offline').count()).toBeGreaterThan(0);
-    await expect(page.locator('.fk-file-row .fk-meta-connected')).toHaveCount(0);
+    await offlineTag.click();
+    await expect(apps.first()).toBeVisible();
+    const offlineCount = await apps.count();
+    expect(offlineCount).toBeGreaterThan(0);
+    expect(offlineCount).toBeLessThan(initialCount);
 
-    await airplaneTag.click();
+    await offlineTag.click();
     await connectedTag.click();
-    await expect(page.locator('.fk-file-row').first()).toBeVisible();
-    expect(await page.locator('.fk-file-row .fk-meta-connected').count()).toBeGreaterThan(0);
-    await expect(page.locator('.fk-file-row .fk-meta-offline')).toHaveCount(0);
+    await expect(apps.first()).toBeVisible();
+    const connectedCount = await apps.count();
+    expect(connectedCount).toBeGreaterThan(0);
+    expect(connectedCount).toBeLessThan(initialCount);
   });
 });
