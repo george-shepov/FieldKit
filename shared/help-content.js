@@ -615,7 +615,7 @@
           "Short high-focus challenge rounds."
         ]
       },
-      "snake": {      "tetris": {
+      "tetris": {
         title: "Block Drop",
         about: "Offline falling-block arcade game with a modern 7-bag piece system, hold slot, ghost piece, next queue, scoring, and local best score.",
         operations: [
@@ -635,7 +635,7 @@
           "Practice planning, spatial rotation, and increasing-speed play."
         ]
       },
-      
+      "snake": {
         title: "Snake",
         about: "Classic snake game for quick breaks.",
         operations: [
