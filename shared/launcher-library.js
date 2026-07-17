@@ -7,6 +7,13 @@
   const FAVORITES_KEY = 'suite_favorite_apps_v1';
   const COLLAPSED_KEY = 'fieldkit_library_collapsed_v1';
   const CATEGORY_FILTER_KEY = 'fieldkit_library_category_v1';
+  const THEME_KEY = 'fieldkit_library_theme_v1';
+  const DEFAULT_THEME = {
+    accent: '#f59e0b',
+    highlight: '#fbbf24',
+    surface: '#111318',
+    fontScale: '1'
+  };
 
   const keywordTags = [
     ['AI', /\b(ai|assistant|caption|model|recommendation|chatgpt)\b/i],
@@ -87,10 +94,50 @@
     selectedTags: new Set(),
     categoryFilter: loadString(CATEGORY_FILTER_KEY, ''),
     favoritesOnly: false,
+    themeOpen: false,
+    theme: loadTheme(),
     apps: [],
     categories: [],
     collapsed: new Set(loadArray(COLLAPSED_KEY))
   };
+
+  function safeColor(value, fallback) {
+    return /^#[0-9a-f]{6}$/i.test(String(value || '')) ? String(value) : fallback;
+  }
+
+  function safeFontScale(value) {
+    const number = Number(value);
+    return Number.isFinite(number) && number >= 0.9 && number <= 1.15 ? number.toFixed(2) : DEFAULT_THEME.fontScale;
+  }
+
+  function loadTheme() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(THEME_KEY) || '{}');
+      return {
+        accent: safeColor(parsed.accent, DEFAULT_THEME.accent),
+        highlight: safeColor(parsed.highlight, DEFAULT_THEME.highlight),
+        surface: safeColor(parsed.surface, DEFAULT_THEME.surface),
+        fontScale: safeFontScale(parsed.fontScale)
+      };
+    } catch (_error) {
+      return { ...DEFAULT_THEME };
+    }
+  }
+
+  function saveTheme() {
+    try { localStorage.setItem(THEME_KEY, JSON.stringify(state.theme)); } catch (_error) {}
+  }
+
+  function applyTheme(root) {
+    if (!root) return;
+    root.style.setProperty('--fkl-accent', state.theme.accent);
+    root.style.setProperty('--fkl-highlight', state.theme.highlight);
+    root.style.setProperty('--fkl-surface', state.theme.surface);
+    root.style.setProperty('--fkl-accent-soft', `color-mix(in srgb, ${state.theme.accent} 14%, transparent)`);
+    root.style.setProperty('--fkl-font-scale', state.theme.fontScale);
+    document.body.style.setProperty('--fk-launcher-accent', state.theme.accent);
+    document.body.style.setProperty('--fk-launcher-highlight', state.theme.highlight);
+  }
 
   function loadString(key, fallback) {
     try { return localStorage.getItem(key) || fallback; } catch (_error) { return fallback; }
@@ -266,6 +313,25 @@
     </section>`;
   }
 
+  function renderThemeSettings() {
+    return `<section class="fk-theme-settings ${state.themeOpen ? 'is-open' : ''}" aria-label="FieldKit appearance settings">
+      <div class="fk-theme-settings-copy">
+        <span>Launcher appearance</span>
+        <h2>Theme &amp; density</h2>
+        <p>Saved on this device. Adjust the main accent, highlight, panel color, and text scale.</p>
+      </div>
+      <div class="fk-theme-settings-fields">
+        <label><span>Accent</span><input type="color" data-theme-field="accent" value="${state.theme.accent}" aria-label="Accent color"></label>
+        <label><span>Highlight</span><input type="color" data-theme-field="highlight" value="${state.theme.highlight}" aria-label="Highlight color"></label>
+        <label><span>Panels</span><input type="color" data-theme-field="surface" value="${state.theme.surface}" aria-label="Panel color"></label>
+        <label><span>Text scale</span><select data-theme-field="fontScale" aria-label="Text scale">
+          ${[['0.90', 'Compact'], ['0.95', 'Small'], ['1', 'Default'], ['1.05', 'Large'], ['1.10', 'Larger'], ['1.15', 'Extra large']].map(([value, label]) => `<option value="${value}" ${state.theme.fontScale === value ? 'selected' : ''}>${label}</option>`).join('')}
+        </select></label>
+        <button type="button" class="fk-theme-reset" data-action="reset-theme">Reset appearance</button>
+      </div>
+    </section>`;
+  }
+
   function renderAppTile(app) {
     const visibleTags = app.tags.filter((tag) => ![app.categoryTitle, 'Full', 'Free', 'Demo'].includes(tag)).slice(0, 3);
     const favorite = isFavorite(app.key);
@@ -314,8 +380,10 @@
       <div class="fk-library-toolbar">
         <label class="fk-library-search"><span aria-hidden="true">⌕</span><input id="fkLibrarySearch" type="search" value="${escapeHtml(state.query)}" placeholder="Search apps, tags, or capabilities" autocomplete="off"></label>
         <button type="button" data-action="favorites" class="fk-library-filter ${state.favoritesOnly ? 'is-active' : ''}"><span>★</span><strong>Favorites</strong><small>${state.apps.filter((app) => isFavorite(app.key)).length}</small></button>
+        <button type="button" data-action="theme-settings" class="fk-library-filter ${state.themeOpen ? 'is-active' : ''}" aria-expanded="${String(state.themeOpen)}"><span>◌</span><strong>Theme</strong></button>
         <button type="button" data-action="reset" class="fk-library-filter"><span>↺</span><strong>Reset</strong></button>
       </div>
+      ${renderThemeSettings()}
       ${renderCategoryDock(state.apps)}
       ${renderTagCloud(tagBase)}
       <div class="fk-library-summary"><strong>App Library</strong><span>${apps.length} of ${state.apps.length} apps</span><span>Categories are folders · tags narrow the library</span></div>
@@ -330,6 +398,17 @@
         if (next) { next.focus(); next.setSelectionRange(next.value.length, next.value.length); }
       });
     }
+    root.querySelectorAll('[data-theme-field]').forEach((input) => {
+      input.addEventListener('input', () => {
+        const field = input.dataset.themeField;
+        if (field === 'fontScale') state.theme.fontScale = safeFontScale(input.value);
+        else if (field === 'accent') state.theme.accent = safeColor(input.value, DEFAULT_THEME.accent);
+        else if (field === 'highlight') state.theme.highlight = safeColor(input.value, DEFAULT_THEME.highlight);
+        else if (field === 'surface') state.theme.surface = safeColor(input.value, DEFAULT_THEME.surface);
+        saveTheme();
+        applyTheme(root);
+      });
+    });
   }
 
   function handleAction(node, event) {
@@ -355,6 +434,12 @@
       state.categoryFilter = node.dataset.category || '';
       saveString(CATEGORY_FILTER_KEY, state.categoryFilter);
       render(); return true;
+    }
+    if (action === 'theme-settings') {
+      event.preventDefault(); state.themeOpen = !state.themeOpen; render(); return true;
+    }
+    if (action === 'reset-theme') {
+      event.preventDefault(); state.theme = { ...DEFAULT_THEME }; saveTheme(); state.themeOpen = true; render(); return true;
     }
     if (action === 'collapse') {
       event.preventDefault();
@@ -386,6 +471,7 @@
     root.id = 'fkAppLibrary';
     root.className = 'fk-app-library';
     content.replaceChildren(root);
+    applyTheme(root);
 
     root.addEventListener('click', (event) => {
       const target = event.target instanceof Element ? event.target : null;
