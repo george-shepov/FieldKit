@@ -23,6 +23,8 @@ const PRECACHE_URLS = [
   "shared/app-extensions.js",
   "shared/launcher-library.css",
   "shared/launcher-library.js",
+  "shared/launcher-explorer.css",
+  "shared/launcher-explorer.js",
   "shared/components.js",
   "shared/shadcn.css",
   "shared/tic-tac-toe-layout.js",

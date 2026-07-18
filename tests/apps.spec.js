@@ -81,7 +81,6 @@ test.describe('Tic-Tac-Toe App', () => {
   });
 });
 
-test.describe('Snake Game', () => {
 test.describe('Block Drop App', () => {
   test('should load the board and game controls', async ({ page }) => {
     await page.goto(appUrl('tetris'));
@@ -92,7 +91,7 @@ test.describe('Block Drop App', () => {
   });
 });
 
-
+test.describe('Snake Game', () => {
   test('should load and have essential elements', async ({ page }) => {
     await page.goto(appUrl('snake'));
     await page.waitForLoadState('domcontentloaded');
