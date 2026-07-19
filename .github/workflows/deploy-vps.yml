@@ -27,7 +27,7 @@ jobs:
     env:
       DEPLOY_HOST: ${{ secrets.FIELDKIT_VPS_HOST }}
       DEPLOY_USER: ${{ secrets.FIELDKIT_VPS_USER }}
-      DEPLOY_PORT: ${{ secrets.FIELDKIT_VPS_PORT }}
+      DEPLOY_PORT: ${{ secrets.FIELDKIT_VPS_PORT || '22' }}
       DEPLOY_PATH: ${{ secrets.FIELDKIT_VPS_PATH }}
       KNOWN_HOSTS: ${{ secrets.FIELDKIT_VPS_KNOWN_HOSTS }}
       SSH_KEY: ${{ secrets.FIELDKIT_VPS_SSH_KEY }}
@@ -53,7 +53,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for name in DEPLOY_HOST DEPLOY_USER DEPLOY_PORT DEPLOY_PATH KNOWN_HOSTS SSH_KEY; do
+          echo "Deploy enabled: ${{ vars.FIELDKIT_VPS_DEPLOY_ENABLED }}"
+          echo "Public URL: $PUBLIC_URL"
+          echo "Deploy port: $DEPLOY_PORT"
+          for name in DEPLOY_HOST DEPLOY_USER DEPLOY_PATH KNOWN_HOSTS SSH_KEY; do
             if [[ -z "${!name}" ]]; then
               echo "A required FieldKit VPS GitHub secret is missing ($name)." >&2
               exit 1
@@ -69,9 +72,43 @@ jobs:
           set -euo pipefail
           mkdir release
           git archive --format=tar "$DEPLOY_SHA" | tar -x -C release
+          SHORT_SHA="${DEPLOY_SHA:0:7}"
+          BUILT_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           cat > release/fieldkit-release.json <<EOF
-          {"commit":"$DEPLOY_SHA","built_at":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","source":"github-actions"}
+          {"version":"$SHORT_SHA","commit":"$DEPLOY_SHA","built_at":"$BUILT_AT","source":"github-actions"}
           EOF
+
+          # Add a small, non-invasive version badge to the VPS release. It reads
+          # fieldkit-release.json so the UI always reports the release actually served.
+          python3 - <<'PY'
+          from pathlib import Path
+
+          index = Path('release/index.html')
+          html = index.read_text(encoding='utf-8')
+          marker = '<script id="fieldkit-release-badge">'
+          if marker not in html:
+              badge = r'''
+          <script id="fieldkit-release-badge">
+          (() => {
+            const render = (release) => {
+              const badge = document.createElement('a');
+              badge.href = './fieldkit-release.json';
+              badge.title = `Built ${release.built_at || 'unknown'} from ${release.commit || 'unknown'}`;
+              badge.textContent = `FieldKit ${release.version || (release.commit || '').slice(0, 7) || 'dev'}`;
+              badge.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:90;padding:6px 10px;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:rgba(9,9,11,.86);backdrop-filter:blur(8px);color:#a1a1aa;font:600 11px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;text-decoration:none;box-shadow:0 6px 24px rgba(0,0,0,.25)';
+              document.body.appendChild(badge);
+            };
+            fetch(`./fieldkit-release.json?t=${Date.now()}`, { cache: 'no-store' })
+              .then((response) => response.ok ? response.json() : Promise.reject(new Error(String(response.status))))
+              .then(render)
+              .catch(() => render({ version: 'dev' }));
+          })();
+          </script>
+          '''
+              html = html.replace('</body>', badge + '\n</body>')
+              index.write_text(html, encoding='utf-8')
+          PY
+
           tar -C release -czf fieldkit-release.tar.gz .
 
       - name: Configure trusted SSH connection
@@ -129,5 +166,6 @@ jobs:
         run: |
           set -euo pipefail
           curl --fail --show-error --silent --retry 8 --retry-all-errors --retry-delay 3 \
-            "$PUBLIC_URL/fieldkit-release.json" -o fieldkit-release.json
+            -H 'Cache-Control: no-cache' "$PUBLIC_URL/fieldkit-release.json?sha=$DEPLOY_SHA" -o fieldkit-release.json
+          cat fieldkit-release.json
           grep -Fq "$DEPLOY_SHA" fieldkit-release.json
