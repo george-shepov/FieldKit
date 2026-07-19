@@ -32,6 +32,8 @@ jobs:
       KNOWN_HOSTS: ${{ secrets.FIELDKIT_VPS_KNOWN_HOSTS }}
       SSH_KEY: ${{ secrets.FIELDKIT_VPS_SSH_KEY }}
       PUBLIC_URL: ${{ vars.FIELDKIT_DEMO_URL || 'https://fieldkit.giorgiy.org' }}
+      VERSION_MAJOR: ${{ vars.FIELDKIT_VERSION_MAJOR || '1' }}
+      VERSION_MINOR: ${{ vars.FIELDKIT_VERSION_MINOR || '0' }}
 
     steps:
       - name: Choose the verified commit
@@ -56,6 +58,7 @@ jobs:
           echo "Deploy enabled: ${{ vars.FIELDKIT_VPS_DEPLOY_ENABLED }}"
           echo "Public URL: $PUBLIC_URL"
           echo "Deploy port: $DEPLOY_PORT"
+          echo "Version line: $VERSION_MAJOR.$VERSION_MINOR.x"
           for name in DEPLOY_HOST DEPLOY_USER DEPLOY_PATH KNOWN_HOSTS SSH_KEY; do
             if [[ -z "${!name}" ]]; then
               echo "A required FieldKit VPS GitHub secret is missing ($name)." >&2
@@ -63,19 +66,70 @@ jobs:
             fi
           done
           [[ "$DEPLOY_PATH" == /* ]] || { echo 'FIELDKIT_VPS_PATH must be absolute.' >&2; exit 1; }
+          [[ "$VERSION_MAJOR" =~ ^[0-9]+$ ]] || { echo 'FIELDKIT_VERSION_MAJOR must be an integer.' >&2; exit 1; }
+          [[ "$VERSION_MINOR" =~ ^[0-9]+$ ]] || { echo 'FIELDKIT_VERSION_MINOR must be an integer.' >&2; exit 1; }
+
+      - name: Configure trusted SSH connection
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+      - name: Determine next deployment version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          CURRENT_BUILD="$(ssh -p "$DEPLOY_PORT" -i ~/.ssh/id_ed25519 "$DEPLOY_USER@$DEPLOY_HOST" \
+            "DEPLOY_PATH='$DEPLOY_PATH' VERSION_MAJOR='$VERSION_MAJOR' VERSION_MINOR='$VERSION_MINOR' bash -s" <<'REMOTE'
+          set -euo pipefail
+          release_file="${DEPLOY_PATH}/current/fieldkit-release.json"
+          if [[ ! -f "$release_file" ]]; then
+            echo 0
+            exit 0
+          fi
+          python3 - "$release_file" "$VERSION_MAJOR" "$VERSION_MINOR" <<'PY'
+          import json
+          import sys
+
+          path, expected_major, expected_minor = sys.argv[1:]
+          try:
+              release = json.load(open(path, encoding='utf-8'))
+              major = str(release.get('major', ''))
+              minor = str(release.get('minor', ''))
+              build = int(release.get('build', 0))
+              # Reset the build counter when major or minor is deliberately changed.
+              print(build if major == expected_major and minor == expected_minor else 0)
+          except (OSError, ValueError, TypeError, json.JSONDecodeError):
+              print(0)
+          PY
+          REMOTE
+          )"
+          [[ "$CURRENT_BUILD" =~ ^[0-9]+$ ]] || { echo "Invalid current build: $CURRENT_BUILD" >&2; exit 1; }
+          NEXT_BUILD=$((CURRENT_BUILD + 1))
+          VERSION="$VERSION_MAJOR.$VERSION_MINOR.$NEXT_BUILD"
+          echo "build=$NEXT_BUILD" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Deploying FieldKit $VERSION"
 
       - name: Build immutable static release
         shell: bash
         env:
           DEPLOY_SHA: ${{ steps.commit.outputs.sha }}
+          DEPLOY_VERSION: ${{ steps.version.outputs.version }}
+          DEPLOY_BUILD: ${{ steps.version.outputs.build }}
         run: |
           set -euo pipefail
           mkdir release
           git archive --format=tar "$DEPLOY_SHA" | tar -x -C release
-          SHORT_SHA="${DEPLOY_SHA:0:7}"
           BUILT_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           cat > release/fieldkit-release.json <<EOF
-          {"version":"$SHORT_SHA","commit":"$DEPLOY_SHA","built_at":"$BUILT_AT","source":"github-actions"}
+          {"version":"$DEPLOY_VERSION","major":$VERSION_MAJOR,"minor":$VERSION_MINOR,"build":$DEPLOY_BUILD,"commit":"$DEPLOY_SHA","built_at":"$BUILT_AT","source":"github-actions"}
           EOF
 
           # Add a small, non-invasive version badge to the VPS release. It reads
@@ -94,7 +148,7 @@ jobs:
               const badge = document.createElement('a');
               badge.href = './fieldkit-release.json';
               badge.title = `Built ${release.built_at || 'unknown'} from ${release.commit || 'unknown'}`;
-              badge.textContent = `FieldKit ${release.version || (release.commit || '').slice(0, 7) || 'dev'}`;
+              badge.textContent = `FieldKit ${release.version || 'dev'}`;
               badge.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:90;padding:6px 10px;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:rgba(9,9,11,.86);backdrop-filter:blur(8px);color:#a1a1aa;font:600 11px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;text-decoration:none;box-shadow:0 6px 24px rgba(0,0,0,.25)';
               document.body.appendChild(badge);
             };
@@ -110,17 +164,6 @@ jobs:
           PY
 
           tar -C release -czf fieldkit-release.tar.gz .
-
-      - name: Configure trusted SSH connection
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
 
       - name: Upload release archive
         shell: bash
@@ -163,9 +206,11 @@ jobs:
         shell: bash
         env:
           DEPLOY_SHA: ${{ steps.commit.outputs.sha }}
+          DEPLOY_VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
           curl --fail --show-error --silent --retry 8 --retry-all-errors --retry-delay 3 \
             -H 'Cache-Control: no-cache' "$PUBLIC_URL/fieldkit-release.json?sha=$DEPLOY_SHA" -o fieldkit-release.json
           cat fieldkit-release.json
           grep -Fq "$DEPLOY_SHA" fieldkit-release.json
+          grep -Fq "\"version\":\"$DEPLOY_VERSION\"" fieldkit-release.json
