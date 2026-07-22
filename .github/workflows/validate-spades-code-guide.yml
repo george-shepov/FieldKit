@@ -1,0 +1,29 @@
+name: Validate offline Spades and Code Guide
+on:
+  pull_request:
+    paths:
+      - 'games/spades-royale/**'
+      - 'code-guide/**'
+      - 'shared/app-extensions.js'
+      - 'sw.js'
+      - 'scripts/validate-spades-code-guide.js'
+      - '.github/workflows/validate-spades-code-guide.yml'
+  push:
+    branches:
+      - 'agent/fieldkit-spades-code-guide'
+    paths:
+      - 'games/spades-royale/**'
+      - 'code-guide/**'
+      - 'shared/app-extensions.js'
+      - 'sw.js'
+      - 'scripts/validate-spades-code-guide.js'
+      - '.github/workflows/validate-spades-code-guide.yml'
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node scripts/validate-spades-code-guide.js
