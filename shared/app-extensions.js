@@ -3,7 +3,7 @@
   const currentScript=document.currentScript;
   const scriptURL=currentScript&&currentScript.src?new URL(currentScript.src,window.location.href):new URL('shared/app-extensions.js',document.baseURI);
   const sharedRoot=new URL('./',scriptURL);
-  const LIBRARY_VERSION='2026.07.23.1';
+  const LIBRARY_VERSION='2026.07.22.2';
   const EXTERNAL_LEARNING_APPS={
     'vocabulary-expander':{name:'Vocabulary Expander',desc:'Estimate vocabulary and learn unfamiliar words',icon:'languages.svg',path:'https://george-shepov.github.io/Vocabulary-Expander/',offline:'hybrid',free:true,sourceRepo:'george-shepov/Vocabulary-Expander'},
     'developer-interview-prep':{name:'Developer Interview Prep',desc:'Offline SQL, .NET, JavaScript and interview reference',icon:'code-2.svg',path:'https://george-shepov.github.io/developer-interview-prep/',offline:'hybrid',free:true,sourceRepo:'george-shepov/developer-interview-prep'}
