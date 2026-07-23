@@ -1,0 +1,1320 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="description" content="Skyline Sprint is an offline 2D action trainer with movement, jumping, ladders, hazards, enemies, prizes, and four levels." />
+  <meta data-fieldkit-unified-shell="1" />
+  <title>Skyline Sprint — 2D Action Game</title>
+  <script src="../shared/pwa-init.js" defer></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f7fbff;
+      --muted: #b9c7d8;
+      --panel: rgba(10, 17, 30, 0.82);
+      --line: rgba(255,255,255,.14);
+      --accent: #ffd166;
+      --accent-2: #7ef29a;
+      --danger: #ff5d73;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 20% 15%, #263b72 0 18%, transparent 42%),
+        radial-gradient(circle at 80% 10%, #512d6d 0 13%, transparent 38%),
+        linear-gradient(160deg, #0b1020, #101b33 55%, #09111c);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      touch-action: none;
+      user-select: none;
+    }
+    body {
+      display: grid;
+      place-items: center;
+      padding: 12px;
+    }
+    #gameShell {
+      position: relative;
+      width: min(100%, 1100px);
+      aspect-ratio: 16 / 9;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 22px;
+      overflow: hidden;
+      background: #0a1020;
+      box-shadow:
+        0 30px 90px rgba(0,0,0,.45),
+        inset 0 0 0 1px rgba(255,255,255,.05);
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+    }
+    #hud {
+      position: absolute;
+      inset: 12px 112px auto 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      pointer-events: none;
+      z-index: 5;
+      flex-wrap: wrap;
+    }
+    .chip {
+      min-width: 86px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(8,15,28,.65);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+      font-weight: 800;
+      font-size: clamp(12px, 1.4vw, 15px);
+      letter-spacing: .02em;
+    }
+    .chip span { color: var(--accent); }
+    #message {
+      position: absolute;
+      left: 50%;
+      top: 17%;
+      translate: -50% -50%;
+      padding: 10px 16px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 999px;
+      background: rgba(7,12,22,.74);
+      backdrop-filter: blur(10px);
+      font-weight: 900;
+      letter-spacing: .04em;
+      opacity: 0;
+      transform: translateY(-8px);
+      transition: opacity .18s ease, transform .18s ease;
+      pointer-events: none;
+      z-index: 5;
+      white-space: nowrap;
+    }
+    #message.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    #overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: linear-gradient(rgba(4,8,17,.34), rgba(4,8,17,.72));
+      backdrop-filter: blur(3px);
+      z-index: 10;
+    }
+    #overlay.hidden { display: none; }
+    .card {
+      width: min(620px, 92%);
+      padding: clamp(22px, 4vw, 40px);
+      border: 1px solid rgba(255,255,255,.17);
+      border-radius: 28px;
+      background: var(--panel);
+      box-shadow: 0 24px 80px rgba(0,0,0,.42);
+      text-align: center;
+    }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--accent-2);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(36px, 7vw, 78px);
+      line-height: .96;
+      letter-spacing: -.055em;
+    }
+    .subtitle {
+      margin: 18px auto 22px;
+      max-width: 46ch;
+      color: var(--muted);
+      font-size: clamp(14px, 2vw, 18px);
+      line-height: 1.55;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin: 18px 0 24px;
+      text-align: left;
+    }
+    .control {
+      padding: 11px 13px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 14px;
+      background: rgba(255,255,255,.045);
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .control small {
+      color: #8fa0b8;
+      font-size: .82em;
+      margin-left: 4px;
+    }
+    kbd {
+      display: inline-grid;
+      min-width: 24px;
+      height: 24px;
+      place-items: center;
+      margin-right: 7px;
+      padding: 0 6px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-bottom-width: 3px;
+      border-radius: 7px;
+      background: rgba(255,255,255,.08);
+      color: white;
+      font: inherit;
+      font-weight: 900;
+    }
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      padding: 13px 22px;
+      background: linear-gradient(135deg, #ffd166, #ff9f43);
+      color: #211607;
+      font: inherit;
+      font-weight: 1000;
+      cursor: pointer;
+      box-shadow: 0 12px 34px rgba(255,177,66,.28);
+    }
+    button:active { transform: translateY(1px); }
+    #touchControls {
+      position: absolute;
+      inset: auto 14px 14px 14px;
+      display: none;
+      align-items: end;
+      justify-content: space-between;
+      z-index: 7;
+      pointer-events: none;
+    }
+    .touchGroup {
+      display: grid;
+      grid-template-columns: repeat(3, 58px);
+      gap: 8px;
+      pointer-events: auto;
+    }
+    .touchGroup.right {
+      grid-template-columns: repeat(2, 68px);
+    }
+    .touchBtn {
+      width: 58px;
+      height: 58px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(8,15,28,.58);
+      color: white;
+      box-shadow: 0 8px 26px rgba(0,0,0,.25);
+      backdrop-filter: blur(10px);
+      font-size: 23px;
+      font-weight: 1000;
+    }
+    .touchGroup.right .touchBtn {
+      width: 68px;
+      height: 68px;
+      border-radius: 22px;
+    }
+    .touchBtn.active { background: rgba(255,209,102,.34); }
+    #pauseBtn, #fieldkitBack {
+      position: absolute;
+      top: 12px;
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(8,15,28,.65);
+      color: white;
+      box-shadow: none;
+      z-index: 7;
+      text-decoration: none;
+      font-weight: 900;
+      backdrop-filter: blur(10px);
+    }
+    #pauseBtn { right: 12px; }
+    #fieldkitBack { right: 62px; }
+    @media (pointer: coarse), (max-width: 780px) {
+      #touchControls { display: flex; }
+      #gameShell { border-radius: 14px; }
+      .controls { grid-template-columns: 1fr; }
+      #hud { right: 112px; }
+      .chip { min-width: auto; padding: 7px 10px; }
+    }
+    @media (max-height: 520px) {
+      body { padding: 0; }
+      #gameShell { width: 100vw; height: 100vh; aspect-ratio: auto; border-radius: 0; }
+      .card { padding: 18px; }
+      .subtitle { margin: 10px auto 12px; }
+      .controls { margin: 10px 0 14px; }
+    }
+  </style>
+</head>
+<body>
+  <main id="gameShell" aria-label="Skyline Sprint 2D action game">
+    <canvas id="game" width="960" height="540"></canvas>
+
+    <div id="hud">
+      <div class="chip">Score <span id="score">0</span></div>
+      <div class="chip">Lives <span id="lives">3</span></div>
+      <div class="chip">Level <span id="level">1</span></div>
+      <div class="chip">Prizes <span id="prizes">0/0</span></div>
+    </div>
+
+    <div id="message"></div>
+    <a id="fieldkitBack" href="../index.html" aria-label="Back to FieldKit" title="Back to FieldKit">←</a>
+    <button id="pauseBtn" aria-label="Pause game">Ⅱ</button>
+
+    <section id="overlay">
+      <div class="card">
+        <p class="eyebrow">FieldKit offline action trainer</p>
+        <h1 id="overlayTitle">Skyline Sprint</h1>
+        <p class="subtitle" id="overlayText">
+          Collect every prize, dodge hazards and enemies, climb ladders, and reach the glowing exit.
+        </p>
+        <div class="controls">
+          <div class="control"><kbd>←</kbd><kbd>→</kbd> Move <small>(or A / D)</small></div>
+          <div class="control"><kbd>↑</kbd><kbd>↓</kbd> Climb <small>(or W / S)</small></div>
+          <div class="control"><kbd>Space</kbd> Jump</div>
+          <div class="control"><kbd>P</kbd> Pause</div>
+        </div>
+        <button id="startBtn">Start Game</button>
+      </div>
+    </section>
+
+    <div id="touchControls" aria-label="Touch controls">
+      <div class="touchGroup">
+        <button class="touchBtn" data-key="left" aria-label="Move left">◀</button>
+        <button class="touchBtn" data-key="down" aria-label="Climb down">▼</button>
+        <button class="touchBtn" data-key="right" aria-label="Move right">▶</button>
+      </div>
+      <div class="touchGroup right">
+        <button class="touchBtn" data-key="up" aria-label="Climb up">▲</button>
+        <button class="touchBtn" data-key="jump" aria-label="Jump">JUMP</button>
+      </div>
+    </div>
+  </main>
+
+<script>
+(() => {
+  "use strict";
+
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const scoreEl = document.getElementById("score");
+  const livesEl = document.getElementById("lives");
+  const levelEl = document.getElementById("level");
+  const prizesEl = document.getElementById("prizes");
+  const overlay = document.getElementById("overlay");
+  const overlayTitle = document.getElementById("overlayTitle");
+  const overlayText = document.getElementById("overlayText");
+  const startBtn = document.getElementById("startBtn");
+  const pauseBtn = document.getElementById("pauseBtn");
+  const messageEl = document.getElementById("message");
+
+  const keys = {
+    left: false,
+    right: false,
+    up: false,
+    down: false,
+    jump: false,
+    jumpPressed: false
+  };
+
+  let state = "menu";
+  let currentLevel = 0;
+  let score = 0;
+  let lives = 3;
+  let prizesCollected = 0;
+  let particles = [];
+  let cameraShake = 0;
+  let messageTimer = 0;
+  let lastTime = 0;
+  let audioContext = null;
+
+  const colors = {
+    player: "#75e6ff",
+    playerDark: "#1676a4",
+    platform: "#243b64",
+    platformTop: "#8ec5ff",
+    ladder: "#d8a45a",
+    enemy: "#ff6978",
+    enemyDark: "#a52f49",
+    prize: "#ffd166",
+    hazard: "#ff5470",
+    exit: "#7ef29a"
+  };
+
+  const levels = [
+    {
+      name: "Rooftop Run",
+      sky: ["#14213d", "#243b64"],
+      start: { x: 45, y: 462 },
+      exit: { x: 884, y: 92, w: 42, h: 62 },
+      platforms: [
+        { x: 0, y: 505, w: 960, h: 35 },
+        { x: 120, y: 425, w: 180, h: 18 },
+        { x: 370, y: 360, w: 180, h: 18 },
+        { x: 650, y: 300, w: 180, h: 18 },
+        { x: 160, y: 235, w: 230, h: 18 },
+        { x: 510, y: 170, w: 180, h: 18 },
+        { x: 790, y: 150, w: 160, h: 18 }
+      ],
+      ladders: [
+        { x: 210, y: 425, w: 34, h: 80 },
+        { x: 450, y: 360, w: 34, h: 65 },
+        { x: 735, y: 300, w: 34, h: 60 },
+        { x: 280, y: 235, w: 34, h: 125 },
+        { x: 595, y: 170, w: 34, h: 130 },
+        { x: 848, y: 150, w: 34, h: 20 }
+      ],
+      prizes: [
+        { x: 180, y: 390 }, { x: 470, y: 325 }, { x: 720, y: 265 },
+        { x: 340, y: 200 }, { x: 620, y: 135 }, { x: 820, y: 115 }
+      ],
+      hazards: [
+        { x: 315, y: 487, w: 72, h: 18 },
+        { x: 565, y: 487, w: 92, h: 18 }
+      ],
+      enemies: [
+        { x: 150, y: 392, minX: 125, maxX: 270, speed: 55 },
+        { x: 680, y: 267, minX: 655, maxX: 800, speed: 62 }
+      ]
+    },
+    {
+      name: "Factory Climb",
+      sky: ["#2b193d", "#5b2c53"],
+      start: { x: 35, y: 462 },
+      exit: { x: 54, y: 80, w: 42, h: 62 },
+      platforms: [
+        { x: 0, y: 505, w: 960, h: 35 },
+        { x: 80, y: 420, w: 200, h: 18 },
+        { x: 370, y: 440, w: 180, h: 18 },
+        { x: 680, y: 390, w: 210, h: 18 },
+        { x: 485, y: 315, w: 190, h: 18 },
+        { x: 180, y: 285, w: 210, h: 18 },
+        { x: 50, y: 155, w: 180, h: 18 },
+        { x: 390, y: 190, w: 220, h: 18 },
+        { x: 710, y: 135, w: 180, h: 18 }
+      ],
+      ladders: [
+        { x: 160, y: 420, w: 34, h: 85 },
+        { x: 465, y: 440, w: 34, h: 65 },
+        { x: 770, y: 390, w: 34, h: 115 },
+        { x: 560, y: 315, w: 34, h: 75 },
+        { x: 280, y: 285, w: 34, h: 30 },
+        { x: 120, y: 155, w: 34, h: 130 },
+        { x: 490, y: 190, w: 34, h: 125 },
+        { x: 790, y: 135, w: 34, h: 55 }
+      ],
+      prizes: [
+        { x: 115, y: 385 }, { x: 505, y: 405 }, { x: 820, y: 355 },
+        { x: 610, y: 280 }, { x: 250, y: 250 }, { x: 505, y: 155 },
+        { x: 780, y: 100 }, { x: 100, y: 120 }
+      ],
+      hazards: [
+        { x: 290, y: 487, w: 65, h: 18 },
+        { x: 575, y: 487, w: 80, h: 18 },
+        { x: 690, y: 372, w: 56, h: 18 }
+      ],
+      enemies: [
+        { x: 395, y: 407, minX: 375, maxX: 520, speed: 72 },
+        { x: 520, y: 282, minX: 490, maxX: 640, speed: 60 },
+        { x: 415, y: 157, minX: 395, maxX: 580, speed: 76 }
+      ]
+    },
+    {
+      name: "Neon Gauntlet",
+      sky: ["#062f3f", "#174c5f"],
+      start: { x: 35, y: 462 },
+      exit: { x: 878, y: 42, w: 42, h: 62 },
+      platforms: [
+        { x: 0, y: 505, w: 220, h: 35 },
+        { x: 290, y: 505, w: 210, h: 35 },
+        { x: 585, y: 505, w: 375, h: 35 },
+        { x: 100, y: 410, w: 190, h: 18 },
+        { x: 390, y: 365, w: 200, h: 18 },
+        { x: 710, y: 410, w: 190, h: 18 },
+        { x: 650, y: 275, w: 190, h: 18 },
+        { x: 330, y: 235, w: 190, h: 18 },
+        { x: 65, y: 210, w: 170, h: 18 },
+        { x: 210, y: 105, w: 210, h: 18 },
+        { x: 550, y: 125, w: 180, h: 18 },
+        { x: 795, y: 105, w: 150, h: 18 }
+      ],
+      ladders: [
+        { x: 175, y: 410, w: 34, h: 95 },
+        { x: 475, y: 365, w: 34, h: 140 },
+        { x: 790, y: 410, w: 34, h: 95 },
+        { x: 730, y: 275, w: 34, h: 135 },
+        { x: 410, y: 235, w: 34, h: 130 },
+        { x: 140, y: 210, w: 34, h: 200 },
+        { x: 305, y: 105, w: 34, h: 105 },
+        { x: 625, y: 125, w: 34, h: 110 },
+        { x: 865, y: 105, w: 34, h: 20 }
+      ],
+      prizes: [
+        { x: 120, y: 375 }, { x: 430, y: 330 }, { x: 830, y: 375 },
+        { x: 690, y: 240 }, { x: 370, y: 200 }, { x: 115, y: 175 },
+        { x: 260, y: 70 }, { x: 610, y: 90 }, { x: 845, y: 70 }
+      ],
+      hazards: [
+        { x: 220, y: 510, w: 70, h: 30 },
+        { x: 500, y: 510, w: 85, h: 30 },
+        { x: 610, y: 487, w: 72, h: 18 },
+        { x: 525, y: 347, w: 55, h: 18 }
+      ],
+      enemies: [
+        { x: 115, y: 377, minX: 105, maxX: 260, speed: 85 },
+        { x: 420, y: 332, minX: 395, maxX: 560, speed: 88 },
+        { x: 680, y: 242, minX: 655, maxX: 810, speed: 72 },
+        { x: 245, y: 72, minX: 215, maxX: 385, speed: 92 }
+      ]
+    },
+    {
+      name: "Citadel Escape",
+      sky: ["#21123b", "#3d1c5b"],
+      start: { x: 32, y: 462 },
+      exit: { x: 456, y: 35, w: 48, h: 68 },
+      platforms: [
+        { x: 0, y: 505, w: 960, h: 35 },
+        { x: 60, y: 410, w: 170, h: 18 },
+        { x: 310, y: 420, w: 170, h: 18 },
+        { x: 570, y: 410, w: 150, h: 18 },
+        { x: 785, y: 390, w: 150, h: 18 },
+        { x: 690, y: 300, w: 170, h: 18 },
+        { x: 430, y: 315, w: 180, h: 18 },
+        { x: 160, y: 295, w: 180, h: 18 },
+        { x: 45, y: 190, w: 160, h: 18 },
+        { x: 275, y: 205, w: 160, h: 18 },
+        { x: 525, y: 180, w: 170, h: 18 },
+        { x: 765, y: 175, w: 150, h: 18 },
+        { x: 395, y: 105, w: 170, h: 18 }
+      ],
+      ladders: [
+        { x: 130, y: 410, w: 34, h: 95 },
+        { x: 380, y: 420, w: 34, h: 85 },
+        { x: 625, y: 410, w: 34, h: 95 },
+        { x: 840, y: 390, w: 34, h: 115 },
+        { x: 755, y: 300, w: 34, h: 90 },
+        { x: 505, y: 315, w: 34, h: 95 },
+        { x: 235, y: 295, w: 34, h: 115 },
+        { x: 110, y: 190, w: 34, h: 105 },
+        { x: 340, y: 205, w: 34, h: 90 },
+        { x: 600, y: 180, w: 34, h: 135 },
+        { x: 825, y: 175, w: 34, h: 125 },
+        { x: 470, y: 105, w: 34, h: 75 }
+      ],
+      prizes: [
+        { x: 95, y: 375 }, { x: 350, y: 385 }, { x: 610, y: 375 },
+        { x: 825, y: 355 }, { x: 730, y: 265 }, { x: 500, y: 280 },
+        { x: 220, y: 260 }, { x: 85, y: 155 }, { x: 330, y: 170 },
+        { x: 590, y: 145 }, { x: 820, y: 140 }, { x: 470, y: 70 }
+      ],
+      hazards: [
+        { x: 240, y: 487, w: 62, h: 18 },
+        { x: 490, y: 487, w: 68, h: 18 },
+        { x: 730, y: 487, w: 60, h: 18 },
+        { x: 440, y: 297, w: 58, h: 18 },
+        { x: 545, y: 162, w: 58, h: 18 }
+      ],
+      enemies: [
+        { x: 80, y: 377, minX: 65, maxX: 205, speed: 90 },
+        { x: 330, y: 387, minX: 315, maxX: 455, speed: 96 },
+        { x: 595, y: 377, minX: 575, maxX: 695, speed: 88 },
+        { x: 710, y: 267, minX: 695, maxX: 830, speed: 82 },
+        { x: 190, y: 262, minX: 165, maxX: 315, speed: 92 },
+        { x: 790, y: 142, minX: 770, maxX: 890, speed: 98 }
+      ]
+    }
+  ];
+
+  const player = {
+    x: 0, y: 0, w: 30, h: 42,
+    vx: 0, vy: 0,
+    speed: 210,
+    jumpPower: 420,
+    onGround: false,
+    onLadder: false,
+    facing: 1,
+    invulnerable: 0,
+    coyote: 0,
+    jumpBuffer: 0,
+    ladderGrace: 0,
+    activeLadder: null
+  };
+
+  let world = null;
+
+  function cloneLevel(level) {
+    return {
+      ...level,
+      platforms: level.platforms.map(x => ({...x})),
+      ladders: level.ladders.map(x => ({...x})),
+      prizes: level.prizes.map((x, i) => ({...x, w: 22, h: 22, collected: false, phase: i * .7})),
+      hazards: level.hazards.map(x => ({...x})),
+      enemies: level.enemies.map((x, i) => ({
+        ...x, w: 34, h: 32, dir: i % 2 ? -1 : 1, alive: true, phase: i
+      }))
+    };
+  }
+
+  function startGame() {
+    score = 0;
+    lives = 3;
+    currentLevel = 0;
+    state = "playing";
+    overlay.classList.add("hidden");
+    loadLevel(currentLevel);
+    beep(440, .08, "square", .035);
+  }
+
+  function loadLevel(index) {
+    world = cloneLevel(levels[index]);
+    player.x = world.start.x;
+    player.y = world.start.y;
+    player.vx = 0;
+    player.vy = 0;
+    player.onLadder = false;
+    player.ladderGrace = 0;
+    player.activeLadder = null;
+    player.invulnerable = 1.1;
+    prizesCollected = 0;
+    particles = [];
+    updateHUD();
+    showMessage(world.name, 1100);
+  }
+
+  function restartLevelAfterHit() {
+    if (lives <= 0) {
+      gameOver();
+      return;
+    }
+    player.x = world.start.x;
+    player.y = world.start.y;
+    player.vx = 0;
+    player.vy = 0;
+    player.onLadder = false;
+    player.ladderGrace = 0;
+    player.activeLadder = null;
+    player.invulnerable = 1.5;
+  }
+
+  function gameOver() {
+    state = "gameover";
+    overlayTitle.textContent = "Game Over";
+    overlayText.textContent = `Final score: ${score}. Press any key or select Try Again.`;
+    startBtn.textContent = "Try Again";
+    overlay.classList.remove("hidden");
+    beep(130, .35, "sawtooth", .05);
+  }
+
+  function winGame() {
+    state = "won";
+    overlayTitle.textContent = "City Saved!";
+    overlayText.textContent = `You cleared all ${levels.length} levels with ${score} points. Press any key to play again.`;
+    startBtn.textContent = "Play Again";
+    overlay.classList.remove("hidden");
+    beep(660, .1, "square", .04);
+    setTimeout(() => beep(880, .18, "square", .04), 120);
+  }
+
+  function updateHUD() {
+    scoreEl.textContent = score;
+    livesEl.textContent = lives;
+    levelEl.textContent = `${currentLevel + 1}/${levels.length}`;
+    prizesEl.textContent = `${prizesCollected}/${world ? world.prizes.length : 0}`;
+  }
+
+  function showMessage(text, duration = 900) {
+    messageEl.textContent = text;
+    messageEl.classList.add("show");
+    clearTimeout(messageTimer);
+    messageTimer = setTimeout(() => messageEl.classList.remove("show"), duration);
+  }
+
+  function beep(frequency, duration, type = "sine", gain = .03) {
+    try {
+      audioContext ??= new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioContext.createOscillator();
+      const amp = audioContext.createGain();
+      osc.type = type;
+      osc.frequency.value = frequency;
+      amp.gain.setValueAtTime(gain, audioContext.currentTime);
+      amp.gain.exponentialRampToValueAtTime(.0001, audioContext.currentTime + duration);
+      osc.connect(amp).connect(audioContext.destination);
+      osc.start();
+      osc.stop(audioContext.currentTime + duration);
+    } catch (_) {}
+  }
+
+  function rectsOverlap(a, b) {
+    return a.x < b.x + b.w &&
+           a.x + a.w > b.x &&
+           a.y < b.y + b.h &&
+           a.y + a.h > b.y;
+  }
+
+  function getOverlappingLadder() {
+    const centerX = player.x + player.w / 2;
+    const playerTop = player.y;
+    const playerBottom = player.y + player.h;
+
+    return world.ladders.find(l => {
+      const horizontallyAligned =
+        centerX >= l.x - 7 &&
+        centerX <= l.x + l.w + 7;
+
+      const verticallyReachable =
+        playerBottom >= l.y - 8 &&
+        playerTop <= l.y + l.h + 5;
+
+      return horizontallyAligned && verticallyReachable;
+    });
+  }
+
+  function update(dt) {
+    if (state !== "playing") return;
+
+    player.invulnerable = Math.max(0, player.invulnerable - dt);
+    player.coyote = player.onGround ? .11 : Math.max(0, player.coyote - dt);
+    player.jumpBuffer = keys.jumpPressed ? .13 : Math.max(0, player.jumpBuffer - dt);
+    keys.jumpPressed = false;
+
+    const accel = player.onGround ? 1800 : 1150;
+    const friction = player.onGround ? 0.00003 : 0.0014;
+    let target = 0;
+    if (keys.left) target -= player.speed;
+    if (keys.right) target += player.speed;
+
+    if (target !== 0) {
+      player.vx += Math.sign(target - player.vx) * accel * dt;
+      if ((target > 0 && player.vx > target) || (target < 0 && player.vx < target)) {
+        player.vx = target;
+      }
+      player.facing = Math.sign(target);
+    } else {
+      player.vx *= Math.pow(friction, dt);
+      if (Math.abs(player.vx) < 2) player.vx = 0;
+    }
+
+    const detectedLadder = getOverlappingLadder();
+
+    if (detectedLadder) {
+      player.activeLadder = detectedLadder;
+      player.ladderGrace = .22;
+    } else {
+      player.ladderGrace = Math.max(0, player.ladderGrace - dt);
+    }
+
+    const ladder =
+      detectedLadder ||
+      (player.onLadder && player.ladderGrace > 0 ? player.activeLadder : null);
+
+    if (ladder && (keys.up || keys.down)) {
+      player.onLadder = true;
+      player.activeLadder = ladder;
+    }
+
+    if (player.onLadder && ladder) {
+      const ladderCenterX = ladder.x + ladder.w / 2 - player.w / 2;
+      player.vx = 0;
+      player.x += (ladderCenterX - player.x) * Math.min(1, 18 * dt);
+      player.vy = 0;
+
+      if (keys.up) player.vy = -175;
+      if (keys.down) player.vy = 175;
+
+      if (keys.up && player.y + player.h <= ladder.y + 4) {
+        player.y = ladder.y - player.h;
+        player.vy = 0;
+        player.onLadder = false;
+        player.onGround = true;
+        player.ladderGrace = 0;
+        player.activeLadder = null;
+      }
+
+      if (keys.down && player.y >= ladder.y + ladder.h - 3) {
+        player.onLadder = false;
+        player.ladderGrace = 0;
+        player.activeLadder = null;
+      }
+
+      if (player.jumpBuffer > 0) {
+        player.onLadder = false;
+        player.activeLadder = null;
+        player.ladderGrace = 0;
+        player.vy = -player.jumpPower * .86;
+        player.vx = player.facing * 105;
+        player.jumpBuffer = 0;
+        beep(340, .05, "square", .02);
+      }
+    } else {
+      player.onLadder = false;
+      player.vy += 1050 * dt;
+      player.vy = Math.min(player.vy, 700);
+      if (player.jumpBuffer > 0 && player.coyote > 0) {
+        player.vy = -player.jumpPower;
+        player.onGround = false;
+        player.coyote = 0;
+        player.jumpBuffer = 0;
+        spawnParticles(player.x + player.w / 2, player.y + player.h, 7, "#d7f5ff");
+        beep(300, .06, "square", .025);
+      }
+    }
+
+    movePlayerX(dt);
+    movePlayerY(dt);
+
+    updateEnemies(dt);
+    checkPrizes();
+    checkHazards();
+    checkExit();
+    updateParticles(dt);
+
+    if (player.y > H + 120) hurtPlayer("Watch the gaps!");
+    if (cameraShake > 0) cameraShake = Math.max(0, cameraShake - 30 * dt);
+  }
+
+  function movePlayerX(dt) {
+    player.x += player.vx * dt;
+    player.x = Math.max(0, Math.min(W - player.w, player.x));
+
+    for (const p of world.platforms) {
+      if (!rectsOverlap(player, p)) continue;
+      if (player.vx > 0) player.x = p.x - player.w;
+      else if (player.vx < 0) player.x = p.x + p.w;
+      player.vx = 0;
+    }
+  }
+
+  function movePlayerY(dt) {
+    const oldY = player.y;
+    player.y += player.vy * dt;
+    player.onGround = false;
+
+    if (player.onLadder) return;
+
+    for (const p of world.platforms) {
+      if (!rectsOverlap(player, p)) continue;
+      const previousBottom = oldY + player.h;
+      const previousTop = oldY;
+
+      if (player.vy >= 0 && previousBottom <= p.y + 6) {
+        player.y = p.y - player.h;
+        player.vy = 0;
+        player.onGround = true;
+      } else if (player.vy < 0 && previousTop >= p.y + p.h - 6) {
+        player.y = p.y + p.h;
+        player.vy = 0;
+      }
+    }
+  }
+
+  function updateEnemies(dt) {
+    for (const enemy of world.enemies) {
+      if (!enemy.alive) continue;
+
+      enemy.x += enemy.speed * enemy.dir * dt;
+      if (enemy.x <= enemy.minX) {
+        enemy.x = enemy.minX;
+        enemy.dir = 1;
+      }
+      if (enemy.x + enemy.w >= enemy.maxX) {
+        enemy.x = enemy.maxX - enemy.w;
+        enemy.dir = -1;
+      }
+
+      if (rectsOverlap(player, enemy)) {
+        const playerBottom = player.y + player.h;
+        const stomped = player.vy > 110 && playerBottom - enemy.y < 22;
+        if (stomped) {
+          enemy.alive = false;
+          player.vy = -270;
+          score += 150;
+          spawnParticles(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, 14, colors.enemy);
+          beep(180, .05, "square", .04);
+          updateHUD();
+        } else {
+          hurtPlayer("Enemy hit!");
+        }
+      }
+    }
+  }
+
+  function checkPrizes() {
+    for (const prize of world.prizes) {
+      if (prize.collected) continue;
+      if (rectsOverlap(player, prize)) {
+        prize.collected = true;
+        prizesCollected++;
+        score += 100;
+        spawnParticles(prize.x + prize.w / 2, prize.y + prize.h / 2, 12, colors.prize);
+        beep(720 + prizesCollected * 25, .07, "sine", .035);
+        if (prizesCollected === world.prizes.length) {
+          showMessage("Exit unlocked!", 1100);
+          beep(980, .12, "triangle", .04);
+        }
+        updateHUD();
+      }
+    }
+  }
+
+  function checkHazards() {
+    for (const hazard of world.hazards) {
+      if (rectsOverlap(player, hazard)) {
+        hurtPlayer("Obstacle hit!");
+        return;
+      }
+    }
+  }
+
+  function checkExit() {
+    const exit = world.exit;
+    const exitZone = {
+      x: exit.x - 24,
+      y: exit.y - 12,
+      w: exit.w + 48,
+      h: exit.h + 28
+    };
+
+    if (!rectsOverlap(player, exitZone)) return;
+
+    if (prizesCollected < world.prizes.length) {
+      showMessage(`${world.prizes.length - prizesCollected} prizes remaining`, 700);
+      return;
+    }
+
+    state = "transition";
+    showMessage("Level complete!", 650);
+    score += 500;
+    updateHUD();
+    beep(760, .08, "square", .04);
+
+    setTimeout(() => {
+      currentLevel++;
+      if (currentLevel >= levels.length) {
+        winGame();
+      } else {
+        state = "playing";
+        loadLevel(currentLevel);
+      }
+    }, 420);
+  }
+
+  function hurtPlayer(message) {
+    if (player.invulnerable > 0 || state !== "playing") return;
+    lives--;
+    score = Math.max(0, score - 100);
+    cameraShake = 9;
+    spawnParticles(player.x + player.w / 2, player.y + player.h / 2, 18, colors.hazard);
+    showMessage(message, 700);
+    beep(90, .22, "sawtooth", .045);
+    updateHUD();
+    restartLevelAfterHit();
+  }
+
+  function spawnParticles(x, y, count, color) {
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 45 + Math.random() * 150;
+      particles.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 40,
+        life: .35 + Math.random() * .45,
+        maxLife: .8,
+        size: 2 + Math.random() * 5,
+        color
+      });
+    }
+  }
+
+  function updateParticles(dt) {
+    for (const p of particles) {
+      p.life -= dt;
+      p.vy += 300 * dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+    }
+    particles = particles.filter(p => p.life > 0);
+  }
+
+  function draw(time) {
+    ctx.save();
+    const sx = cameraShake ? (Math.random() - .5) * cameraShake : 0;
+    const sy = cameraShake ? (Math.random() - .5) * cameraShake : 0;
+    ctx.translate(sx, sy);
+
+    drawBackground(time);
+    if (world) {
+      drawPlatforms();
+      drawLadders();
+      drawHazards();
+      drawExit(time);
+      drawPrizes(time);
+      drawEnemies(time);
+      drawPlayer(time);
+      drawParticles();
+    }
+
+    ctx.restore();
+  }
+
+  function drawBackground(time) {
+    const sky = world?.sky || ["#14213d", "#243b64"];
+    const gradient = ctx.createLinearGradient(0, 0, 0, H);
+    gradient.addColorStop(0, sky[0]);
+    gradient.addColorStop(1, sky[1]);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, W, H);
+
+    const t = time * .00008;
+    ctx.fillStyle = "rgba(255,255,255,.045)";
+    for (let i = 0; i < 24; i++) {
+      const x = (i * 113 + t * 2800) % (W + 140) - 70;
+      const h = 60 + ((i * 47) % 180);
+      ctx.fillRect(x, H - h - 35, 54 + (i % 4) * 18, h);
+    }
+
+    ctx.fillStyle = "rgba(255,255,255,.08)";
+    for (let i = 0; i < 45; i++) {
+      const x = (i * 149) % W;
+      const y = (i * 67) % 240 + 20;
+      const pulse = .45 + Math.sin(time * .002 + i) * .25;
+      ctx.globalAlpha = pulse;
+      ctx.fillRect(x, y, 2, 2);
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = "rgba(4,8,18,.28)";
+    ctx.fillRect(0, H - 54, W, 54);
+  }
+
+  function roundRect(x, y, w, h, r, fillStyle) {
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, r);
+    ctx.fillStyle = fillStyle;
+    ctx.fill();
+  }
+
+  function drawPlatforms() {
+    for (const p of world.platforms) {
+      roundRect(p.x, p.y, p.w, p.h, 5, colors.platform);
+      ctx.fillStyle = colors.platformTop;
+      ctx.fillRect(p.x + 4, p.y, p.w - 8, 4);
+      ctx.fillStyle = "rgba(255,255,255,.08)";
+      for (let x = p.x + 14; x < p.x + p.w - 10; x += 28) {
+        ctx.fillRect(x, p.y + 8, 11, 3);
+      }
+    }
+  }
+
+  function drawLadders() {
+    ctx.strokeStyle = colors.ladder;
+    ctx.lineWidth = 5;
+    ctx.lineCap = "round";
+    for (const l of world.ladders) {
+      ctx.beginPath();
+      ctx.moveTo(l.x + 7, l.y);
+      ctx.lineTo(l.x + 7, l.y + l.h);
+      ctx.moveTo(l.x + l.w - 7, l.y);
+      ctx.lineTo(l.x + l.w - 7, l.y + l.h);
+      ctx.stroke();
+
+      ctx.lineWidth = 3;
+      for (let y = l.y + 10; y < l.y + l.h; y += 16) {
+        ctx.beginPath();
+        ctx.moveTo(l.x + 7, y);
+        ctx.lineTo(l.x + l.w - 7, y);
+        ctx.stroke();
+      }
+      ctx.lineWidth = 5;
+    }
+  }
+
+  function drawHazards() {
+    for (const h of world.hazards) {
+      ctx.fillStyle = colors.hazard;
+      const spikeW = 16;
+      const count = Math.ceil(h.w / spikeW);
+      ctx.beginPath();
+      ctx.moveTo(h.x, h.y + h.h);
+      for (let i = 0; i < count; i++) {
+        const x = h.x + i * (h.w / count);
+        const nx = h.x + (i + 1) * (h.w / count);
+        ctx.lineTo((x + nx) / 2, h.y);
+        ctx.lineTo(nx, h.y + h.h);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.28)";
+      ctx.fillRect(h.x, h.y + h.h - 4, h.w, 3);
+    }
+  }
+
+  function drawExit(time) {
+    const e = world.exit;
+    const unlocked = prizesCollected === world.prizes.length;
+    const glow = .55 + Math.sin(time * .006) * .2;
+    ctx.save();
+    ctx.shadowBlur = unlocked ? 28 : 0;
+    ctx.shadowColor = colors.exit;
+    roundRect(e.x, e.y, e.w, e.h, 10, unlocked ? `rgba(126,242,154,${glow})` : "#394052");
+    roundRect(e.x + 7, e.y + 10, e.w - 14, e.h - 10, 7, unlocked ? "#0a3c2b" : "#222837");
+    ctx.fillStyle = unlocked ? colors.exit : "#747d8f";
+    ctx.beginPath();
+    ctx.arc(e.x + e.w - 11, e.y + e.h / 2, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    if (!unlocked) {
+      ctx.fillStyle = "#d8dde8";
+      roundRect(e.x + e.w / 2 - 8, e.y + 24, 16, 15, 4, "#d8dde8");
+      ctx.strokeStyle = "#d8dde8";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(e.x + e.w / 2, e.y + 24, 6, Math.PI, 0);
+      ctx.stroke();
+    } else {
+      const arrowBob = Math.sin(time * .008) * 4;
+      ctx.save();
+      ctx.textAlign = "center";
+      ctx.font = "900 12px system-ui, sans-serif";
+      ctx.fillStyle = colors.exit;
+      ctx.fillText("EXIT", e.x + e.w / 2, e.y - 16 + arrowBob);
+
+      ctx.beginPath();
+      ctx.moveTo(e.x + e.w / 2 - 7, e.y - 11 + arrowBob);
+      ctx.lineTo(e.x + e.w / 2 + 7, e.y - 11 + arrowBob);
+      ctx.lineTo(e.x + e.w / 2, e.y - 3 + arrowBob);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawPrizes(time) {
+    for (const p of world.prizes) {
+      if (p.collected) continue;
+      const bob = Math.sin(time * .005 + p.phase) * 5;
+      const cx = p.x + p.w / 2;
+      const cy = p.y + p.h / 2 + bob;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(time * .0015 + p.phase);
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = colors.prize;
+      ctx.fillStyle = colors.prize;
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const a = -Math.PI / 2 + i * Math.PI / 5;
+        const r = i % 2 === 0 ? 12 : 5.5;
+        const x = Math.cos(a) * r;
+        const y = Math.sin(a) * r;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawEnemies(time) {
+    for (const e of world.enemies) {
+      if (!e.alive) continue;
+      const bounce = Math.sin(time * .008 + e.phase) * 2;
+      ctx.save();
+      ctx.translate(e.x, e.y + bounce);
+      ctx.scale(e.dir, 1);
+      const originX = e.dir === -1 ? -e.w : 0;
+      roundRect(originX, 4, e.w, e.h - 4, 10, colors.enemy);
+      ctx.fillStyle = colors.enemyDark;
+      ctx.fillRect(originX + 4, e.h - 8, e.w - 8, 6);
+      ctx.fillStyle = "white";
+      ctx.beginPath();
+      ctx.arc(originX + e.w - 11, 14, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#15151d";
+      ctx.beginPath();
+      ctx.arc(originX + e.w - 9, 14, 2.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawPlayer(time) {
+    if (player.invulnerable > 0 && Math.floor(time / 80) % 2 === 0) return;
+
+    const walk = player.onGround && Math.abs(player.vx) > 20 ? Math.sin(time * .018) : 0;
+    ctx.save();
+    ctx.translate(player.x + player.w / 2, player.y);
+    ctx.scale(player.facing, 1);
+
+    ctx.strokeStyle = colors.playerDark;
+    ctx.lineWidth = 5;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(-6, 31);
+    ctx.lineTo(-8 + walk * 4, 42);
+    ctx.moveTo(6, 31);
+    ctx.lineTo(8 - walk * 4, 42);
+    ctx.stroke();
+
+    roundRect(-14, 10, 28, 27, 8, colors.player);
+    roundRect(-11, 0, 22, 18, 8, "#e9fbff");
+
+    ctx.fillStyle = "#12243a";
+    ctx.beginPath();
+    ctx.arc(4, 7, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = colors.playerDark;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(-12, 18);
+    ctx.lineTo(-19, 25 + walk * 3);
+    ctx.moveTo(12, 18);
+    ctx.lineTo(19, 23 - walk * 3);
+    ctx.stroke();
+
+    ctx.fillStyle = colors.prize;
+    ctx.fillRect(-8, 13, 5, 11);
+
+    ctx.restore();
+  }
+
+  function drawParticles() {
+    for (const p of particles) {
+      ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x, p.y, p.size, p.size);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function frame(time) {
+    const dt = Math.min((time - lastTime) / 1000 || 0, .033);
+    lastTime = time;
+    update(dt);
+    draw(time);
+    requestAnimationFrame(frame);
+  }
+
+  function setKey(action, isDown) {
+    if (action === "jump" && isDown && !keys.jump) keys.jumpPressed = true;
+    keys[action] = isDown;
+  }
+
+  const keyMap = {
+    ArrowLeft: "left", KeyA: "left",
+    ArrowRight: "right", KeyD: "right",
+    ArrowUp: "up", KeyW: "up",
+    ArrowDown: "down", KeyS: "down",
+    Space: "jump"
+  };
+
+  window.addEventListener("keydown", (event) => {
+    if (state === "gameover" || state === "won") {
+      event.preventDefault();
+      startGame();
+      return;
+    }
+
+    const action = keyMap[event.code];
+    if (action) {
+      event.preventDefault();
+      setKey(action, true);
+    }
+    if (event.code === "KeyP" || event.code === "Escape") {
+      event.preventDefault();
+      togglePause();
+    }
+  });
+
+  window.addEventListener("keyup", (event) => {
+    const action = keyMap[event.code];
+    if (action) {
+      event.preventDefault();
+      setKey(action, false);
+    }
+  });
+
+  window.addEventListener("blur", () => {
+    Object.keys(keys).forEach(k => keys[k] = false);
+    if (state === "playing") togglePause();
+  });
+
+  document.querySelectorAll(".touchBtn").forEach(btn => {
+    const action = btn.dataset.key;
+    const press = (event) => {
+      event.preventDefault();
+      btn.classList.add("active");
+      setKey(action, true);
+    };
+    const release = (event) => {
+      event.preventDefault();
+      btn.classList.remove("active");
+      setKey(action, false);
+    };
+    btn.addEventListener("pointerdown", press);
+    btn.addEventListener("pointerup", release);
+    btn.addEventListener("pointercancel", release);
+    btn.addEventListener("pointerleave", release);
+  });
+
+  function togglePause() {
+    if (state === "menu" || state === "gameover" || state === "won") return;
+
+    if (state === "playing") {
+      state = "paused";
+      overlayTitle.textContent = "Paused";
+      overlayText.textContent = "Take a breath. The enemies will wait.";
+      startBtn.textContent = "Resume";
+      overlay.classList.remove("hidden");
+    } else if (state === "paused") {
+      state = "playing";
+      overlay.classList.add("hidden");
+      lastTime = performance.now();
+    }
+  }
+
+  startBtn.addEventListener("click", () => {
+    if (state === "paused") {
+      state = "playing";
+      overlay.classList.add("hidden");
+      lastTime = performance.now();
+    } else {
+      overlayTitle.textContent = "Skyline Sprint";
+      startBtn.textContent = "Start Game";
+      startGame();
+    }
+  });
+
+  pauseBtn.addEventListener("click", togglePause);
+
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
