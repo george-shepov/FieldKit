@@ -358,6 +358,7 @@
         title: '🧠 Drills & Games',
         icon: 'trophy.svg',
         apps: {
+          'chronoquest': { name: 'ChronoQuest', desc: 'Race the clock and master global GMT offsets', icon: 'clock.svg', free: true, path: 'games/chronoquest.html' },
           'game-academy': { name: 'Game Academy', desc: 'Chess & Checkers — Play & Learn', icon: 'trophy.svg', free: true, path: 'games/game-academy.html' },
           'reversi': { name: 'Reversi', desc: 'Classic disc-flipping strategy game', icon: 'circle-check-big.svg', free: true, path: 'games/reversi.html' },
           'battleship': { name: 'Battleship', desc: 'Naval strategy board game', icon: 'ship.svg', free: true },
@@ -371,7 +372,7 @@
         }
       }
     };
-    const APP_NAV_VERSION = '2026.02.18.13';
+    const APP_NAV_VERSION = '2026.07.22.1';
     const APP_HELP = {
       'gigtax': {
         feature: 'Estimate self-employment taxes from 1099 income and deductions.',
@@ -568,6 +569,10 @@
       'profile': {
         feature: 'Set and rotate one global username/password used by protected apps.',
         scenario: 'Use before opening GigTax or Snippet Board, and sign out quickly from shared devices.'
+      },
+      'chronoquest': {
+        feature: 'Three timezone challenge modes with countdown scoring, streaks, lives, keyboard controls, and a fixed-offset world clock.',
+        scenario: 'Use for geography practice, distributed-team timezone fluency, or a fast offline brain-training round.'
       },
       'game-academy': {
         feature: '2-in-1 strategy trainer with Chess and Checkers in Play mode or Watch & Learn AI commentary mode.',

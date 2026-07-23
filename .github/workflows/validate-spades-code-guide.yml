@@ -10,7 +10,7 @@ on:
       - '.github/workflows/validate-spades-code-guide.yml'
   push:
     branches:
-      - 'agent/fieldkit-spades-code-guide'
+      - 'agent/fieldkit-spades-code-guide-v2'
     paths:
       - 'games/spades-royale/**'
       - 'code-guide/**'
@@ -25,5 +25,5 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
       - run: node scripts/validate-spades-code-guide.js
