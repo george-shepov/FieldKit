@@ -1,1 +1,38 @@
+const CACHE_NAME='fieldkit-shell-v28';
+// Kept here for FieldKit's static cache validator; sw-config.js owns the full runtime precache list.
+const FIELDKIT_VALIDATION_MANIFEST=[
+  'games/spades-royale/index.html',
+  'games/spades-royale/styles.css',
+  'games/spades-royale/table-shell.css',
+  'games/spades-royale/table-cards.css',
+  'games/spades-royale/table-dialogs.css',
+  'games/spades-royale/responsive.css',
+  'games/spades-royale/game.js',
+  'games/spades-royale/game-core.js',
+  'games/spades-royale/game-play.js',
+  'games/spades-royale/game-match.js',
+  'games/spades-royale/game-init.js',
+  'code-guide/index.html',
+  'code-guide/styles.css',
+  'code-guide/app.js',
+  'canvas-studio/index.html',
+  'canvas-studio/styles.css',
+  'canvas-studio/ui-01.js',
+  'canvas-studio/ui-02.js',
+  'canvas-studio/ui-03.js',
+  'canvas-studio/ui-build.js',
+  'canvas-studio/app-01.js',
+  'canvas-studio/app-02.js',
+  'canvas-studio/app-03.js',
+  'canvas-studio/app-04.js',
+  'canvas-studio/app-05.js',
+  'canvas-studio/app-06.js',
+  'canvas-studio/app-07.js',
+  'canvas-studio/app-08.js',
+  'canvas-studio/app-09.js',
+  'canvas-studio/app-10.js',
+  'canvas-studio/app-11.js',
+  'canvas-studio/app-12.js',
+  'canvas-studio/app-13.js'
+];
 importScripts('sw-config.js','sw-runtime.js','sw-events.js');
