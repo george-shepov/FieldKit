@@ -88,7 +88,7 @@ function documentCanvas() {
 
 function outerEffectCanvas(source, config, glow = false) {
         const out = documentCanvas();
-        if (!config?.enabled || Number(config.blur) <= 0 || Number(config.opacity) <= 0) return out;
+        if (!config?.enabled || Number(config.opacity) <= 0 || (glow && Number(config.blur) <= 0)) return out;
         const octx = out.getContext('2d');
         octx.save();
         octx.shadowColor = rgba(config.color || '#000000', clamp(Number(config.opacity) || 0,0,100)/100);

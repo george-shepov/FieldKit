@@ -4,7 +4,7 @@ async function drawLayer(targetCtx, layer) {
         normalizeLayer(layer);
         const shadow = layer.effects.shadow;
         const glow = layer.effects.glow;
-        const hasEffects = (shadow.enabled && shadow.opacity > 0 && shadow.blur > 0) || (glow.enabled && glow.opacity > 0 && glow.blur > 0);
+        const hasEffects = (shadow.enabled && shadow.opacity > 0 && (shadow.blur > 0 || shadow.offsetX || shadow.offsetY)) || (glow.enabled && glow.opacity > 0 && glow.blur > 0);
         if (!hasEffects) {
           targetCtx.save();
           targetCtx.globalAlpha = layer.opacity;
