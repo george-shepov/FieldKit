@@ -47,7 +47,7 @@ function sharpenCanvas(sourceCanvas, amount) {
       }
 
 function applyBackgroundRemoval(sourceCanvas, removal) {
-        if (!removal?.enabled) return sourceCanvas;
+        if (!removal?.enabled || (removal.mode && removal.mode !== 'color')) return sourceCanvas;
         const w = sourceCanvas.width;
         const h = sourceCanvas.height;
         if (w * h > 14_000_000) {
