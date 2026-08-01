@@ -13,8 +13,19 @@ async function getProcessedImageLayer(layer) {
         const wctx = work.getContext('2d', { willReadFrequently:true });
         const img = await loadImage(layer.src);
         const a = layer.adjustments || defaultImageAdjustments();
+        const removal = layer.backgroundRemoval || defaultBackgroundRemoval();
         rawCtx.drawImage(img, 0, 0, raw.width, raw.height);
-        applyBackgroundRemoval(raw, layer.backgroundRemoval);
+        if (removal.enabled && removal.mode === 'ai' && removal.aiMask) {
+          const mask = await loadImage(removal.aiMask);
+          rawCtx.save();
+          rawCtx.globalCompositeOperation = 'destination-in';
+          rawCtx.imageSmoothingEnabled = true;
+          rawCtx.imageSmoothingQuality = 'high';
+          rawCtx.drawImage(mask, 0, 0, raw.width, raw.height);
+          rawCtx.restore();
+        } else {
+          applyBackgroundRemoval(raw, removal);
+        }
         wctx.save();
         wctx.filter = filterCss(a);
         wctx.drawImage(raw, 0, 0, work.width, work.height);

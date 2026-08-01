@@ -105,7 +105,10 @@ function defaultImageAdjustments() {
       }
 
 function defaultBackgroundRemoval() {
-        return { enabled:false, color:'#ffffff', tolerance:18, softness:12, despill:35 };
+        return {
+          enabled:false, mode:'none', color:'#ffffff', tolerance:18, softness:12, despill:35,
+          aiMask:null, aiRawMask:null, aiRevision:0, aiThreshold:38, aiFeather:10, aiEdge:1
+        };
       }
 
 function defaultLayerEffects() {
@@ -125,7 +128,9 @@ function normalizeLayer(layer) {
         if (!layer.effects.glow) layer.effects.glow = defaultLayerEffects().glow;
         if (layer.type === 'image') {
           if (!layer.adjustments) layer.adjustments = defaultImageAdjustments();
-          if (!layer.backgroundRemoval) layer.backgroundRemoval = defaultBackgroundRemoval();
+          const legacyRemoval = layer.backgroundRemoval || {};
+          const inferredMode = legacyRemoval.mode || (legacyRemoval.enabled ? 'color' : 'none');
+          layer.backgroundRemoval = { ...defaultBackgroundRemoval(), ...legacyRemoval, mode:inferredMode };
         }
         return layer;
       }
@@ -226,5 +231,5 @@ function loadImage(src) {
 function layerCacheKey(layer) {
         const a = layer.adjustments || defaultImageAdjustments();
         const r = layer.backgroundRemoval || defaultBackgroundRemoval();
-        return [layer.id, layer.w, layer.h, a.brightness, a.contrast, a.saturation, a.sharpness, a.filter, a.filterStrength, a.filterParam, r.enabled, r.color, r.tolerance, r.softness, r.despill].join('|');
+        return [layer.id, layer.w, layer.h, a.brightness, a.contrast, a.saturation, a.sharpness, a.filter, a.filterStrength, a.filterParam, r.enabled, r.mode, r.color, r.tolerance, r.softness, r.despill, r.aiRevision || 0, r.aiThreshold, r.aiFeather, r.aiEdge].join('|');
       }
