@@ -1,4 +1,4 @@
-const CACHE_NAME='fieldkit-shell-v28';
+const CACHE_NAME='fieldkit-shell-v29';
 // Kept here for FieldKit's static cache validator; sw-config.js owns the full runtime precache list.
 const FIELDKIT_VALIDATION_MANIFEST=[
   'games/spades-royale/index.html',
@@ -33,6 +33,8 @@ const FIELDKIT_VALIDATION_MANIFEST=[
   'canvas-studio/app-10.js',
   'canvas-studio/app-11.js',
   'canvas-studio/app-12.js',
-  'canvas-studio/app-13.js'
+  'canvas-studio/app-13.js',
+  'canvas-studio/ai-background.js',
+  'canvas-studio/AI_MODEL_NOTICE.md'
 ];
 importScripts('sw-config.js','sw-runtime.js','sw-events.js');
