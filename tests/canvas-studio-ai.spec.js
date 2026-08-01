@@ -15,7 +15,7 @@ test.describe('Canvas Studio AI background removal', () => {
     await expect(page.locator('#aiRemoveBackgroundBtn')).toBeVisible();
     await expect(page.locator('#aiRemoveBackgroundBtn')).toBeDisabled();
     await expect(page.locator('#aiBackgroundStatus')).toContainText('First use downloads');
-    await expect(page.locator('[data-panel-content="background"] .section-title h3').nth(1)).toHaveText('Color key');
+    await expect(page.getByRole('heading', { name: 'Color key', exact: true })).toBeVisible();
 
     await page.locator('#fileInput').setInputFiles({
       name: 'tiny-test.png',
