@@ -439,3 +439,38 @@ test.describe('CNS TAP Test', () => {
     await expect(page.locator('button, input, #start').first()).toBeVisible();
   });
 });
+
+test.describe('Runtime regression coverage', () => {
+  test('Online Poll Board renders seeded polls without a page error', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    page.on('console', (message) => {
+      if (message.type() === 'error') errors.push(message.text());
+    });
+    await page.goto(appUrl('opb'));
+    await expect(page.locator('#sectionsContainer .card')).toHaveCount(2);
+    expect(errors).toEqual([]);
+  });
+
+  test('ChatGPT Viewer exposes the browser Highlight.js API without errors', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    page.on('console', (message) => {
+      if (message.type() === 'error') errors.push(message.text());
+    });
+    await page.goto(appUrl('chatgpt-viewer'));
+    await expect(page.locator('#btnLoadJson')).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+
+  test('Math Trainer enters private-mode fallback without a runtime error', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    page.on('console', (message) => {
+      if (message.type() === 'error') errors.push(message.text());
+    });
+    await page.goto(appUrl('math-trainer'));
+    await expect(page.locator('#settings')).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+});
