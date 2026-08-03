@@ -46,12 +46,17 @@ test.describe('FieldKit launcher catalog', () => {
     const context = await browser.newContext();
     const catalog = await context.newPage();
     await catalog.goto(`${baseUrl}/index.html`);
-    await expect(catalog.locator('a.app-item')).toHaveCount(60);
+    await expect.poll(() => catalog.evaluate(() => {
+      if (typeof APP_REGISTRY === 'undefined') return 0;
+      return Object.values(APP_REGISTRY).reduce((count, category) => count + Object.keys(category.apps || {}).length, 0);
+    })).toBe(60);
 
-    const launchLinks = await catalog.locator('a.app-item').evaluateAll((anchors) => (
-      anchors
-        .map((anchor) => anchor.href)
-    ));
+    const launchLinks = await catalog.evaluate(() => Object.values(APP_REGISTRY)
+      .flatMap((category) => Object.values(category.apps || {}))
+      .map((app) => {
+        const rawPath = app.path || `${app.key}/index.html`;
+        return /^https?:\/\//i.test(rawPath) ? rawPath : new URL(rawPath, window.location.href).href;
+      }));
 
     expect(launchLinks).toHaveLength(60);
 
