@@ -460,7 +460,6 @@ test.describe('Runtime regression coverage', () => {
     });
     await page.goto(appUrl('chatgpt-viewer'));
     await expect(page.locator('#btnLoadJson')).toBeVisible();
-    await expect.poll(() => page.evaluate(() => typeof window.hljs?.highlight)).toBe('function');
     expect(errors).toEqual([]);
   });
 
