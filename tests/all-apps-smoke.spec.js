@@ -52,9 +52,9 @@ test.describe('FieldKit launcher catalog', () => {
     })).toBe(60);
 
     const launchLinks = await catalog.evaluate(() => Object.values(APP_REGISTRY)
-      .flatMap((category) => Object.values(category.apps || {}))
-      .map((app) => {
-        const rawPath = app.path || `${app.key}/index.html`;
+      .flatMap((category) => Object.entries(category.apps || {}))
+      .map(([appKey, app]) => {
+        const rawPath = app.path || `${appKey}/index.html`;
         return /^https?:\/\//i.test(rawPath) ? rawPath : new URL(rawPath, window.location.href).href;
       }));
 
