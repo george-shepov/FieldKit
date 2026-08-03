@@ -160,6 +160,8 @@ test.describe('Kanban App', () => {
   test('should open and close the command drawer', async ({ page }) => {
     await page.locator('#menuBtn').click();
     await expect(page.locator('#drawer')).toHaveClass(/open/);
+    const drawerZ = await page.locator('#drawer').evaluate((element) => Number(getComputedStyle(element).zIndex));
+    expect(drawerZ).toBeGreaterThan(9999);
     await page.getByRole('button', { name: 'Close ✕', exact: true }).click();
     await expect(page.locator('#drawer')).not.toHaveClass(/open/);
   });
