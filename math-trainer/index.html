@@ -287,7 +287,7 @@ async function initSQLite(){
   const privacyConfig = window.SUITE_PRIVACY?.getConfig?.();
   if (privacyConfig && privacyConfig.allowAI === false){
     sqliteReady = false;
-    showBanner('Private mode blocks the external SQLite WASM file. Using temporary in-memory storage.');
+    showBanner('Privacy settings block the external SQLite WASM file. Using temporary in-memory storage.');
     return;
   }
   try{
