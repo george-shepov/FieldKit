@@ -2,7 +2,7 @@
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="../shared/components.js"></script>
+<script defer src="../shared/components.js"></script>
 <title>Tiny Kanban — Clean (No eval · No SW · No deps)</title>
 <style>
   :root{
@@ -14,6 +14,8 @@
     --border: 240 3.7% 15.9%;
     --primary: 0 0% 98%;
     --accent: 240 3.7% 15.9%;
+    --danger: #ef4444;
+    --warn: #f59e0b;
     --radius: 0.75rem;
 
     --bg: hsl(var(--background));
@@ -24,7 +26,7 @@
     --prio-high:#ef4444; --prio-med:#f97316; --prio-low:#22c55e;
   }
   *{box-sizing:border-box}
-  body{margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 "Inter", system-ui, -apple-system, sans-serif; display:grid; grid-template-rows:auto 1fr auto; height:100vh}
+  body{margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 "Inter", system-ui, -apple-system, sans-serif; display:grid; grid-template-rows:auto minmax(0,1fr) auto; min-height:100vh; overflow:hidden}
   
   /* App bar */
   .appbar{
@@ -32,6 +34,7 @@
     padding:16px 20px; display:flex; align-items:center; gap:16px; height: 64px !important;
   }
   .brand{display:flex; align-items:center; gap:12px; font-weight:700; font-size: 1.125rem; letter-spacing: -0.02em;}
+  .grow{flex:1}
   .logo{width:24px; height:24px; border-radius:6px; background:linear-gradient(135deg,#6366f1,#a855f7)}
   .pill{font-size:11px; padding:2px 8px; border:1px solid var(--line); border-radius:999px; background:var(--muted); color:var(--ink); font-weight: 500;}
   
@@ -50,9 +53,33 @@
   }
   .iconbtn:hover{background:var(--accent)}
 
+  /* Drawer */
+  .drawer{position:fixed; inset:0; display:none; z-index:40}
+  .drawer.open{display:block}
+  .drawer .backdrop{position:absolute; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(3px)}
+  .drawer .panel{position:absolute; left:0; top:0; bottom:0; width:min(340px,88vw); background:hsl(240 3.7% 7%); color:var(--ink); border-right:1px solid var(--line); display:flex; flex-direction:column; box-shadow:20px 0 50px rgba(0,0,0,.45)}
+  .menu-head{display:flex; align-items:center; justify-content:space-between; padding:16px; border-bottom:1px solid var(--line)}
+  .menu-body{padding:10px; overflow:auto; display:flex; flex-direction:column; gap:8px}
+  .menu-item{display:flex; align-items:center; gap:12px; padding:12px; border-radius:10px; border:1px solid transparent; cursor:pointer}
+  .menu-item:hover{background:var(--accent); border-color:var(--line)}
+  .menu-item small{color:var(--muted-foreground)}
+
   /* Board */
-  main{padding:20px; display:grid; gap:20px; grid-template-columns:repeat(3, 1fr); min-height:0; height: auto !important;}
-  @media (max-width: 980px){ main{grid-template-columns:1fr} }
+  main{padding:20px; display:grid; gap:20px; grid-template-columns:repeat(3, minmax(0,1fr)); min-height:0; height:auto; overflow:hidden;}
+  @media (max-width:980px){
+    body{height:auto; min-height:100dvh; overflow:auto; grid-template-rows:auto auto auto}
+    .appbar{position:relative; height:auto !important; padding:12px; gap:8px; flex-wrap:wrap}
+    .brand{width:100%}
+    .grow{display:none}
+    .search-wrap{min-width:0; flex:1}
+    main{grid-template-columns:1fr; overflow:visible; padding:12px; gap:12px}
+    .column{min-height:220px}
+    footer{flex-wrap:wrap}
+  }
+  @media (max-width:560px){
+    .grid{grid-template-columns:1fr}
+    .card{padding:12px}
+  }
   
   .column{background:hsl(240 3.7% 7%); border:1px solid var(--line); border-radius:var(--radius); display:flex; flex-direction:column; flex:1; min-height:0}
   .col-head{display:flex; align-items:center; justify-content: space-between; padding:16px 20px; border-bottom:1px solid var(--line)}
@@ -60,12 +87,19 @@
   .badge{font-weight:600; font-size:12px; padding:2px 8px; border-radius:999px; background:var(--muted); color: var(--ink);}
   
   .cards{overflow:auto; padding:12px; display:flex; flex-direction:column; gap:12px; flex:1; min-height:100px}
+  .drop-ok{outline:2px dashed #6366f1; outline-offset:-6px; border-radius:10px}
   .card{
     background:hsl(var(--card)); border:1px solid var(--line); border-radius:10px; 
     padding:16px; cursor:grab; user-select:none; transition: transform 0.1s, box-shadow 0.2s;
   }
   .card:hover { border-color: hsl(0 0% 98% / 0.3); box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
   .card.dragging{opacity:.4; transform: scale(0.95);}
+
+  .row{display:flex; gap:8px; align-items:flex-start; justify-content:space-between}
+  .controls{display:flex; gap:6px; align-items:center; flex:0 0 auto}
+  .icon{border:1px solid var(--line); background:transparent; color:var(--ink); min-width:28px; min-height:28px; padding:3px 6px; border-radius:7px; cursor:pointer; font-size:12px}
+  .icon:hover{background:var(--accent)}
+  .handle{cursor:grab; opacity:.65}
 
   .title{font-weight:600; font-size:0.9375rem; line-height: 1.4;}
   .meta{display:flex; gap:6px; align-items:center; color:var(--muted-foreground); font-size:11px; margin-top:12px; flex-wrap:wrap}
@@ -80,9 +114,13 @@
   .kbd{font:600 11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; padding:2px 6px; border:1px solid var(--line); border-radius:4px; background:hsl(240 3.7% 10%); color:var(--ink)}
 
   /* Modals */
+  .modal{position:fixed; inset:0; display:none; place-items:center; z-index:50;}
+  .modal.open{display:grid;}
   .modal .backdrop{position:absolute; inset:0; background:rgba(0,0,0,0.8); backdrop-filter: blur(4px);}
   .modal .box{position:relative; z-index:1; background:hsl(var(--card)); border:1px solid var(--line); border-radius:var(--radius); padding:24px; width:min(500px, 92vw); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);}
   .box h3{margin:0 0 20px 0; font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em;}
+  .grid{display:grid; gap:14px; grid-template-columns:1fr 1fr}
+  .grid-1{display:grid; gap:10px}
   
   label{font-size:12px; font-weight: 500; color:var(--muted-foreground); margin-bottom: 6px; display: block;}
   input[type='text'], select{
@@ -98,8 +136,10 @@
   }
   .btn.primary{background:hsl(0 0% 98%); color:hsl(240 10% 3.9%); border:none; font-weight:600}
   .btn.primary:hover { background: hsl(0 0% 98% / 0.9); }
+  .btn.ghost{background:transparent}
   .btn.warn{border-color:var(--danger); color:var(--danger)}
   .btn.warn:hover { background: hsl(0 100% 50% / 0.1); }
+  .row-end{display:flex; gap:8px; justify-content:flex-end; margin-top:16px}
   /* Hidden test panel (open via menu) */
   .tests{display:none; padding:10px 14px; border-top:1px dashed var(--line)}
   .tests.open{display:block}
@@ -141,9 +181,7 @@
     </nav>
   </aside>
 
-  <main role="main" aria-label="Kanban board" style="
-    height: 713px;
-">
+  <main role="main" aria-label="Kanban board">
     <section class="column" data-status="todo">
       <div class="col-head"><h2>Todo</h2><span class="badge" id="count-todo">2</span></div>
       <div class="cards" id="list-todo"><article class="card" draggable="true" data-id="1"><div class="row"><div class="title"><span class="handle" title="Drag to reorder">⋮⋮</span> ship</div><div class="controls"><button class="icon btn-up" title="Move up">↑</button><button class="icon btn-down" title="Move down">↓</button><button class="icon btn-edit" title="Edit">✎</button><button class="icon btn-del" title="Delete">✕</button></div></div><div class="meta"><span class="chip"><span class="prio high"></span> high</span><span class="chip">🌱¤ Gio</span><span class="chip">#1</span></div></article><article class="card" draggable="true" data-id="2"><div class="row"><div class="title"><span class="handle" title="Drag to reorder">⋮⋮</span> remove crazy letters</div><div class="controls"><button class="icon btn-up" title="Move up">↑</button><button class="icon btn-down" title="Move down">↓</button><button class="icon btn-edit" title="Edit">✎</button><button class="icon btn-del" title="Delete">✕</button></div></div><div class="meta"><span class="chip"><span class="prio high"></span> high</span><span class="chip">🌱¤ Gio</span><span class="chip">#2</span></div></article></div>
@@ -244,10 +282,10 @@ function $(sel){ return document.querySelector(sel); }
 function $all(sel){ return Array.from(document.querySelectorAll(sel)); }
 function escapeHTML(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({
-    '&': '&',
-    '<': '<',
-    '>': '>',
-    '"': '"',
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
     "'": '&#39;',
   })[c]);
 }
@@ -588,7 +626,6 @@ function runTests(){
   $('#testResults').textContent = out.join('\\n');
 }
 </script>
-<script src="../shared/components.js"></script>
   <script src="../shared/help-content.js"></script>
   <script src="../shared/f1-help-nav.js"></script>
 </body></html>

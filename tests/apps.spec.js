@@ -128,11 +128,53 @@ test.describe('Inventory App', () => {
 });
 
 test.describe('Kanban App', () => {
-  test('should load and have essential elements', async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     await page.goto(appUrl('kanban'));
+    await page.evaluate(() => {
+      localStorage.removeItem('tiny-kanban-clean.v1');
+      localStorage.removeItem('tiny-kanban-clean.settings');
+    });
+    await page.reload();
+  });
+
+  test('should load and have essential elements', async ({ page }) => {
     await expect(page.locator('#list-todo')).toBeVisible();
     await expect(page.locator('#list-doing')).toBeVisible();
     await expect(page.locator('#list-done')).toBeVisible();
+    await expect(page.locator('.column')).toHaveCount(3);
+    await expect(page.locator('.modal.open')).toHaveCount(0);
+    await expect(page.locator('.modal').first()).toBeHidden();
+  });
+
+  test('should open the task modal and persist a new task', async ({ page }) => {
+    await page.locator('#addQuick').click();
+    await expect(page.locator('#modalAdd')).toBeVisible();
+    await page.locator('#title').fill('Verify consolidated board');
+    await page.locator('#assignee').fill('Gio');
+    await page.locator('#addBtn').click();
+    await expect(page.locator('#list-todo .card')).toContainText('Verify consolidated board');
+    await page.reload();
+    await expect(page.locator('#list-todo .card')).toContainText('Verify consolidated board');
+  });
+
+  test('should open and close the command drawer', async ({ page }) => {
+    await page.locator('#menuBtn').click();
+    await expect(page.locator('#drawer')).toHaveClass(/open/);
+    await page.locator('#drawer [data-close="drawer"]').first().click();
+    await expect(page.locator('#drawer')).not.toHaveClass(/open/);
+  });
+
+  test('should stack usable columns on a phone viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.reload();
+    const columns = page.locator('.column');
+    await expect(columns).toHaveCount(3);
+    await expect(columns.nth(0)).toBeVisible();
+    await expect(columns.nth(1)).toBeVisible();
+    await expect(columns.nth(2)).toBeVisible();
+    const first = await columns.nth(0).boundingBox();
+    const second = await columns.nth(1).boundingBox();
+    expect(second.y).toBeGreaterThan(first.y + first.height - 1);
   });
 });
 
