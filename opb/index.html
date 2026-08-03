@@ -482,6 +482,42 @@ function refreshSectionsUI(){
 function selectedSection(){ const v = SECTION_FILTER.value; if (v==='all') return null; return sectionsCache.find(s=>String(s.id)===String(v)); }
 function currentSectionId(){ return SECTION_FILTER.value; }
 
+function pollCard(p, section){
+  const card = document.createElement('article');
+  card.className = 'card';
+  card.id = `poll-${p.id}`;
+  const options = usingFallback
+    ? mem.options.filter(o=>o.poll_id===p.id).sort((a,b)=>(a.position||0)-(b.position||0)||a.id-b.id)
+    : query(`SELECT id, label, votes, COALESCE(color,'') AS color, COALESCE(position,id) AS position
+             FROM poll_options WHERE poll_id=? ORDER BY position ASC, id ASC`, [p.id]);
+
+  card.innerHTML = `
+    <div class="row">
+      <h3>${escapeHtml(p.question)}</h3>
+      <span class="pill">${p.one_per_day ? '1 vote/day' : 'Multiple votes'}</span>
+    </div>
+    <div class="options" id="options-${p.id}"></div>
+    <div class="results" id="res-${p.id}"></div>
+    <div class="meta">
+      <span>${escapeHtml(section?.name || 'General')}</span>
+      <button class="btn secondary export-poll" type="button">Export CSV</button>
+    </div>
+  `;
+
+  const optionsEl = card.querySelector(`#options-${p.id}`);
+  options.forEach(opt=>{
+    const button = document.createElement('button');
+    button.className = 'option-btn';
+    button.type = 'button';
+    button.disabled = isResultsOnly();
+    button.innerHTML = `<span>${escapeHtml(opt.label)}</span><span>Vote →</span>`;
+    button.addEventListener('click', ()=>onVote(p.id, opt.id));
+    optionsEl.appendChild(button);
+  });
+  card.querySelector('.export-poll').addEventListener('click', ()=>exportPollCsv(p.id));
+  return card;
+}
+
 /* =========================
    Rendering — Sections Page
    ========================= */
@@ -1004,7 +1040,7 @@ function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&nbsp;&amp;','<
 let toastTimer=null; function toast(msg){ TOAST.textContent=msg; TOAST.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>TOAST.classList.remove('show'), 2000); }
 function sanitizeColor(c){ return c && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(c) ? c : ''; }
 function randomColorFor(seed){ return PALETTE[Math.abs(hashCode(String(seed))) % PALETTE.length]; }
-function hashCode(str){ let h=0; for (let i=0;i<s.length;i++){ h=((h<<5)-h)+s.charCodeAt(i); h|=0; } return h; }
+function hashCode(str){ let h=0; for (let i=0;i<str.length;i++){ h=((h<<5)-h)+str.charCodeAt(i); h|=0; } return h; }
 function gradientFrom(hex){ const base = sanitizeColor(hex) || "#6c63ff"; const light = lighten(base, 18); return `linear-gradient(90deg, ${base}, ${light})`; }
 function lighten(hex, pct){ const c=hex.replace('#',''); const n=c.length===3?c.split('').map(x=>x+x).join(''):c;
   const r=parseInt(n.slice(0,2),16), g=parseInt(n.slice(2,4),16), b=parseInt(n.slice(4,6),16);
