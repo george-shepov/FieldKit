@@ -507,7 +507,6 @@ function renderAll(){
 // Menu
 $('#menuBtn').onclick = ()=> toggleDrawer(true);
 $('#addQuick').onclick = ()=> openModal('#modalAdd');
-$all('[data-close=\"drawer\"]').forEach(btn=> btn.onclick = ()=> toggleDrawer(false));
 $('#mi-add').onclick = ()=> { toggleDrawer(false); openModal('#modalAdd'); };
 $('#mi-import-json').onclick = ()=> { toggleDrawer(false); $('#fileImportJson').click(); };
 $('#mi-export-json').onclick = ()=> { toggleDrawer(false); downloadBlob(Model.exportJSON(), 'tasks.json'); };
@@ -517,8 +516,13 @@ $('#mi-shortcuts').onclick = ()=> { toggleDrawer(false); openModal('#modalShort'
 $('#mi-about').onclick = ()=> { toggleDrawer(false); openModal('#modalAbout'); };
 $('#mi-tests').onclick = ()=> { toggleDrawer(false); $('#tests').classList.toggle('open'); };
 
-// Modals close
-$all('[data-close=\"modal\"]').forEach(btn=> btn.onclick = function(){ closeModalByChild(this); });
+// Delegated close controls survive shared-shell initialization and DOM updates.
+document.addEventListener('click', e=>{
+  const close = e.target.closest('[data-close]');
+  if (!close) return;
+  if (close.dataset.close === 'drawer') toggleDrawer(false);
+  if (close.dataset.close === 'modal') closeModalByChild(close);
+});
 
 // Add task
 $('#addBtn').addEventListener('click', ()=>{
