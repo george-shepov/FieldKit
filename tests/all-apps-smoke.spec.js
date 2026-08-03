@@ -46,11 +46,10 @@ test.describe('FieldKit launcher catalog', () => {
     const context = await browser.newContext();
     const catalog = await context.newPage();
     await catalog.goto(`${baseUrl}/index.html`);
-    await catalog.waitForTimeout(1200);
+    await expect(catalog.locator('a.app-item')).toHaveCount(60);
 
-    const launchLinks = await catalog.locator('a[href]').evaluateAll((anchors) => (
+    const launchLinks = await catalog.locator('a.app-item').evaluateAll((anchors) => (
       anchors
-        .filter((anchor) => anchor.textContent.includes('Launch'))
         .map((anchor) => anchor.href)
     ));
 
@@ -85,8 +84,8 @@ test.describe('FieldKit launcher catalog', () => {
       }
     }
 
-      await context.close();
-      await new Promise((resolve) => server.close(resolve));
-      expect(failures).toEqual([]);
+    await context.close();
+    await new Promise((resolve) => server.close(resolve));
+    expect(failures).toEqual([]);
   });
 });
